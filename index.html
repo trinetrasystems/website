@@ -454,12 +454,16 @@
         unsubscribeAdminSubmissions = null;
       }
 
-      const hasAdminAccess = await isAdminUser(user);
-      setAdminUi(user, hasAdminAccess);
-
-      if (user && hasAdminAccess) {
-        subscribeAdminSubmissions();
+      // Only check admin status if user is logged in
+      let hasAdminAccess = false;
+      if (user) {
+        hasAdminAccess = await isAdminUser(user);
+        if (hasAdminAccess) {
+          subscribeAdminSubmissions();
+        }
       }
+
+      setAdminUi(user, hasAdminAccess);
     });
   </script>
 </body>
