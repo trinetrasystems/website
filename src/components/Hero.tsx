@@ -23,8 +23,8 @@ const Hero = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8 }}
         >
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass mb-8 text-sm text-accent">
-            <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse-glow" />
+          <div className="inline-flex items-center gap-2.5 px-4 py-2.5 rounded-full glass-strong mb-8 text-sm font-semibold tracking-wide text-foreground shadow-sm">
+            <span className="w-3 h-3 rounded-full bg-red-500 ring-2 ring-red-500/25 shadow-[0_0_14px_rgba(239,68,68,0.85)] animate-pulse-glow" />
             AI-Powered Computer Vision Platform
           </div>
 
