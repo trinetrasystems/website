@@ -7,9 +7,9 @@ const Hero = () => {
     <section id="home" className="relative min-h-screen flex items-center overflow-hidden">
       {/* Background */}
       <div className="absolute inset-0">
-        <img src={heroBg} alt="" className="w-full h-full object-cover opacity-30" />
-        <div className="absolute inset-0 bg-gradient-to-r from-background via-background/90 to-background/70" />
-        <div className="absolute inset-0 bg-grid opacity-20" />
+        <img src={heroBg} alt="" className="w-full h-full object-cover object-center opacity-30" />
+        <div className="absolute inset-0 bg-gradient-to-r from-background/80 via-background/45 to-background/60" />
+        <div className="absolute inset-0 bg-grid opacity-12" />
       </div>
 
       {/* Animated scan line */}
@@ -24,7 +24,7 @@ const Hero = () => {
           transition={{ duration: 0.8 }}
         >
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass mb-8 text-sm text-accent">
-            <span className="w-2 h-2 rounded-full bg-accent animate-pulse-glow" />
+            <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse-glow" />
             AI-Powered Computer Vision Platform
           </div>
 

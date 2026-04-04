@@ -1,3 +1,5 @@
+import { useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import AppSidebar from "@/components/AppSidebar";
 import Hero from "@/components/Hero";
 import About from "@/components/About";
@@ -11,10 +13,27 @@ import Contact from "@/components/Contact";
 import Footer from "@/components/Footer";
 
 const Index = () => {
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const redirectIfAdminHash = () => {
+      if (window.location.hash === "#admin") {
+        navigate("/admin", { replace: true });
+      }
+    };
+
+    redirectIfAdminHash();
+    window.addEventListener("hashchange", redirectIfAdminHash);
+
+    return () => {
+      window.removeEventListener("hashchange", redirectIfAdminHash);
+    };
+  }, [navigate]);
+
   return (
-    <div className="min-h-screen flex">
+    <div className="min-h-screen">
       <AppSidebar />
-      <main className="flex-1 lg:ml-64 mt-16 lg:mt-0">
+      <main className="pt-16">
         <Hero />
         <About />
         <Solutions />
