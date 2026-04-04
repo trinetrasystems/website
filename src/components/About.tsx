@@ -4,10 +4,10 @@ import { useRef } from "react";
 import { Eye, Brain, Zap, ShieldCheck } from "lucide-react";
 
 const features = [
-  { icon: Eye, title: "Divine Vision", desc: "Inspired by the third eye of Mahadev — omniscient awareness across all feeds." },
+  { icon: Eye, title: "Comprehensive Visibility", desc: "Unified, real-time visibility across all camera feeds and monitored zones." },
   { icon: Brain, title: "Intelligent Analysis", desc: "Deep learning models that understand context, behavior, and intent." },
   { icon: Zap, title: "Instant Alerts", desc: "Sub-second detection and notification for critical security events." },
-  { icon: ShieldCheck, title: "Total Protection", desc: "End-to-end surveillance automation for complete operational safety." },
+  { icon: ShieldCheck, title: "Operational Security", desc: "End-to-end surveillance automation for safer and more reliable operations." },
 ];
 
 const About = () => {
@@ -24,10 +24,10 @@ const About = () => {
           className="text-center mb-8 md:mb-16"
         >
           <h2 className="text-3xl md:text-5xl font-bold mb-6">
-            The <span className="text-gradient">Third Eye</span> of Intelligence
+            AI-Powered <span className="text-gradient">Intelligence</span> for Modern Surveillance
           </h2>
           <p className="text-muted-foreground text-lg max-w-3xl mx-auto">
-            Named after Lord Shiva's all-seeing third eye, Trinetra brings divine-level awareness to your surveillance infrastructure. Our AI sees beyond what cameras capture — it understands, predicts, and protects.
+            Trinetra delivers real-time situational awareness for surveillance environments. Our AI platform detects events, identifies risk patterns, and supports faster, more accurate operational decisions.
           </p>
         </motion.div>
 
