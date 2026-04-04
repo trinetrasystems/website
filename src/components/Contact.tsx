@@ -129,7 +129,7 @@ const Contact = () => {
               </div>
               <div>
                 <h3 className="font-semibold mb-1">Email Us</h3>
-                <p className="text-muted-foreground">contact@trinetra.ai</p>
+                <p className="text-muted-foreground">trinetrasystems.com@gmail.com</p>
               </div>
             </div>
             <div className="flex items-start gap-4">
@@ -152,7 +152,7 @@ const Contact = () => {
               <div>
                 <h3 className="font-semibold mb-1">Visit Us</h3>
                 <p className="text-muted-foreground">
-                  Trinetra AI Technologies Pvt. Ltd.<br />
+                  Trinetra Systems<br />
                   Tech Park, Bengaluru, Karnataka 560001, India
                 </p>
               </div>

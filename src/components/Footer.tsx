@@ -29,7 +29,7 @@ const Footer = () => {
           <div>
             <h4 className="font-semibold mb-4">Contact</h4>
             <ul className="space-y-2 text-sm text-muted-foreground">
-              <li>contact@trinetra.ai</li>
+              <li>trinetrasystems.com.gmail.com</li>
               <li>+91 98765 43210</li>
               <li>Tech Park, Bengaluru, Karnataka<br />560001, India</li>
             </ul>

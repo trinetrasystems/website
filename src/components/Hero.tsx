@@ -36,10 +36,14 @@ const Hero = () => {
             <span className="text-foreground">Surveillance</span>
           </h1>
 
-          <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mb-10">
-            See Everything. Detect Anything. Act Instantly.
-            <br />
-            Real-time video analytics powered by advanced YOLO models for security, safety, and automation.
+          <p className="max-w-2xl mb-10 leading-relaxed text-foreground/90 drop-shadow-[0_1px_1px_rgba(0,0,0,0.15)]">
+            <span className="block text-xl md:text-2xl font-semibold text-foreground">
+              AI Where You Need It.
+            </span>
+            <span className="block mt-2 text-base md:text-lg">
+              Real-time video intelligence for security, safety, and automation with fast and reliable
+              <span className="font-semibold text-foreground"> edge device deployment</span>.
+            </span>
           </p>
 
           <div className="flex flex-wrap gap-4">
