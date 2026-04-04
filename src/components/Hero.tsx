@@ -7,9 +7,9 @@ const Hero = () => {
     <section id="home" className="relative min-h-screen flex items-center overflow-hidden">
       {/* Background */}
       <div className="absolute inset-0">
-        <img src={heroBg} alt="" className="w-full h-full object-cover object-center opacity-30" />
-        <div className="absolute inset-0 bg-gradient-to-r from-background/80 via-background/45 to-background/60" />
-        <div className="absolute inset-0 bg-grid opacity-12" />
+        <img src={heroBg} alt="" className="w-full h-full object-cover object-center opacity-55 dark:opacity-30" />
+        <div className="absolute inset-0 bg-gradient-to-r from-background/35 via-background/20 to-background/35 dark:from-background/80 dark:via-background/45 dark:to-background/60" />
+        <div className="absolute inset-0 bg-grid opacity-18 dark:opacity-12" />
       </div>
 
       {/* Animated scan line */}
