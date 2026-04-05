@@ -17,10 +17,10 @@ const CTA = () => {
         <div className="absolute inset-0 bg-grid opacity-10" />
         <div className="relative z-10">
           <h2 className="text-3xl md:text-5xl font-bold mb-6">
-            Secure Your Business with <span className="text-gradient">Trinetra</span>
+            Secure Your Business with <span className="text-gradient">Trinetra Systems</span>
           </h2>
           <p className="text-muted-foreground text-lg mb-10 max-w-2xl mx-auto">
-            Join leading enterprises who trust Trinetra's AI-powered surveillance to protect what matters most.
+            Join leading enterprises who trust Trinetra Systems' AI-powered surveillance to protect what matters most.
           </p>
           <motion.a
             href="#contact"

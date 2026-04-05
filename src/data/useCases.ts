@@ -1,141 +1,170 @@
-export interface UseCase {
+import atmMaskImage from "../../videosandphotoes/ATM_person_with_mask.PNG";
+import attendanceImage from "../../videosandphotoes/attendence_monitoring.PNG";
+import checkoutImage from "../../videosandphotoes/automatic_billing.PNG";
+import productionStuckImage from "../../videosandphotoes/blockage_in_production.PNG";
+import objectCountingImage from "../../videosandphotoes/chocolatecounting.PNG";
+import fireImage from "../../videosandphotoes/firealert.PNG";
+import machineIdleImage from "../../videosandphotoes/machine idle.PNG";
+import heatmapImage from "../../videosandphotoes/mart_heatmap.PNG";
+import theftImage from "../../videosandphotoes/mart_theft_Detection.PNG";
+import fallImage from "../../videosandphotoes/Person_fall_detection.PNG";
+import officeMonitoringImage from "../../videosandphotoes/Person_monitoring_office_sleeping_talking.PNG";
+import ppeImage from "../../videosandphotoes/person_vest_helmet_goggles.PNG";
+import loadingImage from "../../videosandphotoes/smart_loading_unloading.PNG";
+import queueImage from "../../videosandphotoes/waiting_queue_person_counting.PNG";
+import intrusionImage from "../../videosandphotoes/zoneintrusion.PNG";
+
+export interface UseCaseItem {
   id: string;
   title: string;
   description: string;
   image: string;
 }
 
-export const useCases: UseCase[] = [
+export interface UseCaseCategory {
+  id: string;
+  title: string;
+  description: string;
+  items: UseCaseItem[];
+}
+
+export const useCaseCategories: UseCaseCategory[] = [
   {
-    id: "atm-security",
-    title: "ATM Security Monitoring",
-    description: "AI-powered surveillance for ATM areas detecting suspicious behavior and unauthorized access in real-time.",
-    image: "atm-security",
+    id: "safety-ppe-compliance",
+    title: "Safety & PPE Compliance",
+    description: "Monitor workplace safety gear and detect high-risk incidents in real time.",
+    items: [
+      {
+        id: "industry-ppe",
+        title: "Vest, Helmet, Goggles & Seat Belt Compliance",
+        description: "Detect PPE usage to enforce safety compliance in industrial zones.",
+        image: ppeImage,
+      },
+      {
+        id: "fire-detection",
+        title: "Fire Detection",
+        description: "Early fire detection alerts for rapid emergency response.",
+        image: fireImage,
+      },
+      {
+        id: "fall-detection",
+        title: "Person Fall Detection",
+        description: "Detect fall incidents instantly to improve safety response time.",
+        image: fallImage,
+      },
+    ],
   },
   {
-    id: "gold-shop-theft",
-    title: "Gold Shop Theft Detection",
-    description: "Advanced detection of theft attempts in jewelry stores using behavioral analysis and object tracking.",
-    image: "gold-shop-theft",
+    id: "security-intrusion-prevention",
+    title: "Security & Intrusion Prevention",
+    description: "Prevent unauthorized access and suspicious behavior across sensitive environments.",
+    items: [
+      {
+        id: "atm-face-covering",
+        title: "ATM Face Covering Alert",
+        description: "Trigger alerts when persons with face covering are detected at ATM zones.",
+        image: atmMaskImage,
+      },
+      {
+        id: "zone-intrusion",
+        title: "Zone Intrusion Detection",
+        description: "Detect and alert on unauthorized entry into restricted zones.",
+        image: intrusionImage,
+      },
+      {
+        id: "retail-theft-pose",
+        title: "Theft Protection with Pose Detection",
+        description: "Detect suspicious shoplifting behavior with pose-based analytics.",
+        image: theftImage,
+      },
+    ],
   },
   {
-    id: "retail-theft",
-    title: "Retail Theft Detection",
-    description: "Pose estimation and object tracking to detect shoplifting behavior like hiding items in pockets.",
-    image: "retail-theft",
+    id: "attendance-presence-management",
+    title: "Attendance & Presence Management",
+    description: "Automate attendance tracking and workforce presence visibility.",
+    items: [
+      {
+        id: "attendance-system",
+        title: "Attendance System",
+        description: "Automated attendance monitoring for offices and facilities.",
+        image: attendanceImage,
+      },
+    ],
   },
   {
-    id: "helmet-detection",
-    title: "Helmet Detection",
-    description: "Automatic compliance monitoring for helmet usage on construction sites and industrial zones.",
-    image: "helmet-detection",
+    id: "workforce-behavior-desk-activity",
+    title: "Workforce Behavior & Desk Activity",
+    description: "Track desk activity, engagement, and policy adherence in office environments.",
+    items: [
+      {
+        id: "workforce-desk-activity-overview",
+        title: "Workforce Monitoring: Mobile, Productivity & Desk Presence",
+        description: "Single consolidated office view covering mobile usage, productivity behavior, and desk sitting time insights.",
+        image: officeMonitoringImage,
+      },
+    ],
   },
   {
-    id: "safety-vest",
-    title: "Safety Vest Detection",
-    description: "Real-time detection of high-visibility vest compliance in warehouses and hazardous areas.",
-    image: "safety-vest",
+    id: "process-production-efficiency",
+    title: "Process & Production Efficiency",
+    description: "Improve throughput and reduce downtime with production intelligence.",
+    items: [
+      {
+        id: "smart-loading-unloading",
+        title: "Smart Loading & Unloading",
+        description: "Track loading and unloading operations for better logistics control.",
+        image: loadingImage,
+      },
+      {
+        id: "machine-idle",
+        title: "Machine Idle Detection",
+        description: "Identify machine idle periods to reduce operational downtime.",
+        image: machineIdleImage,
+      },
+      {
+        id: "object-stuck-production",
+        title: "Object Stuck in Production",
+        description: "Detect blockages in production lines before they escalate.",
+        image: productionStuckImage,
+      },
+      {
+        id: "object-counting",
+        title: "Object Counting",
+        description: "Count production items in real time for process validation.",
+        image: objectCountingImage,
+      },
+      {
+        id: "worker-idle-time",
+        title: "Worker Idle Time",
+        description: "Monitor idle periods to optimize shift productivity.",
+        image: machineIdleImage,
+      },
+    ],
   },
   {
-    id: "restricted-heatmap",
-    title: "Restricted Area Heatmap Alerts",
-    description: "Heatmap-based monitoring of restricted zones with instant intrusion alerts.",
-    image: "restricted-heatmap",
-  },
-  {
-    id: "loading-verification",
-    title: "Smart Loading/Unloading Verification",
-    description: "Automated verification of cargo loading and unloading processes at logistics docks.",
-    image: "loading-verification",
-  },
-  {
-    id: "intrusion-detection",
-    title: "Restricted Zone Intrusion Detection",
-    description: "Intent-based detection of unauthorized entry into restricted zones with predictive alerts.",
-    image: "intrusion-detection",
-  },
-  {
-    id: "idle-time",
-    title: "Worker Idle Time Calculation",
-    description: "AI-based tracking of worker activity and productivity with detailed idle time analytics.",
-    image: "idle-time",
-  },
-  {
-    id: "fire-detection",
-    title: "Fire Detection",
-    description: "Early fire and smoke detection using computer vision for rapid emergency response.",
-    image: "fire-detection",
-  },
-  {
-    id: "production-stuck",
-    title: "Object Stuck in Production",
-    description: "Detect jams and stuck objects on production lines to minimize downtime and losses.",
-    image: "production-stuck",
-  },
-  {
-    id: "eye-tracking",
-    title: "Eye Tracking for Productivity",
-    description: "Monitor student attention and engagement using gaze tracking and attention heatmaps.",
-    image: "eye-tracking",
-  },
-  {
-    id: "retail-heatmap",
-    title: "Retail Heatmap Analytics",
-    description: "Customer movement heatmaps for store layout optimization and marketing insights.",
-    image: "retail-heatmap",
-  },
-  {
-    id: "checkout-conveyor",
-    title: "Real-time Checkout Detection",
-    description: "Automated product recognition on conveyor belts for seamless checkout experiences.",
-    image: "checkout-conveyor",
-  },
-  {
-    id: "bird-detection",
-    title: "Farm Bird Detection & Deterrent",
-    description: "Detect birds on crops and trigger automated deterrent systems to protect harvests.",
-    image: "bird-detection",
-  },
-  {
-    id: "person-reid",
-    title: "Person Re-Identification",
-    description: "Track individuals across multiple camera feeds using image-to-video matching.",
-    image: "person-reid",
-  },
-  {
-    id: "phone-detection",
-    title: "Mobile Phone Usage Detection",
-    description: "Detect unauthorized phone usage in workplaces and restricted environments.",
-    image: "phone-detection",
-  },
-  {
-    id: "fall-detection",
-    title: "Fall Detection",
-    description: "Instant detection of falls using pose estimation for elderly care and workplace safety.",
-    image: "fall-detection",
-  },
-  {
-    id: "forklift-helmet",
-    title: "Forklift Helmet Detection",
-    description: "Ensure forklift operators wear helmets with real-time compliance monitoring.",
-    image: "forklift-helmet",
-  },
-  {
-    id: "construction-safety",
-    title: "Construction PPE Detection",
-    description: "Comprehensive PPE detection including goggles, helmets, and safety gear on construction sites.",
-    image: "construction-safety",
-  },
-  {
-    id: "crowd-density",
-    title: "Crowd Density Monitoring",
-    description: "Real-time crowd density analysis for event management and public safety.",
-    image: "crowd-density",
-  },
-  {
-    id: "license-plate",
-    title: "License Plate Recognition (ANPR)",
-    description: "Automatic number plate recognition for parking management, toll systems, and security.",
-    image: "license-plate",
+    id: "queue-checkout-footfall-analytics",
+    title: "Queue & Checkout Analytics",
+    description: "Optimize customer flow and checkout operations using visual analytics.",
+    items: [
+      {
+        id: "waiting-queue-counting",
+        title: "Waiting Queue Person Counting",
+        description: "Track queue density and waiting load in real time.",
+        image: queueImage,
+      },
+      {
+        id: "realtime-checkout-counter",
+        title: "Real-Time Checkout Counter Monitoring",
+        description: "Monitor billing conveyor counters for efficient checkout operations.",
+        image: checkoutImage,
+      },
+      {
+        id: "retail-heatmap-analytics",
+        title: "Retail Heatmap Analytics",
+        description: "Visualize busy areas in marts to improve layout and staffing.",
+        image: heatmapImage,
+      },
+    ],
   },
 ];

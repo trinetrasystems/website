@@ -20,7 +20,7 @@ const AppSidebar = () => {
         <div className="flex h-16 w-full items-center justify-between px-3 md:px-5">
           <a href="#home" className="flex items-center gap-2">
             <Eye className="w-6 h-6 text-primary" />
-            <span className="text-lg font-bold text-gradient">Trinetra</span>
+            <span className="text-lg font-bold text-gradient">Trinetra Systems</span>
           </a>
 
           <nav className="hidden lg:flex items-center gap-1">

@@ -8,7 +8,7 @@ const Footer = () => {
           <div>
             <div className="flex items-center gap-2 mb-4">
               <Eye className="w-6 h-6 text-primary" />
-              <span className="text-xl font-bold text-gradient">Trinetra</span>
+              <span className="text-xl font-bold text-gradient">Trinetra Systems</span>
             </div>
             <p className="text-sm text-muted-foreground leading-relaxed">
               AI-powered smart surveillance platform delivering real-time video analytics for security, safety, and automation.
@@ -44,7 +44,7 @@ const Footer = () => {
         </div>
 
         <div className="border-t border-border/30 pt-8 text-center text-sm text-muted-foreground">
-          © {new Date().getFullYear()} Trinetra AI Technologies. All rights reserved.
+          © {new Date().getFullYear()} Trinetra Systems. All rights reserved.
         </div>
       </div>
     </footer>

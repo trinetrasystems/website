@@ -1,55 +1,93 @@
 import { motion, useInView } from "framer-motion";
-import { useRef, useState } from "react";
-import { useCases } from "@/data/useCases";
-import { ChevronDown } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { useCaseCategories } from "@/data/useCases";
+import { Carousel, CarouselApi, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 
-const images: Record<string, string> = import.meta.glob("@/assets/usecases/*.jpg", { eager: true, import: "default" }) as Record<string, string>;
-
-const getImage = (key: string): string => {
-  const entry = Object.entries(images).find(([path]) => path.includes(key));
-  return entry ? entry[1] : "";
-};
-
-const UseCaseCard = ({ title, description, image, index }: { title: string; description: string; image: string; index: number }) => {
-  const ref = useRef(null);
-  const isInView = useInView(ref, { once: true, margin: "-50px" });
-
+const UseCaseCard = ({
+  title,
+  description,
+  image,
+}: {
+  title: string;
+  description: string;
+  image: string;
+}) => {
   return (
-    <motion.div
-      ref={ref}
-      initial={{ opacity: 0, y: 30 }}
-      animate={isInView ? { opacity: 1, y: 0 } : {}}
-      transition={{ duration: 0.5, delay: (index % 6) * 0.08 }}
-      className="glass rounded-xl overflow-hidden group cursor-pointer glow-hover transition-all duration-300"
-    >
-      <div className="relative aspect-video overflow-hidden">
+    <div className="glass rounded-2xl overflow-hidden h-full group">
+      <div className="relative aspect-[16/9] md:aspect-[16/8] overflow-hidden">
         <img
-          src={getImage(image)}
+          src={image}
           alt={title}
           loading="lazy"
-          width={1024}
-          height={576}
-          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+          width={1280}
+          height={720}
+          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/20 to-transparent opacity-60 group-hover:opacity-90 transition-opacity duration-300" />
-        <div className="absolute inset-0 flex flex-col justify-end p-3 md:p-5 translate-y-4 group-hover:translate-y-0 transition-transform duration-300">
-          <h3 className="text-xs md:text-base font-bold mb-1 line-clamp-1">{title}</h3>
-          <p className="text-[10px] md:text-sm text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity duration-300 line-clamp-2">
-            {description}
-          </p>
+        <div className="absolute top-3 left-3 z-10 inline-flex items-center gap-2 rounded-full bg-black/60 border border-white/20 px-2.5 py-1">
+          <span className="w-3 h-3 rounded-full bg-red-500 animate-pulse shadow-[0_0_10px_rgba(239,68,68,0.95)]" />
+          <span className="text-[10px] md:text-[11px] font-bold tracking-wide text-white drop-shadow-[0_1px_3px_rgba(0,0,0,0.9)]">
+            Live AI detection
+          </span>
         </div>
       </div>
-    </motion.div>
+      <div className="p-5 md:p-6">
+        <h3 className="text-base md:text-lg font-bold mb-2 line-clamp-2">{title}</h3>
+        <p className="text-sm md:text-base text-muted-foreground line-clamp-3">{description}</p>
+      </div>
+    </div>
+  );
+};
+
+const CategoryCarousel = ({
+  title,
+  description,
+  items,
+}: {
+  title: string;
+  description: string;
+  items: Array<{ id: string; title: string; description: string; image: string }>;
+}) => {
+  const [carouselApi, setCarouselApi] = useState<CarouselApi>();
+
+  useEffect(() => {
+    if (!carouselApi || items.length <= 1) {
+      return;
+    }
+
+    const timerId = window.setInterval(() => {
+      carouselApi.scrollNext();
+    }, 6000);
+
+    return () => {
+      window.clearInterval(timerId);
+    };
+  }, [carouselApi, items.length]);
+
+  return (
+    <div className="glass rounded-2xl p-4 md:p-6 lg:p-7 h-full">
+      <div className="mb-4 md:mb-5">
+        <h3 className="text-xl md:text-2xl font-bold mb-2">{title}</h3>
+        <p className="text-sm md:text-base text-muted-foreground">{description}</p>
+      </div>
+
+      <Carousel setApi={setCarouselApi} opts={{ align: "start", loop: true }} className="w-full">
+        <CarouselContent>
+          {items.map((item) => (
+            <CarouselItem key={item.id} className="basis-full">
+              <UseCaseCard title={item.title} description={item.description} image={item.image} />
+            </CarouselItem>
+          ))}
+        </CarouselContent>
+        <CarouselPrevious className="left-3 top-1/2 -translate-y-1/2" />
+        <CarouselNext className="right-3 top-1/2 -translate-y-1/2" />
+      </Carousel>
+    </div>
   );
 };
 
 const UseCases = () => {
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true, margin: "-100px" });
-  const [showAll, setShowAll] = useState(false);
-
-  // On mobile (< sm), show 6 items (2 cols × 3 rows), on larger screens show all
-  const MOBILE_LIMIT = 6;
 
   return (
     <section id="usecases" className="py-12 md:py-24 px-4 md:px-6" ref={ref}>
@@ -64,34 +102,23 @@ const UseCases = () => {
             <span className="text-gradient">Use Cases</span>
           </h2>
           <p className="text-muted-foreground text-sm md:text-lg max-w-2xl mx-auto">
-            From security to retail to industrial automation — see how Trinetra transforms video feeds into actionable intelligence.
+            Category-wise auto-scrolling showcases with one larger photo visible at a time.
           </p>
         </motion.div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-6">
-          {useCases.map((uc, i) => {
-            // On mobile, hide items beyond limit unless showAll is true
-            const hiddenOnMobile = !showAll && i >= MOBILE_LIMIT;
-            return (
-              <div key={uc.id} className={hiddenOnMobile ? "hidden sm:block" : ""}>
-                <UseCaseCard {...uc} index={i} />
-              </div>
-            );
-          })}
-        </div>
-
-        {/* Show More button - only visible on mobile when not all shown */}
-        {!showAll && (
-          <div className="sm:hidden flex justify-center mt-6">
-            <button
-              onClick={() => setShowAll(true)}
-              className="inline-flex items-center gap-2 px-6 py-3 rounded-lg glass text-sm font-semibold text-foreground glow-hover transition-all"
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8">
+          {useCaseCategories.map((category, categoryIndex) => (
+            <motion.div
+              key={category.id}
+              initial={{ opacity: 0, y: 24 }}
+              animate={isInView ? { opacity: 1, y: 0 } : {}}
+              transition={{ duration: 0.45, delay: categoryIndex * 0.08 }}
+              className="h-full"
             >
-              Show More
-              <ChevronDown className="w-4 h-4" />
-            </button>
-          </div>
-        )}
+              <CategoryCarousel title={category.title} description={category.description} items={category.items} />
+            </motion.div>
+          ))}
+        </div>
       </div>
     </section>
   );

@@ -27,7 +27,7 @@ const About = () => {
             AI-Powered <span className="text-gradient">Intelligence</span> for Modern Surveillance
           </h2>
           <p className="text-muted-foreground text-lg max-w-3xl mx-auto">
-            Trinetra delivers real-time situational awareness for surveillance environments. Our AI platform detects events, identifies risk patterns, and supports faster, more accurate operational decisions.
+            Trinetra Systems delivers real-time situational awareness for surveillance environments. Our AI platform detects events, identifies risk patterns, and supports faster, more accurate operational decisions.
           </p>
         </motion.div>
 
