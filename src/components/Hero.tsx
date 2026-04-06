@@ -1,23 +1,15 @@
 import { motion } from "framer-motion";
 import { ArrowRight, Play } from "lucide-react";
-import videoFile from "@/assets/video.MP4";
+import lightBg from "../../videosandphotoes/dark.PNG";
+import darkBg from "../../videosandphotoes/light.PNG";
 
 const Hero = () => {
   return (
     <section id="home" className="relative min-h-screen flex items-center overflow-hidden">
-      {/* Background Video */}
+      {/* Background Images */}
       <div className="absolute inset-0">
-        <video 
-          autoPlay 
-          muted 
-          loop 
-          playsInline
-          className="w-full h-full object-cover object-center"
-        >
-          <source src={videoFile} type="video/mp4" />
-        </video>
-        {/* Light Blur and Overlay */}
-        <div className="absolute inset-0 backdrop-blur-sm" />
+        <img src={lightBg} alt="" className="absolute inset-0 w-full h-full object-cover object-center dark:hidden" />
+        <img src={darkBg} alt="" className="absolute inset-0 w-full h-full object-cover object-center hidden dark:block" />
         <div className="absolute inset-0 bg-gradient-to-r from-black/15 via-black/10 to-black/15 dark:from-black/30 dark:via-black/20 dark:to-black/30" />
         <div className="absolute inset-0 bg-grid opacity-18 dark:opacity-12" />
       </div>
@@ -27,36 +19,32 @@ const Hero = () => {
         <div className="w-full h-px bg-gradient-to-r from-transparent via-accent/50 to-transparent animate-scan-line" />
       </div>
 
-      <div className="relative z-10 max-w-4xl mx-auto px-4 md:px-6 py-20 md:py-32">
+      <div className="relative z-10 max-w-4xl px-4 md:px-6 py-20 md:py-32 md:pl-10 lg:pl-16 text-left">
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8 }}
         >
-          <div className="inline-flex items-center gap-2.5 px-4 py-2.5 rounded-full glass-strong mb-8 text-sm font-semibold tracking-wide text-foreground shadow-sm">
+          <div className="inline-flex items-center gap-2.5 px-4 py-2.5 rounded-full glass-strong mb-8 text-sm font-semibold tracking-wide text-white shadow-sm">
             <span className="w-3 h-3 rounded-full bg-red-500 ring-2 ring-red-500/25 shadow-[0_0_14px_rgba(239,68,68,0.85)] animate-pulse-glow" />
-            AI-Powered Computer Vision Platform
+            AI Live Detection
           </div>
 
           <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold leading-tight mb-6 drop-shadow-[0_2px_10px_rgba(0,0,0,0.8)]">
-            <span className="text-gradient drop-shadow-[0_2px_8px_rgba(0,0,0,0.7)]">Trinetra Systems</span>
+            <span className="text-white drop-shadow-[0_2px_8px_rgba(0,0,0,0.7)]">Trinetra Systems</span>
             <br />
-            <span className="text-white drop-shadow-[0_2px_8px_rgba(0,0,0,0.8)]">AI-Powered Smart</span>
+            <span className="bg-gradient-to-r from-amber-500 to-orange-600 dark:from-[#ffb300] dark:to-[#ff6f00] bg-clip-text text-transparent drop-shadow-[0_2px_8px_rgba(0,0,0,0.8)]">AI-Powered</span>
             <br />
             <span className="text-white drop-shadow-[0_2px_8px_rgba(0,0,0,0.8)]">Surveillance</span>
           </h1>
 
-          <p className="max-w-2xl mb-10 leading-relaxed text-white drop-shadow-[0_2px_8px_rgba(0,0,0,0.7)]">
-            <span className="block text-xl md:text-2xl font-semibold text-white drop-shadow-[0_2px_6px_rgba(0,0,0,0.7)]">
+          <p className="max-w-2xl mb-10 leading-relaxed text-slate-200 drop-shadow-[0_2px_8px_rgba(0,0,0,0.35)]">
+            <span className="block text-xl md:text-2xl font-semibold text-white drop-shadow-[0_2px_6px_rgba(0,0,0,0.45)]">
               AI Where You Need It.
-            </span>
-            <span className="block mt-2 text-base md:text-lg text-white drop-shadow-[0_1px_4px_rgba(0,0,0,0.6)]">
-              Real-time video intelligence for security, safety, and automation with fast and reliable
-              <span className="font-semibold text-white drop-shadow-[0_1px_4px_rgba(0,0,0,0.6)]"> edge device deployment</span>.
             </span>
           </p>
 
-          <div className="flex flex-wrap gap-4">
+          <div className="flex flex-wrap gap-4 justify-start">
             <motion.a
               href="#contact"
               whileHover={{ scale: 1.05 }}
