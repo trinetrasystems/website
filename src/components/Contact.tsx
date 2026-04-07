@@ -3,11 +3,19 @@ import { useRef, useState } from "react";
 import { Mail, Phone, MapPin, Send } from "lucide-react";
 import { addDoc, collection, serverTimestamp } from "firebase/firestore";
 import { db } from "@/lib/firebase";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 type ContactFormState = {
   name: string;
   email: string;
   contactNumber: string;
+  countryCode: string;
   message: string;
 };
 
@@ -15,27 +23,33 @@ const initialFormState: ContactFormState = {
   name: "",
   email: "",
   contactNumber: "",
+  countryCode: "+91",
   message: "",
 };
 
+const countryCodes = [
+  { code: "+91", name: "India (IN)" },
+  { code: "+1", name: "USA (US)" },
+  { code: "+44", name: "UK (GB)" },
+  { code: "+61", name: "Australia (AU)" },
+  { code: "+971", name: "UAE (AE)" },
+  { code: "+65", name: "Singapore (SG)" },
+  { code: "+49", name: "Germany (DE)" },
+  { code: "+33", name: "France (FR)" },
+  { code: "+81", name: "Japan (JP)" },
+  { code: "+86", name: "China (CN)" },
+  { code: "+7", name: "Russia (RU)" },
+  { code: "+55", name: "Brazil (BR)" },
+  { code: "+27", name: "South Africa (ZA)" },
+  { code: "+31", name: "Netherlands (NL)" },
+  { code: "+39", name: "Italy (IT)" },
+  { code: "+34", name: "Spain (ES)" },
+  { code: "+1", name: "Canada (CA)" },
+];
+
 const sanitizePhoneInput = (value: string) => {
-  const allowedChars = value.replace(/[^\d+\s()-]/g, "");
-  const hasLeadingPlus = allowedChars.startsWith("+");
-  const withoutExtraPlus = hasLeadingPlus
-    ? `+${allowedChars.slice(1).replace(/\+/g, "")}`
-    : allowedChars.replace(/\+/g, "");
-
-  return withoutExtraPlus;
+  return value.replace(/[^\d\s-]/g, "");
 };
-
-const normalizePhoneForStorage = (value: string) => {
-  const compact = value.replace(/[\s()-]/g, "");
-  const withCountryPrefix = compact.startsWith("00") ? `+${compact.slice(2)}` : compact;
-
-  return withCountryPrefix;
-};
-
-const isValidInternationalPhone = (value: string) => /^\+[1-9]\d{7,14}$/.test(value);
 
 const Contact = () => {
   const ref = useRef(null);
@@ -54,8 +68,7 @@ const Contact = () => {
 
     const name = formData.name.trim();
     const email = formData.email.trim();
-    const rawContactNumber = formData.contactNumber.trim();
-    const contactNumber = normalizePhoneForStorage(rawContactNumber);
+    const contactNumber = formData.contactNumber.trim();
     const message = formData.message.trim();
 
     if (!name || !email || !message) {
@@ -63,22 +76,16 @@ const Contact = () => {
       return;
     }
 
-    if (contactNumber && !isValidInternationalPhone(contactNumber)) {
-      setStatus({
-        type: "error",
-        message: "Enter contact number with country code, for example +91 XXXXXXXXXX.",
-      });
-      return;
-    }
-
     setIsSubmitting(true);
     setStatus(null);
 
     try {
-      const documentRef = await addDoc(collection(db, "publicSubmissions"), {
+      const fullContactNumber = contactNumber ? `${formData.countryCode} ${contactNumber}` : null;
+      
+      await addDoc(collection(db, "publicSubmissions"), {
         name,
         email,
-        contactNumber: contactNumber || null,
+        contactNumber: fullContactNumber,
         message,
         createdAt: serverTimestamp(),
         source: "website-contact",
@@ -87,7 +94,7 @@ const Contact = () => {
       setFormData(initialFormState);
       setStatus({
         type: "success",
-        message: `Message sent successfully. ID: ${documentRef.id}`,
+        message: "Your form has been submitted and we will contact you soon.",
       });
     } catch (error) {
       setStatus({
@@ -182,19 +189,34 @@ const Contact = () => {
                 className="w-full px-4 py-3 rounded-lg bg-secondary/50 border border-border/50 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
               />
             </div>
-            <input
-              type="tel"
-              placeholder="+91 XXXXXXXXXX (optional)"
-              value={formData.contactNumber}
-              onChange={(event) => handleInputChange("contactNumber", event.target.value)}
-              autoComplete="tel"
-              inputMode="tel"
-              title="Optional. If provided, use international format with country code, e.g. +91 XXXXXXXXXX"
-              className="w-full px-4 py-3 rounded-lg bg-secondary/50 border border-border/50 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
-            />
-            <p className="-mt-3 text-xs text-muted-foreground">
-              Optional. Include country code if entered. Example: +91 XXXXXXXXXX
-            </p>
+            
+            <div className="flex gap-2">
+              <div className="w-[120px] shrink-0">
+                <Select
+                  value={formData.countryCode}
+                  onValueChange={(value) => handleInputChange("countryCode", value)}
+                >
+                  <SelectTrigger className="w-full h-12 rounded-lg bg-secondary/50 border border-border/50 text-foreground focus:ring-2 focus:ring-primary/50 transition-all">
+                    <SelectValue placeholder="Code" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {countryCodes.map((c) => (
+                      <SelectItem key={c.code + c.name} value={c.code}>
+                        {c.code} ({c.name.split(" ")[0]})
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <input
+                type="tel"
+                placeholder="Mobile Number"
+                value={formData.contactNumber}
+                onChange={(event) => handleInputChange("contactNumber", event.target.value)}
+                className="flex-1 px-4 py-3 h-12 rounded-lg bg-secondary/50 border border-border/50 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
+              />
+            </div>
+
             <textarea
               rows={4}
               placeholder="Tell us your requirement..."
