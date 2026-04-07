@@ -199,19 +199,16 @@ const Admin = () => {
             <ArrowLeft className="h-4 w-4" />
             Back to site
           </Link>
-          <div className="inline-flex items-center gap-2 rounded-full border border-border bg-secondary/40 px-4 py-2 text-sm">
-            <Shield className="h-4 w-4 text-primary" />
-            Admin Dashboard
-          </div>
+          
         </div>
 
         <div className={`grid gap-6 ${canShowDashboard ? "lg:grid-cols-[380px_minmax(0,1fr)]" : "max-w-md mx-auto"}`}>
           <section className="rounded-2xl border border-border bg-card p-6 shadow-lg h-fit">
-            <h1 className="text-3xl font-bold">Admin Login</h1>
+            <h1 className="text-3xl font-bold">Login</h1>
             <p className="mt-2 text-sm text-muted-foreground">
               {canShowDashboard 
-                ? "Manage your systems and view recent submissions." 
-                : "Log in with your admin account to manage the dashboard."}
+                ? "" 
+                : ""}
             </p>
 
             {!user ? (
@@ -223,7 +220,7 @@ const Admin = () => {
                     value={email}
                     onChange={(event) => setEmail(event.target.value)}
                     className="w-full rounded-lg border border-border bg-background px-4 py-3 outline-none focus:ring-2 focus:ring-primary/40 transition-all"
-                    placeholder="admin@example.com"
+                    placeholder="Enter your email"
                   />
                 </div>
                 <div className="space-y-2">
@@ -233,7 +230,7 @@ const Admin = () => {
                     value={password}
                     onChange={(event) => setPassword(event.target.value)}
                     className="w-full rounded-lg border border-border bg-background px-4 py-3 outline-none focus:ring-2 focus:ring-primary/40 transition-all"
-                    placeholder="••••••••"
+                    placeholder="Enter your password"
                   />
                 </div>
                 <button
@@ -241,7 +238,7 @@ const Admin = () => {
                   className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-primary px-4 py-3 font-semibold text-primary-foreground transition-all hover:opacity-90 active:scale-[0.98]"
                 >
                   <LogIn className="h-4 w-4" />
-                  Connect to Firebase
+                  Sign In
                 </button>
               </form>
             ) : (

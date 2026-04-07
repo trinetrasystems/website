@@ -120,7 +120,7 @@ const AppSidebar = () => {
                   className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-all duration-200"
                 >
                   <Lock className="w-4 h-4" />
-                  <span>Admin Login</span>
+                  <span>Login</span>
                 </Link>
               </div>
             </motion.nav>
