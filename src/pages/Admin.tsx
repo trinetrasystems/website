@@ -1,4 +1,5 @@
 import { FormEvent, useEffect, useMemo, useState } from "react";
+import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import {
   onAuthStateChanged,
@@ -204,11 +205,13 @@ const Admin = () => {
           </div>
         </div>
 
-        <div className="grid gap-6 lg:grid-cols-[380px_minmax(0,1fr)]">
-          <section className="rounded-2xl border border-border bg-card p-6 shadow-lg">
+        <div className={`grid gap-6 ${canShowDashboard ? "lg:grid-cols-[380px_minmax(0,1fr)]" : "max-w-md mx-auto"}`}>
+          <section className="rounded-2xl border border-border bg-card p-6 shadow-lg h-fit">
             <h1 className="text-3xl font-bold">Admin Login</h1>
             <p className="mt-2 text-sm text-muted-foreground">
-              Log in with your Firebase admin account to view submitted form data.
+              {canShowDashboard 
+                ? "Manage your systems and view recent submissions." 
+                : "Log in with your admin account to manage the dashboard."}
             </p>
 
             {!user ? (
@@ -219,7 +222,7 @@ const Admin = () => {
                     type="email"
                     value={email}
                     onChange={(event) => setEmail(event.target.value)}
-                    className="w-full rounded-lg border border-border bg-background px-4 py-3 outline-none focus:ring-2 focus:ring-primary/40"
+                    className="w-full rounded-lg border border-border bg-background px-4 py-3 outline-none focus:ring-2 focus:ring-primary/40 transition-all"
                     placeholder="admin@example.com"
                   />
                 </div>
@@ -229,13 +232,13 @@ const Admin = () => {
                     type="password"
                     value={password}
                     onChange={(event) => setPassword(event.target.value)}
-                    className="w-full rounded-lg border border-border bg-background px-4 py-3 outline-none focus:ring-2 focus:ring-primary/40"
+                    className="w-full rounded-lg border border-border bg-background px-4 py-3 outline-none focus:ring-2 focus:ring-primary/40 transition-all"
                     placeholder="••••••••"
                   />
                 </div>
                 <button
                   type="submit"
-                  className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-primary px-4 py-3 font-semibold text-primary-foreground transition hover:opacity-90"
+                  className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-primary px-4 py-3 font-semibold text-primary-foreground transition-all hover:opacity-90 active:scale-[0.98]"
                 >
                   <LogIn className="h-4 w-4" />
                   Connect to Firebase
@@ -244,59 +247,67 @@ const Admin = () => {
             ) : (
               <div className="mt-6 space-y-4">
                 <div className="rounded-lg border border-border bg-secondary/30 p-4 text-sm">
-                  <p className="font-medium">Logged in as</p>
-                  <p className="mt-1 text-muted-foreground">{user.email}</p>
+                  <p className="font-medium text-primary">System Admin</p>
+                  <p className="mt-1 text-muted-foreground truncate">{user.email}</p>
                 </div>
+                {!isAdmin && user && (
+                  <div className="rounded-lg bg-red-500/10 border border-red-500/20 p-4 text-xs text-red-500">
+                    Your account does not have admin privileges.
+                  </div>
+                )}
                 <button
                   type="button"
                   onClick={handleSignOut}
-                  className="inline-flex w-full items-center justify-center gap-2 rounded-lg border border-border px-4 py-3 font-semibold transition hover:bg-secondary/40"
+                  className="inline-flex w-full items-center justify-center gap-2 rounded-lg border border-border px-4 py-3 font-semibold transition-all hover:bg-secondary/40 active:scale-[0.98]"
                 >
                   <LogOut className="h-4 w-4" />
                   Sign out
                 </button>
               </div>
             )}
-
-            <div className="mt-5 rounded-lg border border-border bg-secondary/20 p-4 text-sm text-muted-foreground">
-              {checkingAdmin ? "Checking admin access..." : status || "Login to load submitted data."}
-            </div>
+            
+            {(checkingAdmin || (status && !canShowDashboard)) && (
+              <div className="mt-5 rounded-lg border border-border bg-secondary/20 p-4 text-xs text-muted-foreground animate-pulse">
+                {checkingAdmin ? "Verifying permissions..." : status}
+              </div>
+            )}
           </section>
 
-          <section className="rounded-2xl border border-border bg-card p-6 shadow-lg">
-            <div className="flex items-center justify-between gap-4">
-              <div>
-                <h2 className="text-2xl font-bold">Submitted Forms</h2>
-                <p className="mt-1 text-sm text-muted-foreground">
-                  Data appears here only after a verified admin login.
-                </p>
+          {canShowDashboard && (
+            <motion.section 
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              className="rounded-2xl border border-border bg-card p-6 shadow-lg"
+            >
+              <div className="flex items-center justify-between gap-4">
+                <div>
+                  <h2 className="text-2xl font-bold">Submitted Forms</h2>
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    Real-time requests from the website.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => window.location.reload()}
+                  className="inline-flex items-center gap-2 rounded-lg border border-border px-3 py-2 text-sm font-medium transition hover:bg-secondary/40"
+                >
+                  <RefreshCw className="h-4 w-4" />
+                  Refresh
+                </button>
               </div>
-              <button
-                type="button"
-                onClick={() => window.location.reload()}
-                className="inline-flex items-center gap-2 rounded-lg border border-border px-3 py-2 text-sm font-medium transition hover:bg-secondary/40"
-              >
-                <RefreshCw className="h-4 w-4" />
-                Refresh
-              </button>
-            </div>
 
-            <div className="mt-6 space-y-4">
-              {!canShowDashboard ? (
-                <div className="rounded-xl border border-dashed border-border p-8 text-center text-muted-foreground">
-                  Log in with an admin account to load submissions.
-                </div>
-              ) : submissions.length === 0 ? (
-                <div className="rounded-xl border border-dashed border-border p-8 text-center text-muted-foreground">
-                  No submissions yet.
-                </div>
-              ) : (
-                submissions.map((submission) => (
-                  <article 
-                    key={submission.id} 
-                    className={`rounded-xl border border-border bg-secondary/20 p-5 transition-all ${
-                      submission.status === "completed" ? "opacity-60 grayscale-[0.5]" : ""
-                    }`}
+              <div className="mt-6 space-y-4">
+                {submissions.length === 0 ? (
+                  <div className="rounded-xl border border-dashed border-border p-12 text-center text-muted-foreground">
+                    <p className="text-lg font-medium">All caught up!</p>
+                    <p className="text-sm opacity-70">No new submissions found in the database.</p>
+                  </div>
+                ) : (
+                  submissions.map((submission) => (
+                  <article
+                    key={submission.id}
+                    className={`rounded-xl border border-border bg-secondary/20 p-5 transition-all ${submission.status === "completed" ? "opacity-60 grayscale-[0.5]" : ""
+                      }`}
                   >
                     <div className="flex flex-wrap items-start justify-between gap-3">
                       <div className="flex-1">
@@ -314,11 +325,10 @@ const Admin = () => {
                       <div className="flex items-center gap-2">
                         <button
                           onClick={() => handleComplete(submission.id, submission.status)}
-                          className={`p-2 rounded-lg transition-colors ${
-                            submission.status === "completed" 
-                              ? "text-emerald-500 bg-emerald-500/10 hover:bg-emerald-500/20" 
+                          className={`p-2 rounded-lg transition-colors ${submission.status === "completed"
+                              ? "text-emerald-500 bg-emerald-500/10 hover:bg-emerald-500/20"
                               : "text-muted-foreground hover:text-emerald-500 hover:bg-emerald-500/10"
-                          }`}
+                            }`}
                           title={submission.status === "completed" ? "Mark as Pending" : "Mark as Completed"}
                         >
                           <CheckCircle className="h-5 w-5" />
@@ -336,13 +346,13 @@ const Admin = () => {
                             <AlertDialogHeader>
                               <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
                               <AlertDialogDescription>
-                                This action cannot be undone. This will permanently delete the 
+                                This action cannot be undone. This will permanently delete the
                                 submission from **{submission.name}**.
                               </AlertDialogDescription>
                             </AlertDialogHeader>
                             <AlertDialogFooter>
                               <AlertDialogCancel>Cancel</AlertDialogCancel>
-                              <AlertDialogAction 
+                              <AlertDialogAction
                                 onClick={() => handleDelete(submission.id)}
                                 className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                               >
@@ -361,10 +371,11 @@ const Admin = () => {
                 ))
               )}
             </div>
-          </section>
-        </div>
+          </motion.section>
+        )}
       </div>
     </div>
+  </div>
   );
 };
 

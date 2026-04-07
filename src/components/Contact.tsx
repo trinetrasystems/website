@@ -81,7 +81,7 @@ const Contact = () => {
 
     try {
       const fullContactNumber = contactNumber ? `${formData.countryCode} ${contactNumber}` : null;
-      
+
       await addDoc(collection(db, "publicSubmissions"), {
         name,
         email,
@@ -94,7 +94,7 @@ const Contact = () => {
       setFormData(initialFormState);
       setStatus({
         type: "success",
-        message: "Your form has been submitted and we will contact you soon.",
+        message: "Your request has been submitted and we will contact you soon.",
       });
     } catch (error) {
       setStatus({
@@ -136,7 +136,7 @@ const Contact = () => {
               </div>
               <div>
                 <h3 className="font-semibold mb-1">Email Us</h3>
-                <p className="text-muted-foreground">trinetrasystems.com@gmail.com</p>
+                <p className="text-muted-foreground">contact@trinetrasystems.com</p>
               </div>
             </div>
             <div className="flex items-start gap-4">
@@ -189,7 +189,7 @@ const Contact = () => {
                 className="w-full px-4 py-3 rounded-lg bg-secondary/50 border border-border/50 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
               />
             </div>
-            
+
             <div className="flex gap-2">
               <div className="w-[120px] shrink-0">
                 <Select
