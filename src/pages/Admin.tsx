@@ -318,9 +318,17 @@ const Admin = () => {
                             </span>
                           )}
                         </div>
-                        <p className="text-sm text-muted-foreground">{submission.email}</p>
-                        <p className="text-sm text-muted-foreground">Company: {submission.companyName}</p>
-                        <p className="text-sm text-muted-foreground">Contact: {submission.contactNumber}</p>
+                        <div className="mt-3 space-y-1 text-sm text-muted-foreground">
+                          <p>
+                            <span className="font-medium text-foreground">Email:</span> {submission.email}
+                          </p>
+                          <p>
+                            <span className="font-medium text-foreground">Company Name:</span> {submission.companyName}
+                          </p>
+                          <p>
+                            <span className="font-medium text-foreground">Mobile Number:</span> {submission.contactNumber}
+                          </p>
+                        </div>
                       </div>
                       <div className="flex items-center gap-2">
                         <button
@@ -365,6 +373,7 @@ const Admin = () => {
                       </div>
                     </div>
                     <p className="mt-4 whitespace-pre-wrap text-sm leading-6 text-foreground/90">
+                      <span className="font-medium text-foreground">Query:</span>{" "}
                       {submission.message}
                     </p>
                   </article>
