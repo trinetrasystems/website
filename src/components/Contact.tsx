@@ -13,6 +13,7 @@ import {
 
 type ContactFormState = {
   name: string;
+  companyName: string;
   email: string;
   contactNumber: string;
   countryCode: string;
@@ -21,6 +22,7 @@ type ContactFormState = {
 
 const initialFormState: ContactFormState = {
   name: "",
+  companyName: "",
   email: "",
   contactNumber: "",
   countryCode: "+91",
@@ -67,6 +69,7 @@ const Contact = () => {
     event.preventDefault();
 
     const name = formData.name.trim();
+    const companyName = formData.companyName.trim();
     const email = formData.email.trim();
     const contactNumber = formData.contactNumber.trim();
     const message = formData.message.trim();
@@ -84,6 +87,7 @@ const Contact = () => {
 
       await addDoc(collection(db, "publicSubmissions"), {
         name,
+        companyName: companyName || null,
         email,
         contactNumber: fullContactNumber,
         message,
@@ -167,6 +171,7 @@ const Contact = () => {
           </motion.div>
 
           <motion.form
+            id="contact-form"
             initial={{ opacity: 0, x: 30 }}
             animate={isInView ? { opacity: 1, x: 0 } : {}}
             transition={{ duration: 0.6, delay: 0.3 }}
@@ -186,6 +191,13 @@ const Contact = () => {
                 placeholder="Email Address"
                 value={formData.email}
                 onChange={(event) => handleInputChange("email", event.target.value)}
+                className="w-full px-4 py-3 rounded-lg bg-secondary/50 border border-border/50 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
+              />
+              <input
+                type="text"
+                placeholder="Company Name"
+                value={formData.companyName}
+                onChange={(event) => handleInputChange("companyName", event.target.value)}
                 className="w-full px-4 py-3 rounded-lg bg-secondary/50 border border-border/50 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
               />
             </div>
