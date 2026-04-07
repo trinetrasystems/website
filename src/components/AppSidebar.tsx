@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { MouseEvent, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Eye, Home, Layers, Grid3X3, Shield, Mail, Lock, Menu, X } from "lucide-react";
 import { Link } from "react-router-dom";
@@ -9,11 +9,37 @@ const navItems = [
   { title: "Solutions", href: "#solutions", icon: Layers },
   { title: "Use Cases", href: "#usecases", icon: Grid3X3 },
   { title: "SLA", href: "#sla", icon: Shield },
-  { title: "Contact", href: "#contact", icon: Mail },
+  { title: "Contact", href: "#contact-form", icon: Mail },
 ];
 
 const AppSidebar = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
+
+  const handleHashNavigation = (href: string) => (event: MouseEvent<HTMLAnchorElement>) => {
+    event.preventDefault();
+    setMobileOpen(false);
+
+    const targetId = href.slice(1);
+    const targetElement = document.getElementById(targetId);
+
+    if (targetElement) {
+      const headerElement = document.querySelector("header");
+      const headerHeight = headerElement instanceof HTMLElement ? headerElement.offsetHeight : 64;
+      const topGradientHeight = 24;
+      const extraGap = 12;
+      const offset = headerHeight + topGradientHeight + extraGap;
+      const targetTop = targetElement.getBoundingClientRect().top + window.scrollY - offset;
+
+      window.scrollTo({
+        top: Math.max(targetTop, 0),
+        behavior: "smooth",
+      });
+      window.history.replaceState(null, "", `#${targetId}`);
+      return;
+    }
+
+    window.location.assign(`/${href}`);
+  };
 
   return (
     <>
@@ -30,6 +56,7 @@ const AppSidebar = () => {
                 <a
                   key={item.title}
                   href={item.href}
+                  onClick={handleHashNavigation(item.href)}
                   className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-all duration-200"
                 >
                   <item.icon className="w-4 h-4" />
@@ -96,7 +123,7 @@ const AppSidebar = () => {
                     <a
                       key={item.title}
                       href={item.href}
-                      onClick={() => setMobileOpen(false)}
+                      onClick={handleHashNavigation(item.href)}
                       className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-all duration-200"
                     >
                       <item.icon className="w-4 h-4" />
