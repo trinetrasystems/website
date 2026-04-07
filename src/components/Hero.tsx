@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
 import { ArrowRight, Play } from "lucide-react";
+import { Link } from "react-router-dom";
 import lightBg from "../../videosandphotoes/dark.PNG";
 import darkBg from "../../videosandphotoes/light.PNG";
 

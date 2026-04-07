@@ -2,6 +2,7 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Eye, Home, Layers, Grid3X3, Shield, Mail, Lock, Menu, X } from "lucide-react";
 import { Link } from "react-router-dom";
+import { ThemeToggle } from "./ThemeToggle";
 
 const navItems = [
   { title: "Home", href: "#home", icon: Home },
@@ -25,34 +26,48 @@ const AppSidebar = () => {
 
           <nav className="hidden lg:flex items-center gap-1">
             {navItems.map((item) => (
-              <a
-                key={item.title}
-                href={item.href}
-                className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-all duration-200"
-              >
-                <item.icon className="w-4 h-4" />
-                <span>{item.title}</span>
-              </a>
+              item.href.startsWith("#") ? (
+                <a
+                  key={item.title}
+                  href={item.href}
+                  className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-all duration-200"
+                >
+                  <item.icon className="w-4 h-4" />
+                  <span>{item.title}</span>
+                </a>
+              ) : (
+                <Link
+                  key={item.title}
+                  to={item.href}
+                  className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-all duration-200"
+                >
+                  <item.icon className="w-4 h-4" />
+                  <span>{item.title}</span>
+                </Link>
+              )
             ))}
           </nav>
 
-          <div className="hidden lg:flex">
-            <Link
-              to="/admin"
-              className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-all duration-200"
-            >
-              <Lock className="w-4 h-4" />
-              <span>Login</span>
-            </Link>
-          </div>
+          <div className="flex items-center gap-2">
+            <ThemeToggle />
+            <div className="hidden lg:flex">
+              <Link
+                to="/admin"
+                className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-all duration-200"
+              >
+                <Lock className="w-4 h-4" />
+                <span>Login</span>
+              </Link>
+            </div>
 
-          <button
-            onClick={() => setMobileOpen(!mobileOpen)}
-            className="lg:hidden p-2 rounded-lg hover:bg-secondary/50 transition-colors"
-            aria-label="Toggle navigation"
-          >
-            {mobileOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-          </button>
+            <button
+              onClick={() => setMobileOpen(!mobileOpen)}
+              className="lg:hidden p-2 rounded-lg hover:bg-secondary/50 transition-colors"
+              aria-label="Toggle navigation"
+            >
+              {mobileOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+            </button>
+          </div>
         </div>
       </header>
 
@@ -77,15 +92,27 @@ const AppSidebar = () => {
             >
               <div className="px-4 py-3 space-y-1">
                 {navItems.map((item) => (
-                  <a
-                    key={item.title}
-                    href={item.href}
-                    onClick={() => setMobileOpen(false)}
-                    className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-all duration-200"
-                  >
-                    <item.icon className="w-4 h-4" />
-                    <span>{item.title}</span>
-                  </a>
+                  item.href.startsWith("#") ? (
+                    <a
+                      key={item.title}
+                      href={item.href}
+                      onClick={() => setMobileOpen(false)}
+                      className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-all duration-200"
+                    >
+                      <item.icon className="w-4 h-4" />
+                      <span>{item.title}</span>
+                    </a>
+                  ) : (
+                    <Link
+                      key={item.title}
+                      to={item.href}
+                      onClick={() => setMobileOpen(false)}
+                      className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-all duration-200"
+                    >
+                      <item.icon className="w-4 h-4" />
+                      <span>{item.title}</span>
+                    </Link>
+                  )
                 ))}
                 <Link
                   to="/admin"

@@ -1,11 +1,10 @@
-import { useEffect, useMemo, useState } from "react";
+import { FormEvent, useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import {
   onAuthStateChanged,
   signInWithEmailAndPassword,
   signOut,
   type User,
-  type FormEvent,
 } from "firebase/auth";
 import {
   collection,
@@ -16,9 +15,23 @@ import {
   orderBy,
   query,
   type Timestamp,
+  deleteDoc,
+  updateDoc,
 } from "firebase/firestore";
 import { auth, db } from "@/lib/firebase";
-import { Shield, LogIn, LogOut, RefreshCw, ArrowLeft } from "lucide-react";
+import { Shield, LogIn, LogOut, RefreshCw, ArrowLeft, CheckCircle, Trash2 } from "lucide-react";
+import { toast } from "sonner";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 type Submission = {
   id: string;
@@ -27,6 +40,7 @@ type Submission = {
   contactNumber: string;
   message: string;
   createdAtLabel: string;
+  status?: string;
 };
 
 type FirestoreTimestamp = Timestamp & {
@@ -106,6 +120,7 @@ const Admin = () => {
               contactNumber: data.contactNumber || "No contact number",
               message: data.message || "",
               createdAtLabel: formatTimestamp(data.createdAt),
+              status: data.status || "pending",
             };
           })
         );
@@ -137,6 +152,31 @@ const Admin = () => {
       setSubmissions([]);
     } catch (error) {
       setStatus(error instanceof Error ? error.message : "Could not sign out.");
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    try {
+      const docRef = doc(db, "publicSubmissions", id);
+      await deleteDoc(docRef);
+      toast.success("Submission deleted");
+    } catch (error) {
+      console.error("Delete error:", error);
+      toast.error("Failed to delete submission: " + (error instanceof Error ? error.message : "Access Denied"));
+    }
+  };
+
+  const handleComplete = async (id: string, currentStatus?: string) => {
+    try {
+      const docRef = doc(db, "publicSubmissions", id);
+      const newStatus = currentStatus === "completed" ? "pending" : "completed";
+      await updateDoc(docRef, {
+        status: newStatus,
+      });
+      toast.success(`Marked as ${newStatus}`);
+    } catch (error) {
+      console.error("Update error:", error);
+      toast.error("Failed to update status: " + (error instanceof Error ? error.message : "Access Denied"));
     }
   };
 
@@ -252,14 +292,67 @@ const Admin = () => {
                 </div>
               ) : (
                 submissions.map((submission) => (
-                  <article key={submission.id} className="rounded-xl border border-border bg-secondary/20 p-5">
-                    <div className="flex flex-wrap items-center justify-between gap-3">
-                      <div>
-                        <h3 className="text-lg font-semibold">{submission.name}</h3>
+                  <article 
+                    key={submission.id} 
+                    className={`rounded-xl border border-border bg-secondary/20 p-5 transition-all ${
+                      submission.status === "completed" ? "opacity-60 grayscale-[0.5]" : ""
+                    }`}
+                  >
+                    <div className="flex flex-wrap items-start justify-between gap-3">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2">
+                          <h3 className="text-lg font-semibold">{submission.name}</h3>
+                          {submission.status === "completed" && (
+                            <span className="inline-flex items-center rounded-full bg-emerald-500/10 px-2 py-0.5 text-[10px] font-medium text-emerald-500 ring-1 ring-inset ring-emerald-500/20">
+                              Completed
+                            </span>
+                          )}
+                        </div>
                         <p className="text-sm text-muted-foreground">{submission.email}</p>
                         <p className="text-sm text-muted-foreground">Contact: {submission.contactNumber}</p>
                       </div>
-                      <span className="text-xs text-muted-foreground">{submission.createdAtLabel}</span>
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => handleComplete(submission.id, submission.status)}
+                          className={`p-2 rounded-lg transition-colors ${
+                            submission.status === "completed" 
+                              ? "text-emerald-500 bg-emerald-500/10 hover:bg-emerald-500/20" 
+                              : "text-muted-foreground hover:text-emerald-500 hover:bg-emerald-500/10"
+                          }`}
+                          title={submission.status === "completed" ? "Mark as Pending" : "Mark as Completed"}
+                        >
+                          <CheckCircle className="h-5 w-5" />
+                        </button>
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <button
+                              className="p-2 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
+                              title="Remove Request"
+                            >
+                              <Trash2 className="h-5 w-5" />
+                            </button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                This action cannot be undone. This will permanently delete the 
+                                submission from **{submission.name}**.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Cancel</AlertDialogCancel>
+                              <AlertDialogAction 
+                                onClick={() => handleDelete(submission.id)}
+                                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                              >
+                                Delete
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                        <span className="text-xs text-muted-foreground ml-2 whitespace-nowrap">{submission.createdAtLabel}</span>
+                      </div>
                     </div>
                     <p className="mt-4 whitespace-pre-wrap text-sm leading-6 text-foreground/90">
                       {submission.message}
