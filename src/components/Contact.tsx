@@ -175,7 +175,7 @@ const Contact = () => {
             initial={{ opacity: 0, x: 30 }}
             animate={isInView ? { opacity: 1, x: 0 } : {}}
             transition={{ duration: 0.6, delay: 0.3 }}
-            className="glass rounded-2xl p-8 space-y-6"
+            className="glass rounded-2xl p-5 sm:p-8 space-y-6"
             onSubmit={handleSubmit}
           >
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -202,13 +202,13 @@ const Contact = () => {
               />
             </div>
 
-            <div className="flex gap-2">
-              <div className="w-[120px] shrink-0">
+            <div className="flex w-full min-w-0 flex-col gap-2 md:flex-row">
+              <div className="w-full shrink-0 md:w-[120px]">
                 <Select
                   value={formData.countryCode}
                   onValueChange={(value) => handleInputChange("countryCode", value)}
                 >
-                  <SelectTrigger className="w-full h-12 rounded-lg bg-secondary/50 border border-border/50 text-foreground focus:ring-2 focus:ring-primary/50 transition-all">
+                  <SelectTrigger className="h-12 w-full min-w-0 rounded-lg bg-secondary/50 border border-border/50 text-foreground focus:ring-2 focus:ring-primary/50 transition-all">
                     <SelectValue placeholder="Code" />
                   </SelectTrigger>
                   <SelectContent>
@@ -225,7 +225,7 @@ const Contact = () => {
                 placeholder="Mobile Number"
                 value={formData.contactNumber}
                 onChange={(event) => handleInputChange("contactNumber", event.target.value)}
-                className="flex-1 px-4 py-3 h-12 rounded-lg bg-secondary/50 border border-border/50 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
+                className="h-12 w-full min-w-0 rounded-lg bg-secondary/50 border border-border/50 px-4 py-3 text-foreground placeholder:text-muted-foreground transition-all focus:outline-none focus:ring-2 focus:ring-primary/50 md:flex-1"
               />
             </div>
 

@@ -43,11 +43,11 @@ const AppSidebar = () => {
 
   return (
     <>
-      <header className="fixed top-0 left-0 right-0 z-50 header-surface">
+      <header className="fixed top-0 left-0 right-0 z-[60] header-surface bg-background/95">
         <div className="flex h-16 w-full items-center justify-between px-3 md:px-5">
           <a href="#home" className="flex items-center gap-2">
             <Eye className="w-6 h-6 text-primary" />
-            <span className="text-lg font-bold text-gradient">Trinetra Systems</span>
+            <span className="text-base sm:text-lg font-bold text-primary dark:text-gradient">Trinetra Systems</span>
           </a>
 
           <nav className="hidden lg:flex items-center gap-1">
@@ -98,7 +98,7 @@ const AppSidebar = () => {
         </div>
       </header>
 
-      <div className="fixed top-16 left-0 right-0 z-40 h-6 pointer-events-none bg-gradient-to-b from-background/65 to-transparent dark:from-background/75" />
+      <div className="fixed top-16 left-0 right-0 z-50 h-6 pointer-events-none bg-gradient-to-b from-background/65 to-transparent dark:from-background/75" />
 
       <AnimatePresence>
         {mobileOpen && (
@@ -107,7 +107,7 @@ const AppSidebar = () => {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-background/80 backdrop-blur-sm z-40 lg:hidden"
+              className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 lg:hidden"
               onClick={() => setMobileOpen(false)}
             />
             <motion.nav
@@ -115,7 +115,7 @@ const AppSidebar = () => {
               animate={{ y: 0, opacity: 1 }}
               exit={{ y: -16, opacity: 0 }}
               transition={{ duration: 0.2 }}
-              className="fixed top-16 left-0 right-0 z-50 lg:hidden header-surface"
+              className="fixed top-16 left-0 right-0 z-[70] lg:hidden header-surface"
             >
               <div className="px-4 py-3 space-y-1">
                 {navItems.map((item) => (
