@@ -37,6 +37,7 @@ import {
 type Submission = {
   id: string;
   name: string;
+  companyName?: string;
   email: string;
   contactNumber: string;
   message: string;
@@ -117,6 +118,7 @@ const Admin = () => {
             return {
               id: entryDoc.id,
               name: data.name || "Anonymous",
+              companyName: data.companyName || "No company name",
               email: data.email || "No email",
               contactNumber: data.contactNumber || "No contact number",
               message: data.message || "",
@@ -317,6 +319,7 @@ const Admin = () => {
                           )}
                         </div>
                         <p className="text-sm text-muted-foreground">{submission.email}</p>
+                        <p className="text-sm text-muted-foreground">Company: {submission.companyName}</p>
                         <p className="text-sm text-muted-foreground">Contact: {submission.contactNumber}</p>
                       </div>
                       <div className="flex items-center gap-2">
