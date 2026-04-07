@@ -6,7 +6,7 @@ const features = [
   { icon: Bell, title: "Real-time Alerts", desc: "Instant push notifications for detected events across all camera feeds." },
   { icon: Brain, title: "AI-Powered Detection", desc: "State-of-the-art YOLO models for accurate object and behavior detection." },
   { icon: BarChart3, title: "Heatmaps & Analytics", desc: "Visual analytics dashboards with movement heatmaps and trend analysis." },
-  { icon: Cloud, title: "Cloud + Edge Deployment", desc: "Flexible deployment on cloud infrastructure or edge devices for low latency." },
+  { icon: Cloud, title: "Edge Deployment", desc: "Flexible deployment on cloud infrastructure or edge devices for low latency." },
   { icon: Network, title: "Scalable Architecture", desc: "Handle thousands of camera feeds with distributed processing architecture." },
 ];
 
