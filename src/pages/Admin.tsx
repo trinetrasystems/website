@@ -1,5 +1,4 @@
-import { FormEvent, useEffect, useMemo, useState } from "react";
-import { motion } from "framer-motion";
+﻿import { FormEvent, useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import {
   createUserWithEmailAndPassword,
@@ -11,16 +10,16 @@ import {
 } from "firebase/auth";
 import {
   collection,
+  deleteDoc,
   doc,
   getDoc,
   limit,
   onSnapshot,
   orderBy,
-  serverTimestamp,
   query,
-  type Timestamp,
-  deleteDoc,
+  serverTimestamp,
   setDoc,
+  type Timestamp,
   updateDoc,
 } from "firebase/firestore";
 import { adminAuth, auth, db } from "@/lib/firebase";
@@ -77,14 +76,17 @@ const Admin = () => {
   const [checkingAdmin, setCheckingAdmin] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
   const [userRole, setUserRole] = useState<"admin" | "user" | null>(null);
-  const [ipLink, setIpLink] = useState<string>("");
+  const [ipLink, setIpLink] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [status, setStatus] = useState("");
+
   const [newUserEmail, setNewUserEmail] = useState("");
   const [newUserPassword, setNewUserPassword] = useState("");
   const [newUserRole, setNewUserRole] = useState<"admin" | "user">("user");
   const [newUserIpLink, setNewUserIpLink] = useState("");
   const [creatingUser, setCreatingUser] = useState(false);
+
   const [users, setUsers] = useState<UserProfile[]>([]);
   const [selectedUserId, setSelectedUserId] = useState("");
   const [selectedUserEmail, setSelectedUserEmail] = useState("");
@@ -92,10 +94,11 @@ const Admin = () => {
   const [selectedUserIpLink, setSelectedUserIpLink] = useState("");
   const [updatingUser, setUpdatingUser] = useState(false);
   const [deletingUser, setDeletingUser] = useState(false);
-  const [status, setStatus] = useState("");
+
   const [submissions, setSubmissions] = useState<Submission[]>([]);
 
   const canShowDashboard = useMemo(() => Boolean(user && isAdmin), [user, isAdmin]);
+  const selectedUser = users.find((profile) => profile.id === selectedUserId) || null;
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
@@ -104,7 +107,13 @@ const Admin = () => {
       setIsAdmin(false);
       setUserRole(null);
       setIpLink("");
+      setStatus("");
       setSubmissions([]);
+      setUsers([]);
+      setSelectedUserId("");
+      setSelectedUserEmail("");
+      setSelectedUserRole("user");
+      setSelectedUserIpLink("");
 
       if (!currentUser) {
         setCheckingAdmin(false);
@@ -113,19 +122,16 @@ const Admin = () => {
 
       setCheckingAdmin(true);
       try {
-        // Check users collection for role-based access
-        const userDoc = await getDoc(doc(db, "users", currentUser.uid));
-        
-        if (userDoc.exists()) {
-          const userData = userDoc.data();
-          const role = userData.role as "admin" | "user";
+        const profileDoc = await getDoc(doc(db, "users", currentUser.uid));
+        if (profileDoc.exists()) {
+          const data = profileDoc.data();
+          const role = (data.role || "user") as "admin" | "user";
           setUserRole(role);
-          
           if (role === "admin") {
             setIsAdmin(true);
             setStatus("Admin access confirmed.");
-          } else if (role === "user") {
-            setIpLink(userData.ip_link || "");
+          } else {
+            setIpLink(data.ip_link || "");
             setStatus("User logged in successfully.");
           }
         } else {
@@ -146,13 +152,11 @@ const Admin = () => {
       return;
     }
 
-    const usersQuery = query(collection(db, "users"));
     const unsubscribeUsers = onSnapshot(
-      usersQuery,
+      collection(db, "users"),
       (snapshot) => {
         const nextUsers = snapshot.docs.map((userDoc) => {
           const data = userDoc.data();
-
           return {
             id: userDoc.id,
             email: data.email || "No email",
@@ -166,17 +170,15 @@ const Admin = () => {
         setUsers(nextUsers);
 
         if (selectedUserId) {
-          const refreshedSelectedUser = nextUsers.find((entry) => entry.id === selectedUserId);
-          if (refreshedSelectedUser) {
-            setSelectedUserEmail(refreshedSelectedUser.email);
-            setSelectedUserRole(refreshedSelectedUser.role);
-            setSelectedUserIpLink(refreshedSelectedUser.ipLink);
+          const selected = nextUsers.find((profile) => profile.id === selectedUserId);
+          if (selected) {
+            setSelectedUserEmail(selected.email);
+            setSelectedUserRole(selected.role);
+            setSelectedUserIpLink(selected.ipLink);
           }
         }
       },
-      (error) => {
-        setStatus(error.message || "Could not load users.");
-      }
+      (error) => setStatus(error.message || "Could not load users.")
     );
 
     const submissionsQuery = query(
@@ -185,7 +187,7 @@ const Admin = () => {
       limit(100)
     );
 
-    const unsubscribe = onSnapshot(
+    const unsubscribeSubmissions = onSnapshot(
       submissionsQuery,
       (snapshot) => {
         setSubmissions(
@@ -204,14 +206,12 @@ const Admin = () => {
           })
         );
       },
-      (error) => {
-        setStatus(error.message || "Could not load submissions.");
-      }
+      (error) => setStatus(error.message || "Could not load submissions.")
     );
 
     return () => {
       unsubscribeUsers();
-      unsubscribe();
+      unsubscribeSubmissions();
     };
   }, [canShowDashboard, selectedUserId]);
 
@@ -228,12 +228,10 @@ const Admin = () => {
 
   const handleCreateUser = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-
     if (!isAdmin) {
       setStatus("Only admins can create users.");
       return;
     }
-
     if (!newUserEmail || !newUserPassword) {
       setStatus("Email and password are required.");
       return;
@@ -285,7 +283,6 @@ const Admin = () => {
 
   const handleUpdateUser = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-
     if (!isAdmin || !selectedUserId) {
       setStatus("Select a user first.");
       return;
@@ -305,9 +302,8 @@ const Admin = () => {
         },
         { merge: true }
       );
-
-      toast.success("User updated successfully");
       setStatus("User updated successfully.");
+      toast.success("User updated successfully");
     } catch (error) {
       const message = error instanceof Error ? error.message : "Could not update user.";
       setStatus(message);
@@ -328,17 +324,12 @@ const Admin = () => {
 
     try {
       await deleteDoc(doc(db, "users", selectedUserId));
-
-      if (user?.uid === selectedUserId) {
-        await handleSignOut();
-      }
-
-      toast.success("User deleted successfully");
-      setStatus("User deleted successfully.");
       setSelectedUserId("");
       setSelectedUserEmail("");
       setSelectedUserRole("user");
       setSelectedUserIpLink("");
+      setStatus("User deleted successfully.");
+      toast.success("User deleted successfully");
     } catch (error) {
       const message = error instanceof Error ? error.message : "Could not delete user.";
       setStatus(message);
@@ -356,6 +347,11 @@ const Admin = () => {
       setUserRole(null);
       setIpLink("");
       setSubmissions([]);
+      setUsers([]);
+      setSelectedUserId("");
+      setSelectedUserEmail("");
+      setSelectedUserRole("user");
+      setSelectedUserIpLink("");
     } catch (error) {
       setStatus(error instanceof Error ? error.message : "Could not sign out.");
     }
@@ -363,32 +359,26 @@ const Admin = () => {
 
   const handleDelete = async (id: string) => {
     try {
-      const docRef = doc(db, "publicSubmissions", id);
-      await deleteDoc(docRef);
+      await deleteDoc(doc(db, "publicSubmissions", id));
       toast.success("Submission deleted");
     } catch (error) {
-      console.error("Delete error:", error);
       toast.error("Failed to delete submission: " + (error instanceof Error ? error.message : "Access Denied"));
     }
   };
 
   const handleComplete = async (id: string, currentStatus?: string) => {
     try {
-      const docRef = doc(db, "publicSubmissions", id);
       const newStatus = currentStatus === "completed" ? "pending" : "completed";
-      await updateDoc(docRef, {
-        status: newStatus,
-      });
+      await updateDoc(doc(db, "publicSubmissions", id), { status: newStatus });
       toast.success(`Marked as ${newStatus}`);
     } catch (error) {
-      console.error("Update error:", error);
       toast.error("Failed to update status: " + (error instanceof Error ? error.message : "Access Denied"));
     }
   };
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-background text-foreground px-4 py-8 md:px-8">
+      <div className="min-h-screen bg-background px-4 py-8 text-foreground md:px-8">
         <div className="mx-auto max-w-6xl rounded-2xl border border-border bg-card p-8 text-center text-muted-foreground shadow-lg">
           Loading admin page...
         </div>
@@ -397,24 +387,38 @@ const Admin = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background text-foreground px-4 py-8 md:px-8">
+    <div className="min-h-screen bg-background px-4 py-8 text-foreground md:px-8">
       <div className="mx-auto max-w-6xl space-y-6">
-        <div className="flex items-center justify-between gap-4">
-          <Link to="/" className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground">
-            <ArrowLeft className="h-4 w-4" />
-            Back to site
-          </Link>
-          
+        <div className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-border bg-card px-5 py-4 shadow-lg">
+          <div>
+            <p className="text-sm text-muted-foreground">Admin Console</p>
+            <h1 className="text-2xl font-bold">User Management</h1>
+          </div>
+          <div className="flex flex-wrap items-center gap-3">
+            <Link
+              to="/"
+              className="inline-flex items-center gap-2 rounded-lg border border-border px-4 py-2 text-sm font-medium text-muted-foreground transition hover:bg-secondary/40 hover:text-foreground"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              Back
+            </Link>
+            {user && (
+              <button
+                type="button"
+                onClick={handleSignOut}
+                className="inline-flex items-center gap-2 rounded-lg border border-border px-4 py-2 text-sm font-medium transition hover:bg-secondary/40"
+              >
+                <LogOut className="h-4 w-4" />
+                Logout
+              </button>
+            )}
+          </div>
         </div>
 
-        <div className={`grid gap-6 ${isAdmin && canShowDashboard ? "lg:grid-cols-[380px_minmax(0,1fr)]" : "max-w-md mx-auto"}`}>
-          <section className="rounded-2xl border border-border bg-card p-6 shadow-lg h-fit">
-            <h1 className="text-3xl font-bold">Login</h1>
-            <p className="mt-2 text-sm text-muted-foreground">
-              {canShowDashboard 
-                ? "" 
-                : ""}
-            </p>
+        <div className={`grid gap-6 ${canShowDashboard ? "lg:grid-cols-[380px_minmax(0,1fr)]" : "max-w-md mx-auto"}`}>
+          <section className="h-fit rounded-2xl border border-border bg-card p-6 shadow-lg">
+            <h2 className="text-3xl font-bold">Login</h2>
+            <p className="mt-2 text-sm text-muted-foreground">Sign in to access the admin tools.</p>
 
             {!user ? (
               <form className="mt-6 space-y-4" onSubmit={handleLogin}>
@@ -424,7 +428,7 @@ const Admin = () => {
                     type="email"
                     value={email}
                     onChange={(event) => setEmail(event.target.value)}
-                    className="w-full rounded-lg border border-border bg-background px-4 py-3 outline-none focus:ring-2 focus:ring-primary/40 transition-all"
+                    className="w-full rounded-lg border border-border bg-background px-4 py-3 outline-none transition-all focus:ring-2 focus:ring-primary/40"
                     placeholder="Enter your email"
                   />
                 </div>
@@ -434,7 +438,7 @@ const Admin = () => {
                     type="password"
                     value={password}
                     onChange={(event) => setPassword(event.target.value)}
-                    className="w-full rounded-lg border border-border bg-background px-4 py-3 outline-none focus:ring-2 focus:ring-primary/40 transition-all"
+                    className="w-full rounded-lg border border-border bg-background px-4 py-3 outline-none transition-all focus:ring-2 focus:ring-primary/40"
                     placeholder="Enter your password"
                   />
                 </div>
@@ -446,127 +450,182 @@ const Admin = () => {
                   Sign In
                 </button>
               </form>
-            ) : (
+            ) : isAdmin ? (
               <div className="mt-6 space-y-4">
-                {/* Admin View */}
-                {isAdmin && (
-                  <>
-                    <div className="rounded-lg border border-border bg-secondary/30 p-4 text-sm">
-                      <p className="font-medium text-primary">System Admin</p>
-                      <p className="mt-1 text-muted-foreground truncate">{user.email}</p>
+                <div className="rounded-lg border border-border bg-secondary/30 p-4 text-sm">
+                  <p className="font-medium text-primary">System Admin</p>
+                  <p className="mt-1 truncate text-muted-foreground">{user.email}</p>
+                </div>
+                <div className="rounded-lg border border-border bg-secondary/20 p-4 text-sm text-muted-foreground">
+                  Use the sections on the right to create users, edit users, and review submissions.
+                </div>
+              </div>
+            ) : userRole === "user" ? (
+              <div className="mt-6 space-y-4">
+                <div className="rounded-lg border border-border bg-secondary/30 p-4 text-sm">
+                  <p className="font-medium text-primary">User Account</p>
+                  <p className="mt-1 truncate text-muted-foreground">{user.email}</p>
+                </div>
+                <div className="rounded-lg border border-blue-500/30 bg-blue-500/10 p-4 text-sm">
+                  <p className="font-medium text-blue-600 dark:text-blue-400">IP Link</p>
+                  {ipLink ? (
+                    <p className="mt-2 rounded bg-background/50 p-2 font-mono text-xs break-all text-muted-foreground">
+                      {ipLink}
+                    </p>
+                  ) : (
+                    <p className="mt-1 italic text-muted-foreground">No IP link assigned yet.</p>
+                  )}
+                </div>
+              </div>
+            ) : (
+              <div className="mt-6 rounded-lg border border-red-500/20 bg-red-500/10 p-4 text-xs text-red-500">
+                Your account does not have proper role assignment.
+              </div>
+            )}
+
+            {(checkingAdmin || (status && !canShowDashboard)) && (
+              <div className="mt-5 rounded-lg border border-border bg-secondary/20 p-4 text-xs text-muted-foreground animate-pulse">
+                {checkingAdmin ? "Verifying permissions..." : status}
+              </div>
+            )}
+
+            {user && (
+              <button
+                type="button"
+                onClick={handleSignOut}
+                className="mt-6 inline-flex w-full items-center justify-center gap-2 rounded-lg border border-border px-4 py-3 font-semibold transition-all hover:bg-secondary/40 active:scale-[0.98]"
+              >
+                <LogOut className="h-4 w-4" />
+                Logout
+              </button>
+            )}
+          </section>
+
+          {canShowDashboard && (
+            <div className="space-y-6">
+              <section className="rounded-2xl border border-border bg-card p-6 shadow-lg">
+                <div className="flex items-center justify-between gap-4">
+                  <div>
+                    <h2 className="text-2xl font-bold">Create User</h2>
+                    <p className="mt-1 text-sm text-muted-foreground">
+                      Create a Firebase Auth account and save the Firestore profile.
+                    </p>
+                  </div>
+                </div>
+                <form className="mt-6 space-y-4" onSubmit={handleCreateUser}>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Email</label>
+                    <input
+                      type="email"
+                      value={newUserEmail}
+                      onChange={(event) => setNewUserEmail(event.target.value)}
+                      className="w-full rounded-lg border border-border bg-background px-4 py-3 outline-none transition-all focus:ring-2 focus:ring-primary/40"
+                      placeholder="New user email"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Password</label>
+                    <input
+                      type="password"
+                      value={newUserPassword}
+                      onChange={(event) => setNewUserPassword(event.target.value)}
+                      className="w-full rounded-lg border border-border bg-background px-4 py-3 outline-none transition-all focus:ring-2 focus:ring-primary/40"
+                      placeholder="New user password"
+                    />
+                  </div>
+                  <div className="grid gap-4 md:grid-cols-2">
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">Role</label>
+                      <select
+                        value={newUserRole}
+                        onChange={(event) => setNewUserRole(event.target.value as "admin" | "user")}
+                        className="w-full rounded-lg border border-border bg-background px-4 py-3 outline-none transition-all focus:ring-2 focus:ring-primary/40"
+                      >
+                        <option value="user">Normal User</option>
+                        <option value="admin">Admin</option>
+                      </select>
                     </div>
-                    <form className="space-y-4 rounded-lg border border-border bg-secondary/20 p-4" onSubmit={handleCreateUser}>
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">IP Link</label>
+                      <input
+                        type="text"
+                        value={newUserIpLink}
+                        onChange={(event) => setNewUserIpLink(event.target.value)}
+                        className="w-full rounded-lg border border-border bg-background px-4 py-3 outline-none transition-all focus:ring-2 focus:ring-primary/40"
+                        placeholder="Optional IP link"
+                      />
+                    </div>
+                  </div>
+                  <button
+                    type="submit"
+                    disabled={creatingUser}
+                    className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-primary px-4 py-3 font-semibold text-primary-foreground transition-all hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    <Shield className="h-4 w-4" />
+                    {creatingUser ? "Creating..." : "Create User"}
+                  </button>
+                </form>
+              </section>
+
+              <section className="rounded-2xl border border-border bg-card p-6 shadow-lg">
+                <div className="flex items-center justify-between gap-4">
+                  <div>
+                    <h2 className="text-2xl font-bold">Edit User</h2>
+                    <p className="mt-1 text-sm text-muted-foreground">
+                      Select a profile to view, update, or delete it.
+                    </p>
+                  </div>
+                </div>
+                <div className="mt-6 space-y-4">
+                  <div className="max-h-60 space-y-2 overflow-y-auto rounded-xl border border-border bg-secondary/10 p-3 pr-1">
+                    {users.length === 0 ? (
+                      <p className="text-sm text-muted-foreground">No users found.</p>
+                    ) : (
+                      users.map((profile) => (
+                        <button
+                          key={profile.id}
+                          type="button"
+                          onClick={() => handleSelectUser(profile)}
+                          className={`w-full rounded-lg border px-3 py-2 text-left text-sm transition ${
+                            selectedUserId === profile.id
+                              ? "border-primary bg-primary/10"
+                              : "border-border bg-background hover:bg-secondary/30"
+                          }`}
+                        >
+                          <div className="flex items-center justify-between gap-3">
+                            <span className="truncate font-medium">{profile.email}</span>
+                            <span className="rounded-full bg-secondary px-2 py-0.5 text-[10px] uppercase tracking-wide text-muted-foreground">
+                              {profile.role}
+                            </span>
+                          </div>
+                          <p className="mt-1 truncate text-xs text-muted-foreground">{profile.id}</p>
+                        </button>
+                      ))
+                    )}
+                  </div>
+
+                  {selectedUserId ? (
+                    <form className="space-y-4 rounded-xl border border-border bg-secondary/20 p-4" onSubmit={handleUpdateUser}>
                       <div>
-                        <p className="text-sm font-semibold">Create User</p>
-                        <p className="mt-1 text-xs text-muted-foreground">
-                          Creates a Firebase Auth account and saves the Firestore profile.
-                        </p>
+                        <p className="text-sm font-semibold">Selected User</p>
+                        <p className="mt-1 break-all text-xs text-muted-foreground">UID: {selectedUserId}</p>
                       </div>
                       <div className="space-y-2">
                         <label className="text-sm font-medium">Email</label>
                         <input
                           type="email"
-                          value={newUserEmail}
-                          onChange={(event) => setNewUserEmail(event.target.value)}
-                          className="w-full rounded-lg border border-border bg-background px-4 py-3 outline-none focus:ring-2 focus:ring-primary/40 transition-all"
-                          placeholder="New user email"
+                          value={selectedUserEmail}
+                          onChange={(event) => setSelectedUserEmail(event.target.value)}
+                          className="w-full rounded-lg border border-border bg-background px-4 py-3 outline-none transition-all focus:ring-2 focus:ring-primary/40"
                         />
                       </div>
-                      <div className="space-y-2">
-                        <label className="text-sm font-medium">Password</label>
-                        <input
-                          type="password"
-                          value={newUserPassword}
-                          onChange={(event) => setNewUserPassword(event.target.value)}
-                          className="w-full rounded-lg border border-border bg-background px-4 py-3 outline-none focus:ring-2 focus:ring-primary/40 transition-all"
-                          placeholder="New user password"
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <label className="text-sm font-medium">Role</label>
-                        <select
-                          value={newUserRole}
-                          onChange={(event) => setNewUserRole(event.target.value as "admin" | "user")}
-                          className="w-full rounded-lg border border-border bg-background px-4 py-3 outline-none focus:ring-2 focus:ring-primary/40 transition-all"
-                        >
-                          <option value="user">Normal User</option>
-                          <option value="admin">Admin</option>
-                        </select>
-                      </div>
-                      <div className="space-y-2">
-                        <label className="text-sm font-medium">IP Link</label>
-                        <input
-                          type="text"
-                          value={newUserIpLink}
-                          onChange={(event) => setNewUserIpLink(event.target.value)}
-                          className="w-full rounded-lg border border-border bg-background px-4 py-3 outline-none focus:ring-2 focus:ring-primary/40 transition-all"
-                          placeholder="Optional IP link"
-                        />
-                      </div>
-                      <button
-                        type="submit"
-                        disabled={creatingUser}
-                        className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-primary px-4 py-3 font-semibold text-primary-foreground transition-all hover:opacity-90 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60"
-                      >
-                        <Shield className="h-4 w-4" />
-                        {creatingUser ? "Creating..." : "Create User"}
-                      </button>
-                    </form>
-                    <div className="space-y-3 rounded-lg border border-border bg-secondary/20 p-4">
-                      <div>
-                        <p className="text-sm font-semibold">Select User</p>
-                        <p className="mt-1 text-xs text-muted-foreground">
-                          Choose a profile to view, update, or delete it.
-                        </p>
-                      </div>
-                      <div className="max-h-56 space-y-2 overflow-y-auto pr-1">
-                        {users.length === 0 ? (
-                          <p className="text-sm text-muted-foreground">No users found.</p>
-                        ) : (
-                          users.map((profile) => (
-                            <button
-                              key={profile.id}
-                              type="button"
-                              onClick={() => handleSelectUser(profile)}
-                              className={`w-full rounded-lg border px-3 py-2 text-left text-sm transition ${
-                                selectedUserId === profile.id
-                                  ? "border-primary bg-primary/10"
-                                  : "border-border bg-background hover:bg-secondary/30"
-                              }`}
-                            >
-                              <div className="flex items-center justify-between gap-3">
-                                <span className="truncate font-medium">{profile.email}</span>
-                                <span className="rounded-full bg-secondary px-2 py-0.5 text-[10px] uppercase tracking-wide text-muted-foreground">
-                                  {profile.role}
-                                </span>
-                              </div>
-                              <p className="mt-1 text-xs text-muted-foreground truncate">{profile.id}</p>
-                            </button>
-                          ))
-                        )}
-                      </div>
-                    </div>
-                    {selectedUserId && (
-                      <form className="space-y-4 rounded-lg border border-border bg-secondary/20 p-4" onSubmit={handleUpdateUser}>
-                        <div>
-                          <p className="text-sm font-semibold">Edit Selected User</p>
-                          <p className="mt-1 text-xs text-muted-foreground break-all">UID: {selectedUserId}</p>
-                        </div>
-                        <div className="space-y-2">
-                          <label className="text-sm font-medium">Email</label>
-                          <input
-                            type="email"
-                            value={selectedUserEmail}
-                            onChange={(event) => setSelectedUserEmail(event.target.value)}
-                            className="w-full rounded-lg border border-border bg-background px-4 py-3 outline-none focus:ring-2 focus:ring-primary/40 transition-all"
-                          />
-                        </div>
+                      <div className="grid gap-4 md:grid-cols-2">
                         <div className="space-y-2">
                           <label className="text-sm font-medium">Role</label>
                           <select
                             value={selectedUserRole}
                             onChange={(event) => setSelectedUserRole(event.target.value as "admin" | "user")}
-                            className="w-full rounded-lg border border-border bg-background px-4 py-3 outline-none focus:ring-2 focus:ring-primary/40 transition-all"
+                            className="w-full rounded-lg border border-border bg-background px-4 py-3 outline-none transition-all focus:ring-2 focus:ring-primary/40"
                           >
                             <option value="user">Normal User</option>
                             <option value="admin">Admin</option>
@@ -578,206 +637,140 @@ const Admin = () => {
                             type="text"
                             value={selectedUserIpLink}
                             onChange={(event) => setSelectedUserIpLink(event.target.value)}
-                            className="w-full rounded-lg border border-border bg-background px-4 py-3 outline-none focus:ring-2 focus:ring-primary/40 transition-all"
-                            placeholder="User IP link"
                             disabled={selectedUserRole === "admin"}
+                            className="w-full rounded-lg border border-border bg-background px-4 py-3 outline-none transition-all focus:ring-2 focus:ring-primary/40 disabled:cursor-not-allowed disabled:opacity-60"
+                            placeholder="User IP link"
                           />
                         </div>
-                        <div className="grid grid-cols-2 gap-3">
-                          <button
-                            type="submit"
-                            disabled={updatingUser}
-                            className="inline-flex items-center justify-center gap-2 rounded-lg bg-primary px-4 py-3 font-semibold text-primary-foreground transition-all hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
-                          >
-                            <Shield className="h-4 w-4" />
-                            {updatingUser ? "Saving..." : "Save Changes"}
-                          </button>
-                          <button
-                            type="button"
-                            onClick={handleDeleteSelectedUser}
-                            disabled={deletingUser}
-                            className="inline-flex items-center justify-center gap-2 rounded-lg border border-destructive px-4 py-3 font-semibold text-destructive transition-all hover:bg-destructive/10 disabled:cursor-not-allowed disabled:opacity-60"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                            {deletingUser ? "Deleting..." : "Delete User"}
-                          </button>
-                        </div>
-                        <p className="text-xs text-muted-foreground">
-                          Created: {users.find((profile) => profile.id === selectedUserId)?.createdAtLabel || "Unknown"}
-                          <br />
-                          Updated: {users.find((profile) => profile.id === selectedUserId)?.updatedAtLabel || "Unknown"}
-                        </p>
-                      </form>
-                    )}
-                    <button
-                      type="button"
-                      onClick={handleSignOut}
-                      className="inline-flex w-full items-center justify-center gap-2 rounded-lg border border-border px-4 py-3 font-semibold transition-all hover:bg-secondary/40 active:scale-[0.98]"
-                    >
-                      <LogOut className="h-4 w-4" />
-                      Sign out
-                    </button>
-                  </>
-                )}
-
-                {/* Normal User View */}
-                {userRole === "user" && (
-                  <>
-                    <div className="rounded-lg border border-border bg-secondary/30 p-4 text-sm">
-                      <p className="font-medium text-primary">User Account</p>
-                      <p className="mt-1 text-muted-foreground truncate">{user.email}</p>
-                    </div>
-                    
-                    <div className="rounded-lg border border-blue-500/30 bg-blue-500/10 p-4 text-sm">
-                      <p className="font-medium text-blue-600 dark:text-blue-400">IP Link</p>
-                      {ipLink ? (
-                        <p className="mt-2 text-muted-foreground break-all font-mono text-xs bg-background/50 rounded p-2">
-                          {ipLink}
-                        </p>
-                      ) : (
-                        <p className="mt-1 text-muted-foreground italic">No IP link assigned yet.</p>
-                      )}
-                    </div>
-
-                    <button
-                      type="button"
-                      onClick={handleSignOut}
-                      className="inline-flex w-full items-center justify-center gap-2 rounded-lg border border-border px-4 py-3 font-semibold transition-all hover:bg-secondary/40 active:scale-[0.98]"
-                    >
-                      <LogOut className="h-4 w-4" />
-                      Sign out
-                    </button>
-                  </>
-                )}
-
-                {userRole === null && (
-                  <div className="rounded-lg bg-red-500/10 border border-red-500/20 p-4 text-xs text-red-500">
-                    Your account does not have proper role assignment.
-                  </div>
-                )}
-              </div>
-            )}
-            
-            {(checkingAdmin || (status && !canShowDashboard)) && (
-              <div className="mt-5 rounded-lg border border-border bg-secondary/20 p-4 text-xs text-muted-foreground animate-pulse">
-                {checkingAdmin ? "Verifying permissions..." : status}
-              </div>
-            )}
-          </section>
-
-          {canShowDashboard && (
-            <motion.section 
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              className="rounded-2xl border border-border bg-card p-6 shadow-lg"
-            >
-              <div className="flex items-center justify-between gap-4">
-                <div>
-                  <h2 className="text-2xl font-bold">Submitted Forms</h2>
-                  <p className="mt-1 text-sm text-muted-foreground">
-                    Real-time requests from the website.
-                  </p>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => window.location.reload()}
-                  className="inline-flex items-center gap-2 rounded-lg border border-border px-3 py-2 text-sm font-medium transition hover:bg-secondary/40"
-                >
-                  <RefreshCw className="h-4 w-4" />
-                  Refresh
-                </button>
-              </div>
-
-              <div className="mt-6 space-y-4">
-                {submissions.length === 0 ? (
-                  <div className="rounded-xl border border-dashed border-border p-12 text-center text-muted-foreground">
-                    <p className="text-lg font-medium">All caught up!</p>
-                    <p className="text-sm opacity-70">No new submissions found in the database.</p>
-                  </div>
-                ) : (
-                  submissions.map((submission) => (
-                  <article
-                    key={submission.id}
-                    className={`rounded-xl border border-border bg-secondary/20 p-5 transition-all ${submission.status === "completed" ? "opacity-60 grayscale-[0.5]" : ""
-                      }`}
-                  >
-                    <div className="flex flex-wrap items-start justify-between gap-3">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2">
-                          <h3 className="text-lg font-semibold">{submission.name}</h3>
-                          {submission.status === "completed" && (
-                            <span className="inline-flex items-center rounded-full bg-emerald-500/10 px-2 py-0.5 text-[10px] font-medium text-emerald-500 ring-1 ring-inset ring-emerald-500/20">
-                              Completed
-                            </span>
-                          )}
-                        </div>
-                        <div className="mt-3 space-y-1 text-sm text-muted-foreground">
-                          <p>
-                            <span className="font-medium text-foreground">Email:</span> {submission.email}
-                          </p>
-                          <p>
-                            <span className="font-medium text-foreground">Company Name:</span> {submission.companyName}
-                          </p>
-                          <p>
-                            <span className="font-medium text-foreground">Mobile Number:</span> {submission.contactNumber}
-                          </p>
-                        </div>
                       </div>
-                      <div className="flex items-center gap-2">
+                      <div className="grid grid-cols-2 gap-3">
                         <button
-                          onClick={() => handleComplete(submission.id, submission.status)}
-                          className={`p-2 rounded-lg transition-colors ${submission.status === "completed"
-                              ? "text-emerald-500 bg-emerald-500/10 hover:bg-emerald-500/20"
-                              : "text-muted-foreground hover:text-emerald-500 hover:bg-emerald-500/10"
-                            }`}
-                          title={submission.status === "completed" ? "Mark as Pending" : "Mark as Completed"}
+                          type="submit"
+                          disabled={updatingUser}
+                          className="inline-flex items-center justify-center gap-2 rounded-lg bg-primary px-4 py-3 font-semibold text-primary-foreground transition-all hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
                         >
-                          <CheckCircle className="h-5 w-5" />
+                          <Shield className="h-4 w-4" />
+                          {updatingUser ? "Saving..." : "Save Changes"}
                         </button>
-                        <AlertDialog>
-                          <AlertDialogTrigger asChild>
-                            <button
-                              className="p-2 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
-                              title="Remove Request"
-                            >
-                              <Trash2 className="h-5 w-5" />
-                            </button>
-                          </AlertDialogTrigger>
-                          <AlertDialogContent>
-                            <AlertDialogHeader>
-                              <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-                              <AlertDialogDescription>
-                                This action cannot be undone. This will permanently delete the
-                                submission from **{submission.name}**.
-                              </AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                              <AlertDialogCancel>Cancel</AlertDialogCancel>
-                              <AlertDialogAction
-                                onClick={() => handleDelete(submission.id)}
-                                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                              >
-                                Delete
-                              </AlertDialogAction>
-                            </AlertDialogFooter>
-                          </AlertDialogContent>
-                        </AlertDialog>
-                        <span className="text-xs text-muted-foreground ml-2 whitespace-nowrap">{submission.createdAtLabel}</span>
+                        <button
+                          type="button"
+                          onClick={handleDeleteSelectedUser}
+                          disabled={deletingUser}
+                          className="inline-flex items-center justify-center gap-2 rounded-lg border border-destructive px-4 py-3 font-semibold text-destructive transition-all hover:bg-destructive/10 disabled:cursor-not-allowed disabled:opacity-60"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                          {deletingUser ? "Deleting..." : "Delete User"}
+                        </button>
                       </div>
+                      <p className="text-xs text-muted-foreground">
+                        Created: {selectedUser?.createdAtLabel || "Unknown"}
+                        <br />
+                        Updated: {selectedUser?.updatedAtLabel || "Unknown"}
+                      </p>
+                    </form>
+                  ) : (
+                    <div className="rounded-xl border border-dashed border-border p-8 text-sm text-muted-foreground">
+                      Select a user to edit them.
                     </div>
-                    <p className="mt-4 whitespace-pre-wrap text-sm leading-6 text-foreground/90">
-                      <span className="font-medium text-foreground">Query:</span>{" "}
-                      {submission.message}
-                    </p>
-                  </article>
-                ))
-              )}
+                  )}
+                </div>
+              </section>
+
+              <section className="rounded-2xl border border-border bg-card p-6 shadow-lg">
+                <div className="flex items-center justify-between gap-4">
+                  <div>
+                    <h2 className="text-2xl font-bold">Submitted Forms</h2>
+                    <p className="mt-1 text-sm text-muted-foreground">Real-time requests from the website.</p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => window.location.reload()}
+                    className="inline-flex items-center gap-2 rounded-lg border border-border px-3 py-2 text-sm font-medium transition hover:bg-secondary/40"
+                  >
+                    <RefreshCw className="h-4 w-4" />
+                    Refresh
+                  </button>
+                </div>
+
+                <div className="mt-6 space-y-4">
+                  {submissions.length === 0 ? (
+                    <div className="rounded-xl border border-dashed border-border p-12 text-center text-muted-foreground">
+                      <p className="text-lg font-medium">All caught up!</p>
+                      <p className="text-sm opacity-70">No new submissions found in the database.</p>
+                    </div>
+                  ) : (
+                    submissions.map((submission) => (
+                      <article
+                        key={submission.id}
+                        className={`rounded-xl border border-border bg-secondary/20 p-5 transition-all ${submission.status === "completed" ? "opacity-60 grayscale-[0.5]" : ""}`}
+                      >
+                        <div className="flex flex-wrap items-start justify-between gap-3">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2">
+                              <h3 className="text-lg font-semibold">{submission.name}</h3>
+                              {submission.status === "completed" && (
+                                <span className="inline-flex items-center rounded-full bg-emerald-500/10 px-2 py-0.5 text-[10px] font-medium text-emerald-500 ring-1 ring-inset ring-emerald-500/20">
+                                  Completed
+                                </span>
+                              )}
+                            </div>
+                            <div className="mt-3 space-y-1 text-sm text-muted-foreground">
+                              <p><span className="font-medium text-foreground">Email:</span> {submission.email}</p>
+                              <p><span className="font-medium text-foreground">Company Name:</span> {submission.companyName}</p>
+                              <p><span className="font-medium text-foreground">Mobile Number:</span> {submission.contactNumber}</p>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <button
+                              onClick={() => handleComplete(submission.id, submission.status)}
+                              className={`rounded-lg p-2 transition-colors ${submission.status === "completed" ? "bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500/20" : "text-muted-foreground hover:bg-emerald-500/10 hover:text-emerald-500"}`}
+                              title={submission.status === "completed" ? "Mark as Pending" : "Mark as Completed"}
+                            >
+                              <CheckCircle className="h-5 w-5" />
+                            </button>
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <button
+                                  className="rounded-lg p-2 text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
+                                  title="Remove Request"
+                                >
+                                  <Trash2 className="h-5 w-5" />
+                                </button>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent>
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                                  <AlertDialogDescription>
+                                    This action cannot be undone. This will permanently delete the submission from {submission.name}.
+                                  </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                  <AlertDialogAction
+                                    onClick={() => handleDelete(submission.id)}
+                                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                  >
+                                    Delete
+                                  </AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
+                            <span className="ml-2 whitespace-nowrap text-xs text-muted-foreground">{submission.createdAtLabel}</span>
+                          </div>
+                        </div>
+                        <p className="mt-4 whitespace-pre-wrap text-sm leading-6 text-foreground/90">
+                          <span className="font-medium text-foreground">Query:</span> {submission.message}
+                        </p>
+                      </article>
+                    ))
+                  )}
+                </div>
+              </section>
             </div>
-          </motion.section>
-        )}
+          )}
+        </div>
       </div>
     </div>
-  </div>
   );
 };
 
