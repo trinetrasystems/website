@@ -88,6 +88,7 @@ const Admin = () => {
   const [creatingUser, setCreatingUser] = useState(false);
 
   const [users, setUsers] = useState<UserProfile[]>([]);
+  const [userSearch, setUserSearch] = useState("");
   const [selectedUserId, setSelectedUserId] = useState("");
   const [selectedUserEmail, setSelectedUserEmail] = useState("");
   const [selectedUserRole, setSelectedUserRole] = useState<"admin" | "user">("user");
@@ -100,6 +101,28 @@ const Admin = () => {
 
   const canShowDashboard = useMemo(() => Boolean(user && isAdmin), [user, isAdmin]);
   const selectedUser = users.find((profile) => profile.id === selectedUserId) || null;
+  const pageTitle = isAdmin ? "Admin Console" : userRole === "user" ? "User Dashboard" : "Access Portal";
+  const pageSubtitle = isAdmin
+    ? "User Management"
+    : userRole === "user"
+      ? "Your account details and IP link"
+      : "Sign in to continue";
+  const filteredUsers = useMemo(() => {
+    const searchValue = userSearch.trim().toLowerCase();
+
+    if (!searchValue) {
+      return users;
+    }
+
+    return users.filter((profile) => {
+      return (
+        profile.email.toLowerCase().includes(searchValue) ||
+        profile.role.toLowerCase().includes(searchValue) ||
+        profile.id.toLowerCase().includes(searchValue) ||
+        profile.ipLink.toLowerCase().includes(searchValue)
+      );
+    });
+  }, [users, userSearch]);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
@@ -111,6 +134,7 @@ const Admin = () => {
       setStatus("");
       setSubmissions([]);
       setUsers([]);
+      setUserSearch("");
       setSelectedUserId("");
       setSelectedUserEmail("");
       setSelectedUserRole("user");
@@ -283,8 +307,15 @@ const Admin = () => {
     setStatus(`Selected ${profile.email}.`);
   };
 
-  const handleUpdateUser = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
+  const handleCancelSelectedUser = () => {
+    setSelectedUserId("");
+    setSelectedUserEmail("");
+    setSelectedUserRole("user");
+    setSelectedUserIpLink("");
+    setStatus("Edit cancelled.");
+  };
+
+  const handleUpdateUser = async () => {
     if (!isAdmin || !selectedUserId) {
       setStatus("Select a user first.");
       return;
@@ -351,6 +382,7 @@ const Admin = () => {
       setIpLink("");
       setSubmissions([]);
       setUsers([]);
+      setUserSearch("");
       setSelectedUserId("");
       setSelectedUserEmail("");
       setSelectedUserRole("user");
@@ -395,8 +427,11 @@ const Admin = () => {
       <div className="mx-auto max-w-6xl space-y-6">
         <div className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-border bg-card px-5 py-4 shadow-lg">
           <div>
-            <p className="text-sm text-muted-foreground">Admin Console</p>
-            <h1 className="text-2xl font-bold">User Management</h1>
+            <p className="text-sm text-muted-foreground">
+              {isAdmin ? "Admin Console" : userRole === "user" ? "User Portal" : "Access Portal"}
+            </p>
+            <h1 className="text-2xl font-bold">{pageTitle}</h1>
+            <p className="mt-1 text-sm text-muted-foreground">{pageSubtitle}</p>
           </div>
           <div className="flex flex-wrap items-center gap-3">
             <Link
@@ -422,18 +457,19 @@ const Admin = () => {
         <div className={`grid gap-6 ${canShowDashboard ? "lg:grid-cols-[380px_minmax(0,1fr)]" : "max-w-md mx-auto"}`}>
           <section className="h-fit rounded-2xl border border-border bg-card p-6 shadow-lg">
             <h2 className="text-3xl font-bold">Login</h2>
-            <p className="mt-2 text-sm text-muted-foreground">Sign in to access the admin tools.</p>
+            <p className="mt-2 text-sm text-muted-foreground">Sign in with your username and password.</p>
 
             {!user ? (
               <form className="mt-6 space-y-4" onSubmit={handleLogin}>
                 <div className="space-y-2">
-                  <label className="text-sm font-medium">Email</label>
+                  <label className="text-sm font-medium">Username</label>
                   <input
-                    type="email"
+                    type="text"
                     value={email}
                     onChange={(event) => setEmail(event.target.value)}
+                    autoComplete="username"
                     className="w-full rounded-lg border border-border bg-background px-4 py-3 outline-none transition-all focus:ring-2 focus:ring-primary/40"
-                    placeholder="Enter your email"
+                    placeholder="Enter your username"
                   />
                 </div>
                 <div className="space-y-2">
@@ -618,11 +654,21 @@ const Admin = () => {
                     </p>
                   </div>
                   <div className="mt-6 space-y-4">
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">Search Users</label>
+                      <input
+                        type="text"
+                        value={userSearch}
+                        onChange={(event) => setUserSearch(event.target.value)}
+                        className="w-full rounded-lg border border-border bg-background px-4 py-3 outline-none transition-all focus:ring-2 focus:ring-primary/40"
+                        placeholder="Search by email, role, UID, or IP link"
+                      />
+                    </div>
                     <div className="max-h-60 space-y-2 overflow-y-auto rounded-xl border border-border bg-secondary/10 p-3 pr-1">
-                      {users.length === 0 ? (
+                      {filteredUsers.length === 0 ? (
                         <p className="text-sm text-muted-foreground">No users found.</p>
                       ) : (
-                        users.map((profile) => (
+                        filteredUsers.map((profile) => (
                           <button
                             key={profile.id}
                             type="button"
@@ -646,7 +692,7 @@ const Admin = () => {
                     </div>
 
                     {selectedUserId ? (
-                      <form className="space-y-4 rounded-xl border border-border bg-secondary/20 p-4" onSubmit={handleUpdateUser}>
+                      <form className="space-y-4 rounded-xl border border-border bg-secondary/20 p-4">
                         <div>
                           <p className="text-sm font-semibold">Selected User</p>
                           <p className="mt-1 break-all text-xs text-muted-foreground">UID: {selectedUserId}</p>
@@ -686,22 +732,66 @@ const Admin = () => {
                         </div>
                         <div className="grid grid-cols-2 gap-3">
                           <button
-                            type="submit"
-                            disabled={updatingUser}
-                            className="inline-flex items-center justify-center gap-2 rounded-lg bg-primary px-4 py-3 font-semibold text-primary-foreground transition-all hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
-                          >
-                            <Shield className="h-4 w-4" />
-                            {updatingUser ? "Saving..." : "Save Changes"}
-                          </button>
-                          <button
                             type="button"
-                            onClick={handleDeleteSelectedUser}
-                            disabled={deletingUser}
-                            className="inline-flex items-center justify-center gap-2 rounded-lg border border-destructive px-4 py-3 font-semibold text-destructive transition-all hover:bg-destructive/10 disabled:cursor-not-allowed disabled:opacity-60"
+                            onClick={handleCancelSelectedUser}
+                            disabled={updatingUser || deletingUser}
+                            className="inline-flex items-center justify-center gap-2 rounded-lg border border-border px-4 py-3 font-semibold transition-all hover:bg-secondary/40 disabled:cursor-not-allowed disabled:opacity-60"
                           >
-                            <Trash2 className="h-4 w-4" />
-                            {deletingUser ? "Deleting..." : "Delete User"}
+                            Cancel
                           </button>
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <button
+                                type="button"
+                                disabled={updatingUser}
+                                className="inline-flex items-center justify-center gap-2 rounded-lg bg-primary px-4 py-3 font-semibold text-primary-foreground transition-all hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
+                              >
+                                <Shield className="h-4 w-4" />
+                                {updatingUser ? "Saving..." : "Save Changes"}
+                              </button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>Save updated details?</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  This will update the selected user profile with the current form values.
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                <AlertDialogAction onClick={handleUpdateUser}>Save</AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <button
+                                type="button"
+                                disabled={deletingUser}
+                                className="inline-flex items-center justify-center gap-2 rounded-lg border border-destructive px-4 py-3 font-semibold text-destructive transition-all hover:bg-destructive/10 disabled:cursor-not-allowed disabled:opacity-60"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                                {deletingUser ? "Deleting..." : "Delete User"}
+                              </button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>Delete this user?</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  This action cannot be undone. The selected user profile will be removed from the database.
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                <AlertDialogAction
+                                  onClick={handleDeleteSelectedUser}
+                                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                >
+                                  Delete
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
                         </div>
                         <p className="text-xs text-muted-foreground">
                           Created: {selectedUser?.createdAtLabel || "Unknown"}
