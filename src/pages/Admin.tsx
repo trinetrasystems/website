@@ -50,7 +50,9 @@ type Submission = {
 
 type UserProfile = {
   id: string;
-  email: string;
+  username: string;
+  usernameKey: string;
+  authEmail: string;
   role: "admin" | "user";
   ipLink: string;
   createdAtLabel: string;
@@ -70,6 +72,14 @@ const formatTimestamp = (value: unknown) => {
   return timestamp.toDate().toLocaleString();
 };
 
+const normalizeUsername = (value: string) => value.trim().toLowerCase();
+
+const createAuthEmail = (value: string) => {
+  const normalizedUsername = normalizeUsername(value);
+  const safeUsername = normalizedUsername.replace(/[^a-z0-9._-]/g, "-");
+  return `${safeUsername || "user"}@trinetra.local`;
+};
+
 const Admin = () => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
@@ -77,11 +87,11 @@ const Admin = () => {
   const [isAdmin, setIsAdmin] = useState(false);
   const [userRole, setUserRole] = useState<"admin" | "user" | null>(null);
   const [ipLink, setIpLink] = useState("");
-  const [email, setEmail] = useState("");
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [status, setStatus] = useState("");
 
-  const [newUserEmail, setNewUserEmail] = useState("");
+  const [newUserUsername, setNewUserUsername] = useState("");
   const [newUserPassword, setNewUserPassword] = useState("");
   const [newUserRole, setNewUserRole] = useState<"admin" | "user">("user");
   const [newUserIpLink, setNewUserIpLink] = useState("");
@@ -90,7 +100,7 @@ const Admin = () => {
   const [users, setUsers] = useState<UserProfile[]>([]);
   const [userSearch, setUserSearch] = useState("");
   const [selectedUserId, setSelectedUserId] = useState("");
-  const [selectedUserEmail, setSelectedUserEmail] = useState("");
+  const [selectedUserUsername, setSelectedUserUsername] = useState("");
   const [selectedUserRole, setSelectedUserRole] = useState<"admin" | "user">("user");
   const [selectedUserIpLink, setSelectedUserIpLink] = useState("");
   const [updatingUser, setUpdatingUser] = useState(false);
@@ -116,7 +126,8 @@ const Admin = () => {
 
     return users.filter((profile) => {
       return (
-        profile.email.toLowerCase().includes(searchValue) ||
+        profile.username.toLowerCase().includes(searchValue) ||
+        profile.authEmail.toLowerCase().includes(searchValue) ||
         profile.role.toLowerCase().includes(searchValue) ||
         profile.id.toLowerCase().includes(searchValue) ||
         profile.ipLink.toLowerCase().includes(searchValue)
@@ -136,7 +147,7 @@ const Admin = () => {
       setUsers([]);
       setUserSearch("");
       setSelectedUserId("");
-      setSelectedUserEmail("");
+      setSelectedUserUsername("");
       setSelectedUserRole("user");
       setSelectedUserIpLink("");
       setActiveSection("create");
@@ -185,7 +196,9 @@ const Admin = () => {
           const data = userDoc.data();
           return {
             id: userDoc.id,
-            email: data.email || "No email",
+            username: data.username || data.email || "No username",
+            usernameKey: data.usernameKey || normalizeUsername(data.username || data.email || ""),
+            authEmail: data.authEmail || data.email || "",
             role: (data.role || "user") as "admin" | "user",
             ipLink: data.ip_link || "",
             createdAtLabel: formatTimestamp(data.createdAt),
@@ -198,7 +211,7 @@ const Admin = () => {
         if (selectedUserId) {
           const selected = nextUsers.find((profile) => profile.id === selectedUserId);
           if (selected) {
-            setSelectedUserEmail(selected.email);
+            setSelectedUserUsername(selected.username);
             setSelectedUserRole(selected.role);
             setSelectedUserIpLink(selected.ipLink);
           }
@@ -245,8 +258,34 @@ const Admin = () => {
     event.preventDefault();
     setStatus("");
 
+    const loginInput = username.trim();
+    const normalizedUsername = normalizeUsername(loginInput);
+
+    if (!normalizedUsername) {
+      setStatus("Username is required.");
+      return;
+    }
+
     try {
-      await signInWithEmailAndPassword(auth, email, password);
+      if (loginInput.includes("@")) {
+        await signInWithEmailAndPassword(auth, loginInput, password);
+        return;
+      }
+
+      let authEmailToUse = "";
+
+      const loginIndexDoc = await getDoc(doc(db, "loginIndex", normalizedUsername));
+      if (loginIndexDoc.exists()) {
+        const data = loginIndexDoc.data();
+        authEmailToUse = data.authEmail || "";
+      }
+
+      if (!authEmailToUse) {
+        setStatus("User not found. Ask admin to create login index for this username.");
+        return;
+      }
+
+      await signInWithEmailAndPassword(auth, authEmailToUse, password);
     } catch (error) {
       setStatus(error instanceof Error ? error.message : "Could not sign in.");
     }
@@ -258,8 +297,10 @@ const Admin = () => {
       setStatus("Only admins can create users.");
       return;
     }
-    if (!newUserEmail || !newUserPassword) {
-      setStatus("Email and password are required.");
+    const normalizedUsername = normalizeUsername(newUserUsername);
+
+    if (!normalizedUsername || !newUserPassword) {
+      setStatus("Username and password are required.");
       return;
     }
 
@@ -267,14 +308,33 @@ const Admin = () => {
     setStatus("");
 
     try {
-      const credential = await createUserWithEmailAndPassword(adminAuth, newUserEmail, newUserPassword);
+      const existingLoginIndex = await getDoc(doc(db, "loginIndex", normalizedUsername));
+
+      if (existingLoginIndex.exists()) {
+        setStatus("Username already exists.");
+        toast.error("Username already exists.");
+        return;
+      }
+
+      const authEmail = createAuthEmail(normalizedUsername);
+      const credential = await createUserWithEmailAndPassword(adminAuth, authEmail, newUserPassword);
 
       try {
         await setDoc(doc(db, "users", credential.user.uid), {
-          email: newUserEmail,
+          username: newUserUsername.trim(),
+          usernameKey: normalizedUsername,
+          authEmail,
+          email: authEmail,
           role: newUserRole,
           ip_link: newUserRole === "user" ? newUserIpLink : "",
           createdAt: serverTimestamp(),
+          updatedAt: serverTimestamp(),
+        });
+        await setDoc(doc(db, "loginIndex", normalizedUsername), {
+          authEmail,
+          userId: credential.user.uid,
+          username: newUserUsername.trim(),
+          usernameKey: normalizedUsername,
           updatedAt: serverTimestamp(),
         });
       } catch (profileError) {
@@ -284,7 +344,7 @@ const Admin = () => {
         await signOut(adminAuth).catch(() => undefined);
       }
 
-      setNewUserEmail("");
+      setNewUserUsername("");
       setNewUserPassword("");
       setNewUserRole("user");
       setNewUserIpLink("");
@@ -301,15 +361,15 @@ const Admin = () => {
 
   const handleSelectUser = (profile: UserProfile) => {
     setSelectedUserId(profile.id);
-    setSelectedUserEmail(profile.email);
+    setSelectedUserUsername(profile.username);
     setSelectedUserRole(profile.role);
     setSelectedUserIpLink(profile.ipLink);
-    setStatus(`Selected ${profile.email}.`);
+    setStatus(`Selected ${profile.username}.`);
   };
 
   const handleCancelSelectedUser = () => {
     setSelectedUserId("");
-    setSelectedUserEmail("");
+    setSelectedUserUsername("");
     setSelectedUserRole("user");
     setSelectedUserIpLink("");
     setStatus("Edit cancelled.");
@@ -325,16 +385,42 @@ const Admin = () => {
     setStatus("");
 
     try {
+      const normalizedUsername = normalizeUsername(selectedUserUsername);
+
+      if (!normalizedUsername) {
+        setStatus("Username is required.");
+        return;
+      }
+
+      const existingLoginIndex = await getDoc(doc(db, "loginIndex", normalizedUsername));
+      if (existingLoginIndex.exists() && existingLoginIndex.data()?.userId !== selectedUserId) {
+        setStatus("Username already exists.");
+        toast.error("Username already exists.");
+        return;
+      }
+
+      const selectedUserAuthEmail = selectedUser?.authEmail || createAuthEmail(normalizedUsername);
+
       await setDoc(
         doc(db, "users", selectedUserId),
         {
-          email: selectedUserEmail,
+          username: selectedUserUsername.trim(),
+          usernameKey: normalizedUsername,
+          authEmail: selectedUserAuthEmail,
+          email: selectedUserAuthEmail,
           role: selectedUserRole,
           ip_link: selectedUserRole === "user" ? selectedUserIpLink : "",
           updatedAt: serverTimestamp(),
         },
         { merge: true }
       );
+      await setDoc(doc(db, "loginIndex", normalizedUsername), {
+        authEmail: selectedUserAuthEmail,
+        userId: selectedUserId,
+        username: selectedUserUsername.trim(),
+        usernameKey: normalizedUsername,
+        updatedAt: serverTimestamp(),
+      });
       setStatus("User updated successfully.");
       toast.success("User updated successfully");
     } catch (error) {
@@ -356,9 +442,13 @@ const Admin = () => {
     setStatus("");
 
     try {
+      const deletedUser = selectedUser;
       await deleteDoc(doc(db, "users", selectedUserId));
+      if (deletedUser?.usernameKey) {
+        await deleteDoc(doc(db, "loginIndex", deletedUser.usernameKey));
+      }
       setSelectedUserId("");
-      setSelectedUserEmail("");
+      setSelectedUserUsername("");
       setSelectedUserRole("user");
       setSelectedUserIpLink("");
       setActiveSection("edit");
@@ -383,8 +473,10 @@ const Admin = () => {
       setSubmissions([]);
       setUsers([]);
       setUserSearch("");
+      setUsername("");
+      setNewUserUsername("");
       setSelectedUserId("");
-      setSelectedUserEmail("");
+      setSelectedUserUsername("");
       setSelectedUserRole("user");
       setSelectedUserIpLink("");
       setActiveSection("create");
@@ -465,8 +557,8 @@ const Admin = () => {
                   <label className="text-sm font-medium">Username</label>
                   <input
                     type="text"
-                    value={email}
-                    onChange={(event) => setEmail(event.target.value)}
+                    value={username}
+                    onChange={(event) => setUsername(event.target.value)}
                     autoComplete="username"
                     className="w-full rounded-lg border border-border bg-background px-4 py-3 outline-none transition-all focus:ring-2 focus:ring-primary/40"
                     placeholder="Enter your username"
@@ -591,13 +683,13 @@ const Admin = () => {
                   </div>
                   <form className="mt-6 space-y-4" onSubmit={handleCreateUser}>
                     <div className="space-y-2">
-                      <label className="text-sm font-medium">Email</label>
+                      <label className="text-sm font-medium">Username</label>
                       <input
-                        type="email"
-                        value={newUserEmail}
-                        onChange={(event) => setNewUserEmail(event.target.value)}
+                        type="text"
+                        value={newUserUsername}
+                        onChange={(event) => setNewUserUsername(event.target.value)}
                         className="w-full rounded-lg border border-border bg-background px-4 py-3 outline-none transition-all focus:ring-2 focus:ring-primary/40"
-                        placeholder="New user email"
+                        placeholder="New username"
                       />
                     </div>
                     <div className="space-y-2">
@@ -661,7 +753,7 @@ const Admin = () => {
                         value={userSearch}
                         onChange={(event) => setUserSearch(event.target.value)}
                         className="w-full rounded-lg border border-border bg-background px-4 py-3 outline-none transition-all focus:ring-2 focus:ring-primary/40"
-                        placeholder="Search by email, role, UID, or IP link"
+                        placeholder="Search by username, auth email, role, UID, or IP link"
                       />
                     </div>
                     <div className="max-h-60 space-y-2 overflow-y-auto rounded-xl border border-border bg-secondary/10 p-3 pr-1">
@@ -680,7 +772,7 @@ const Admin = () => {
                             }`}
                           >
                             <div className="flex items-center justify-between gap-3">
-                              <span className="truncate font-medium">{profile.email}</span>
+                              <span className="truncate font-medium">{profile.username}</span>
                               <span className="rounded-full bg-secondary px-2 py-0.5 text-[10px] uppercase tracking-wide text-muted-foreground">
                                 {profile.role}
                               </span>
@@ -698,12 +790,13 @@ const Admin = () => {
                           <p className="mt-1 break-all text-xs text-muted-foreground">UID: {selectedUserId}</p>
                         </div>
                         <div className="space-y-2">
-                          <label className="text-sm font-medium">Email</label>
+                          <label className="text-sm font-medium">Username</label>
                           <input
-                            type="email"
-                            value={selectedUserEmail}
-                            onChange={(event) => setSelectedUserEmail(event.target.value)}
+                            type="text"
+                            value={selectedUserUsername}
+                            onChange={(event) => setSelectedUserUsername(event.target.value)}
                             className="w-full rounded-lg border border-border bg-background px-4 py-3 outline-none transition-all focus:ring-2 focus:ring-primary/40"
+                            placeholder="User username"
                           />
                         </div>
                         <div className="grid gap-4 md:grid-cols-2">
