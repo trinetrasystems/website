@@ -63,6 +63,8 @@ const Admin = () => {
   const [loading, setLoading] = useState(true);
   const [checkingAdmin, setCheckingAdmin] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [userRole, setUserRole] = useState<"admin" | "user" | null>(null);
+  const [ipLink, setIpLink] = useState<string>("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [status, setStatus] = useState("");
@@ -75,6 +77,8 @@ const Admin = () => {
       setUser(currentUser);
       setLoading(false);
       setIsAdmin(false);
+      setUserRole(null);
+      setIpLink("");
       setSubmissions([]);
 
       if (!currentUser) {
@@ -84,12 +88,26 @@ const Admin = () => {
 
       setCheckingAdmin(true);
       try {
-        const adminDoc = await getDoc(doc(db, "admins", currentUser.uid));
-        const hasAccess = adminDoc.exists();
-        setIsAdmin(hasAccess);
-        setStatus(hasAccess ? "Admin access confirmed." : "This account is not marked as admin.");
+        // Check users collection for role-based access
+        const userDoc = await getDoc(doc(db, "users", currentUser.uid));
+        
+        if (userDoc.exists()) {
+          const userData = userDoc.data();
+          const role = userData.role as "admin" | "user";
+          setUserRole(role);
+          
+          if (role === "admin") {
+            setIsAdmin(true);
+            setStatus("Admin access confirmed.");
+          } else if (role === "user") {
+            setIpLink(userData.ip_link || "");
+            setStatus("User logged in successfully.");
+          }
+        } else {
+          setStatus("User profile not found.");
+        }
       } catch (error) {
-        setStatus(error instanceof Error ? error.message : "Could not check admin access.");
+        setStatus(error instanceof Error ? error.message : "Could not check user access.");
       } finally {
         setCheckingAdmin(false);
       }
@@ -152,6 +170,8 @@ const Admin = () => {
       await signOut(auth);
       setStatus("Signed out.");
       setIsAdmin(false);
+      setUserRole(null);
+      setIpLink("");
       setSubmissions([]);
     } catch (error) {
       setStatus(error instanceof Error ? error.message : "Could not sign out.");
@@ -204,7 +224,7 @@ const Admin = () => {
           
         </div>
 
-        <div className={`grid gap-6 ${canShowDashboard ? "lg:grid-cols-[380px_minmax(0,1fr)]" : "max-w-md mx-auto"}`}>
+        <div className={`grid gap-6 ${isAdmin && canShowDashboard ? "lg:grid-cols-[380px_minmax(0,1fr)]" : "max-w-md mx-auto"}`}>
           <section className="rounded-2xl border border-border bg-card p-6 shadow-lg h-fit">
             <h1 className="text-3xl font-bold">Login</h1>
             <p className="mt-2 text-sm text-muted-foreground">
@@ -245,23 +265,59 @@ const Admin = () => {
               </form>
             ) : (
               <div className="mt-6 space-y-4">
-                <div className="rounded-lg border border-border bg-secondary/30 p-4 text-sm">
-                  <p className="font-medium text-primary">System Admin</p>
-                  <p className="mt-1 text-muted-foreground truncate">{user.email}</p>
-                </div>
-                {!isAdmin && user && (
+                {/* Admin View */}
+                {isAdmin && (
+                  <>
+                    <div className="rounded-lg border border-border bg-secondary/30 p-4 text-sm">
+                      <p className="font-medium text-primary">System Admin</p>
+                      <p className="mt-1 text-muted-foreground truncate">{user.email}</p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={handleSignOut}
+                      className="inline-flex w-full items-center justify-center gap-2 rounded-lg border border-border px-4 py-3 font-semibold transition-all hover:bg-secondary/40 active:scale-[0.98]"
+                    >
+                      <LogOut className="h-4 w-4" />
+                      Sign out
+                    </button>
+                  </>
+                )}
+
+                {/* Normal User View */}
+                {userRole === "user" && (
+                  <>
+                    <div className="rounded-lg border border-border bg-secondary/30 p-4 text-sm">
+                      <p className="font-medium text-primary">User Account</p>
+                      <p className="mt-1 text-muted-foreground truncate">{user.email}</p>
+                    </div>
+                    
+                    <div className="rounded-lg border border-blue-500/30 bg-blue-500/10 p-4 text-sm">
+                      <p className="font-medium text-blue-600 dark:text-blue-400">IP Link</p>
+                      {ipLink ? (
+                        <p className="mt-2 text-muted-foreground break-all font-mono text-xs bg-background/50 rounded p-2">
+                          {ipLink}
+                        </p>
+                      ) : (
+                        <p className="mt-1 text-muted-foreground italic">No IP link assigned yet.</p>
+                      )}
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={handleSignOut}
+                      className="inline-flex w-full items-center justify-center gap-2 rounded-lg border border-border px-4 py-3 font-semibold transition-all hover:bg-secondary/40 active:scale-[0.98]"
+                    >
+                      <LogOut className="h-4 w-4" />
+                      Sign out
+                    </button>
+                  </>
+                )}
+
+                {userRole === null && (
                   <div className="rounded-lg bg-red-500/10 border border-red-500/20 p-4 text-xs text-red-500">
-                    Your account does not have admin privileges.
+                    Your account does not have proper role assignment.
                   </div>
                 )}
-                <button
-                  type="button"
-                  onClick={handleSignOut}
-                  className="inline-flex w-full items-center justify-center gap-2 rounded-lg border border-border px-4 py-3 font-semibold transition-all hover:bg-secondary/40 active:scale-[0.98]"
-                >
-                  <LogOut className="h-4 w-4" />
-                  Sign out
-                </button>
               </div>
             )}
             
