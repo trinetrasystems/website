@@ -49,6 +49,15 @@ type Submission = {
   status?: string;
 };
 
+type UserProfile = {
+  id: string;
+  email: string;
+  role: "admin" | "user";
+  ipLink: string;
+  createdAtLabel: string;
+  updatedAtLabel: string;
+};
+
 type FirestoreTimestamp = Timestamp & {
   toDate: () => Date;
 };
@@ -76,6 +85,13 @@ const Admin = () => {
   const [newUserRole, setNewUserRole] = useState<"admin" | "user">("user");
   const [newUserIpLink, setNewUserIpLink] = useState("");
   const [creatingUser, setCreatingUser] = useState(false);
+  const [users, setUsers] = useState<UserProfile[]>([]);
+  const [selectedUserId, setSelectedUserId] = useState("");
+  const [selectedUserEmail, setSelectedUserEmail] = useState("");
+  const [selectedUserRole, setSelectedUserRole] = useState<"admin" | "user">("user");
+  const [selectedUserIpLink, setSelectedUserIpLink] = useState("");
+  const [updatingUser, setUpdatingUser] = useState(false);
+  const [deletingUser, setDeletingUser] = useState(false);
   const [status, setStatus] = useState("");
   const [submissions, setSubmissions] = useState<Submission[]>([]);
 
@@ -130,6 +146,39 @@ const Admin = () => {
       return;
     }
 
+    const usersQuery = query(collection(db, "users"));
+    const unsubscribeUsers = onSnapshot(
+      usersQuery,
+      (snapshot) => {
+        const nextUsers = snapshot.docs.map((userDoc) => {
+          const data = userDoc.data();
+
+          return {
+            id: userDoc.id,
+            email: data.email || "No email",
+            role: (data.role || "user") as "admin" | "user",
+            ipLink: data.ip_link || "",
+            createdAtLabel: formatTimestamp(data.createdAt),
+            updatedAtLabel: formatTimestamp(data.updatedAt),
+          };
+        });
+
+        setUsers(nextUsers);
+
+        if (selectedUserId) {
+          const refreshedSelectedUser = nextUsers.find((entry) => entry.id === selectedUserId);
+          if (refreshedSelectedUser) {
+            setSelectedUserEmail(refreshedSelectedUser.email);
+            setSelectedUserRole(refreshedSelectedUser.role);
+            setSelectedUserIpLink(refreshedSelectedUser.ipLink);
+          }
+        }
+      },
+      (error) => {
+        setStatus(error.message || "Could not load users.");
+      }
+    );
+
     const submissionsQuery = query(
       collection(db, "publicSubmissions"),
       orderBy("createdAt", "desc"),
@@ -160,8 +209,11 @@ const Admin = () => {
       }
     );
 
-    return () => unsubscribe();
-  }, [canShowDashboard]);
+    return () => {
+      unsubscribeUsers();
+      unsubscribe();
+    };
+  }, [canShowDashboard, selectedUserId]);
 
   const handleLogin = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -220,6 +272,79 @@ const Admin = () => {
       toast.error(message);
     } finally {
       setCreatingUser(false);
+    }
+  };
+
+  const handleSelectUser = (profile: UserProfile) => {
+    setSelectedUserId(profile.id);
+    setSelectedUserEmail(profile.email);
+    setSelectedUserRole(profile.role);
+    setSelectedUserIpLink(profile.ipLink);
+    setStatus(`Selected ${profile.email}.`);
+  };
+
+  const handleUpdateUser = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+
+    if (!isAdmin || !selectedUserId) {
+      setStatus("Select a user first.");
+      return;
+    }
+
+    setUpdatingUser(true);
+    setStatus("");
+
+    try {
+      await setDoc(
+        doc(db, "users", selectedUserId),
+        {
+          email: selectedUserEmail,
+          role: selectedUserRole,
+          ip_link: selectedUserRole === "user" ? selectedUserIpLink : "",
+          updatedAt: serverTimestamp(),
+        },
+        { merge: true }
+      );
+
+      toast.success("User updated successfully");
+      setStatus("User updated successfully.");
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Could not update user.";
+      setStatus(message);
+      toast.error(message);
+    } finally {
+      setUpdatingUser(false);
+    }
+  };
+
+  const handleDeleteSelectedUser = async () => {
+    if (!isAdmin || !selectedUserId) {
+      setStatus("Select a user first.");
+      return;
+    }
+
+    setDeletingUser(true);
+    setStatus("");
+
+    try {
+      await deleteDoc(doc(db, "users", selectedUserId));
+
+      if (user?.uid === selectedUserId) {
+        await handleSignOut();
+      }
+
+      toast.success("User deleted successfully");
+      setStatus("User deleted successfully.");
+      setSelectedUserId("");
+      setSelectedUserEmail("");
+      setSelectedUserRole("user");
+      setSelectedUserIpLink("");
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Could not delete user.";
+      setStatus(message);
+      toast.error(message);
+    } finally {
+      setDeletingUser(false);
     }
   };
 
@@ -387,6 +512,103 @@ const Admin = () => {
                         {creatingUser ? "Creating..." : "Create User"}
                       </button>
                     </form>
+                    <div className="space-y-3 rounded-lg border border-border bg-secondary/20 p-4">
+                      <div>
+                        <p className="text-sm font-semibold">Select User</p>
+                        <p className="mt-1 text-xs text-muted-foreground">
+                          Choose a profile to view, update, or delete it.
+                        </p>
+                      </div>
+                      <div className="max-h-56 space-y-2 overflow-y-auto pr-1">
+                        {users.length === 0 ? (
+                          <p className="text-sm text-muted-foreground">No users found.</p>
+                        ) : (
+                          users.map((profile) => (
+                            <button
+                              key={profile.id}
+                              type="button"
+                              onClick={() => handleSelectUser(profile)}
+                              className={`w-full rounded-lg border px-3 py-2 text-left text-sm transition ${
+                                selectedUserId === profile.id
+                                  ? "border-primary bg-primary/10"
+                                  : "border-border bg-background hover:bg-secondary/30"
+                              }`}
+                            >
+                              <div className="flex items-center justify-between gap-3">
+                                <span className="truncate font-medium">{profile.email}</span>
+                                <span className="rounded-full bg-secondary px-2 py-0.5 text-[10px] uppercase tracking-wide text-muted-foreground">
+                                  {profile.role}
+                                </span>
+                              </div>
+                              <p className="mt-1 text-xs text-muted-foreground truncate">{profile.id}</p>
+                            </button>
+                          ))
+                        )}
+                      </div>
+                    </div>
+                    {selectedUserId && (
+                      <form className="space-y-4 rounded-lg border border-border bg-secondary/20 p-4" onSubmit={handleUpdateUser}>
+                        <div>
+                          <p className="text-sm font-semibold">Edit Selected User</p>
+                          <p className="mt-1 text-xs text-muted-foreground break-all">UID: {selectedUserId}</p>
+                        </div>
+                        <div className="space-y-2">
+                          <label className="text-sm font-medium">Email</label>
+                          <input
+                            type="email"
+                            value={selectedUserEmail}
+                            onChange={(event) => setSelectedUserEmail(event.target.value)}
+                            className="w-full rounded-lg border border-border bg-background px-4 py-3 outline-none focus:ring-2 focus:ring-primary/40 transition-all"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <label className="text-sm font-medium">Role</label>
+                          <select
+                            value={selectedUserRole}
+                            onChange={(event) => setSelectedUserRole(event.target.value as "admin" | "user")}
+                            className="w-full rounded-lg border border-border bg-background px-4 py-3 outline-none focus:ring-2 focus:ring-primary/40 transition-all"
+                          >
+                            <option value="user">Normal User</option>
+                            <option value="admin">Admin</option>
+                          </select>
+                        </div>
+                        <div className="space-y-2">
+                          <label className="text-sm font-medium">IP Link</label>
+                          <input
+                            type="text"
+                            value={selectedUserIpLink}
+                            onChange={(event) => setSelectedUserIpLink(event.target.value)}
+                            className="w-full rounded-lg border border-border bg-background px-4 py-3 outline-none focus:ring-2 focus:ring-primary/40 transition-all"
+                            placeholder="User IP link"
+                            disabled={selectedUserRole === "admin"}
+                          />
+                        </div>
+                        <div className="grid grid-cols-2 gap-3">
+                          <button
+                            type="submit"
+                            disabled={updatingUser}
+                            className="inline-flex items-center justify-center gap-2 rounded-lg bg-primary px-4 py-3 font-semibold text-primary-foreground transition-all hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
+                          >
+                            <Shield className="h-4 w-4" />
+                            {updatingUser ? "Saving..." : "Save Changes"}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={handleDeleteSelectedUser}
+                            disabled={deletingUser}
+                            className="inline-flex items-center justify-center gap-2 rounded-lg border border-destructive px-4 py-3 font-semibold text-destructive transition-all hover:bg-destructive/10 disabled:cursor-not-allowed disabled:opacity-60"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                            {deletingUser ? "Deleting..." : "Delete User"}
+                          </button>
+                        </div>
+                        <p className="text-xs text-muted-foreground">
+                          Created: {users.find((profile) => profile.id === selectedUserId)?.createdAtLabel || "Unknown"}
+                          <br />
+                          Updated: {users.find((profile) => profile.id === selectedUserId)?.updatedAtLabel || "Unknown"}
+                        </p>
+                      </form>
+                    )}
                     <button
                       type="button"
                       onClick={handleSignOut}
