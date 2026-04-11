@@ -94,6 +94,7 @@ const Admin = () => {
   const [selectedUserIpLink, setSelectedUserIpLink] = useState("");
   const [updatingUser, setUpdatingUser] = useState(false);
   const [deletingUser, setDeletingUser] = useState(false);
+  const [activeSection, setActiveSection] = useState<"create" | "edit" | "forms">("create");
 
   const [submissions, setSubmissions] = useState<Submission[]>([]);
 
@@ -114,6 +115,7 @@ const Admin = () => {
       setSelectedUserEmail("");
       setSelectedUserRole("user");
       setSelectedUserIpLink("");
+      setActiveSection("create");
 
       if (!currentUser) {
         setCheckingAdmin(false);
@@ -328,6 +330,7 @@ const Admin = () => {
       setSelectedUserEmail("");
       setSelectedUserRole("user");
       setSelectedUserIpLink("");
+      setActiveSection("edit");
       setStatus("User deleted successfully.");
       toast.success("User deleted successfully");
     } catch (error) {
@@ -352,6 +355,7 @@ const Admin = () => {
       setSelectedUserEmail("");
       setSelectedUserRole("user");
       setSelectedUserIpLink("");
+      setActiveSection("create");
     } catch (error) {
       setStatus(error instanceof Error ? error.message : "Could not sign out.");
     }
@@ -504,268 +508,308 @@ const Admin = () => {
           {canShowDashboard && (
             <div className="space-y-6">
               <section className="rounded-2xl border border-border bg-card p-6 shadow-lg">
-                <div className="flex items-center justify-between gap-4">
+                <div className="flex flex-wrap items-center gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setActiveSection("create")}
+                    className={`rounded-lg px-4 py-2 text-sm font-medium transition ${
+                      activeSection === "create"
+                        ? "bg-primary text-primary-foreground"
+                        : "border border-border bg-background hover:bg-secondary/40"
+                    }`}
+                  >
+                    Create User
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setActiveSection("edit")}
+                    className={`rounded-lg px-4 py-2 text-sm font-medium transition ${
+                      activeSection === "edit"
+                        ? "bg-primary text-primary-foreground"
+                        : "border border-border bg-background hover:bg-secondary/40"
+                    }`}
+                  >
+                    Edit User
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setActiveSection("forms")}
+                    className={`rounded-lg px-4 py-2 text-sm font-medium transition ${
+                      activeSection === "forms"
+                        ? "bg-primary text-primary-foreground"
+                        : "border border-border bg-background hover:bg-secondary/40"
+                    }`}
+                  >
+                    Submitted Forms
+                  </button>
+                </div>
+              </section>
+
+              {activeSection === "create" && (
+                <section className="rounded-2xl border border-border bg-card p-6 shadow-lg">
                   <div>
                     <h2 className="text-2xl font-bold">Create User</h2>
                     <p className="mt-1 text-sm text-muted-foreground">
                       Create a Firebase Auth account and save the Firestore profile.
                     </p>
                   </div>
-                </div>
-                <form className="mt-6 space-y-4" onSubmit={handleCreateUser}>
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">Email</label>
-                    <input
-                      type="email"
-                      value={newUserEmail}
-                      onChange={(event) => setNewUserEmail(event.target.value)}
-                      className="w-full rounded-lg border border-border bg-background px-4 py-3 outline-none transition-all focus:ring-2 focus:ring-primary/40"
-                      placeholder="New user email"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">Password</label>
-                    <input
-                      type="password"
-                      value={newUserPassword}
-                      onChange={(event) => setNewUserPassword(event.target.value)}
-                      className="w-full rounded-lg border border-border bg-background px-4 py-3 outline-none transition-all focus:ring-2 focus:ring-primary/40"
-                      placeholder="New user password"
-                    />
-                  </div>
-                  <div className="grid gap-4 md:grid-cols-2">
+                  <form className="mt-6 space-y-4" onSubmit={handleCreateUser}>
                     <div className="space-y-2">
-                      <label className="text-sm font-medium">Role</label>
-                      <select
-                        value={newUserRole}
-                        onChange={(event) => setNewUserRole(event.target.value as "admin" | "user")}
-                        className="w-full rounded-lg border border-border bg-background px-4 py-3 outline-none transition-all focus:ring-2 focus:ring-primary/40"
-                      >
-                        <option value="user">Normal User</option>
-                        <option value="admin">Admin</option>
-                      </select>
-                    </div>
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium">IP Link</label>
+                      <label className="text-sm font-medium">Email</label>
                       <input
-                        type="text"
-                        value={newUserIpLink}
-                        onChange={(event) => setNewUserIpLink(event.target.value)}
+                        type="email"
+                        value={newUserEmail}
+                        onChange={(event) => setNewUserEmail(event.target.value)}
                         className="w-full rounded-lg border border-border bg-background px-4 py-3 outline-none transition-all focus:ring-2 focus:ring-primary/40"
-                        placeholder="Optional IP link"
+                        placeholder="New user email"
                       />
                     </div>
-                  </div>
-                  <button
-                    type="submit"
-                    disabled={creatingUser}
-                    className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-primary px-4 py-3 font-semibold text-primary-foreground transition-all hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
-                  >
-                    <Shield className="h-4 w-4" />
-                    {creatingUser ? "Creating..." : "Create User"}
-                  </button>
-                </form>
-              </section>
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">Password</label>
+                      <input
+                        type="password"
+                        value={newUserPassword}
+                        onChange={(event) => setNewUserPassword(event.target.value)}
+                        className="w-full rounded-lg border border-border bg-background px-4 py-3 outline-none transition-all focus:ring-2 focus:ring-primary/40"
+                        placeholder="New user password"
+                      />
+                    </div>
+                    <div className="grid gap-4 md:grid-cols-2">
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium">Role</label>
+                        <select
+                          value={newUserRole}
+                          onChange={(event) => setNewUserRole(event.target.value as "admin" | "user")}
+                          className="w-full rounded-lg border border-border bg-background px-4 py-3 outline-none transition-all focus:ring-2 focus:ring-primary/40"
+                        >
+                          <option value="user">Normal User</option>
+                          <option value="admin">Admin</option>
+                        </select>
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium">IP Link</label>
+                        <input
+                          type="text"
+                          value={newUserIpLink}
+                          onChange={(event) => setNewUserIpLink(event.target.value)}
+                          className="w-full rounded-lg border border-border bg-background px-4 py-3 outline-none transition-all focus:ring-2 focus:ring-primary/40"
+                          placeholder="Optional IP link"
+                        />
+                      </div>
+                    </div>
+                    <button
+                      type="submit"
+                      disabled={creatingUser}
+                      className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-primary px-4 py-3 font-semibold text-primary-foreground transition-all hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
+                    >
+                      <Shield className="h-4 w-4" />
+                      {creatingUser ? "Creating..." : "Create User"}
+                    </button>
+                  </form>
+                </section>
+              )}
 
-              <section className="rounded-2xl border border-border bg-card p-6 shadow-lg">
-                <div className="flex items-center justify-between gap-4">
+              {activeSection === "edit" && (
+                <section className="rounded-2xl border border-border bg-card p-6 shadow-lg">
                   <div>
                     <h2 className="text-2xl font-bold">Edit User</h2>
                     <p className="mt-1 text-sm text-muted-foreground">
                       Select a profile to view, update, or delete it.
                     </p>
                   </div>
-                </div>
-                <div className="mt-6 space-y-4">
-                  <div className="max-h-60 space-y-2 overflow-y-auto rounded-xl border border-border bg-secondary/10 p-3 pr-1">
-                    {users.length === 0 ? (
-                      <p className="text-sm text-muted-foreground">No users found.</p>
-                    ) : (
-                      users.map((profile) => (
-                        <button
-                          key={profile.id}
-                          type="button"
-                          onClick={() => handleSelectUser(profile)}
-                          className={`w-full rounded-lg border px-3 py-2 text-left text-sm transition ${
-                            selectedUserId === profile.id
-                              ? "border-primary bg-primary/10"
-                              : "border-border bg-background hover:bg-secondary/30"
-                          }`}
-                        >
-                          <div className="flex items-center justify-between gap-3">
-                            <span className="truncate font-medium">{profile.email}</span>
-                            <span className="rounded-full bg-secondary px-2 py-0.5 text-[10px] uppercase tracking-wide text-muted-foreground">
-                              {profile.role}
-                            </span>
+                  <div className="mt-6 space-y-4">
+                    <div className="max-h-60 space-y-2 overflow-y-auto rounded-xl border border-border bg-secondary/10 p-3 pr-1">
+                      {users.length === 0 ? (
+                        <p className="text-sm text-muted-foreground">No users found.</p>
+                      ) : (
+                        users.map((profile) => (
+                          <button
+                            key={profile.id}
+                            type="button"
+                            onClick={() => handleSelectUser(profile)}
+                            className={`w-full rounded-lg border px-3 py-2 text-left text-sm transition ${
+                              selectedUserId === profile.id
+                                ? "border-primary bg-primary/10"
+                                : "border-border bg-background hover:bg-secondary/30"
+                            }`}
+                          >
+                            <div className="flex items-center justify-between gap-3">
+                              <span className="truncate font-medium">{profile.email}</span>
+                              <span className="rounded-full bg-secondary px-2 py-0.5 text-[10px] uppercase tracking-wide text-muted-foreground">
+                                {profile.role}
+                              </span>
+                            </div>
+                            <p className="mt-1 truncate text-xs text-muted-foreground">{profile.id}</p>
+                          </button>
+                        ))
+                      )}
+                    </div>
+
+                    {selectedUserId ? (
+                      <form className="space-y-4 rounded-xl border border-border bg-secondary/20 p-4" onSubmit={handleUpdateUser}>
+                        <div>
+                          <p className="text-sm font-semibold">Selected User</p>
+                          <p className="mt-1 break-all text-xs text-muted-foreground">UID: {selectedUserId}</p>
+                        </div>
+                        <div className="space-y-2">
+                          <label className="text-sm font-medium">Email</label>
+                          <input
+                            type="email"
+                            value={selectedUserEmail}
+                            onChange={(event) => setSelectedUserEmail(event.target.value)}
+                            className="w-full rounded-lg border border-border bg-background px-4 py-3 outline-none transition-all focus:ring-2 focus:ring-primary/40"
+                          />
+                        </div>
+                        <div className="grid gap-4 md:grid-cols-2">
+                          <div className="space-y-2">
+                            <label className="text-sm font-medium">Role</label>
+                            <select
+                              value={selectedUserRole}
+                              onChange={(event) => setSelectedUserRole(event.target.value as "admin" | "user")}
+                              className="w-full rounded-lg border border-border bg-background px-4 py-3 outline-none transition-all focus:ring-2 focus:ring-primary/40"
+                            >
+                              <option value="user">Normal User</option>
+                              <option value="admin">Admin</option>
+                            </select>
                           </div>
-                          <p className="mt-1 truncate text-xs text-muted-foreground">{profile.id}</p>
-                        </button>
+                          <div className="space-y-2">
+                            <label className="text-sm font-medium">IP Link</label>
+                            <input
+                              type="text"
+                              value={selectedUserIpLink}
+                              onChange={(event) => setSelectedUserIpLink(event.target.value)}
+                              disabled={selectedUserRole === "admin"}
+                              className="w-full rounded-lg border border-border bg-background px-4 py-3 outline-none transition-all focus:ring-2 focus:ring-primary/40 disabled:cursor-not-allowed disabled:opacity-60"
+                              placeholder="User IP link"
+                            />
+                          </div>
+                        </div>
+                        <div className="grid grid-cols-2 gap-3">
+                          <button
+                            type="submit"
+                            disabled={updatingUser}
+                            className="inline-flex items-center justify-center gap-2 rounded-lg bg-primary px-4 py-3 font-semibold text-primary-foreground transition-all hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
+                          >
+                            <Shield className="h-4 w-4" />
+                            {updatingUser ? "Saving..." : "Save Changes"}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={handleDeleteSelectedUser}
+                            disabled={deletingUser}
+                            className="inline-flex items-center justify-center gap-2 rounded-lg border border-destructive px-4 py-3 font-semibold text-destructive transition-all hover:bg-destructive/10 disabled:cursor-not-allowed disabled:opacity-60"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                            {deletingUser ? "Deleting..." : "Delete User"}
+                          </button>
+                        </div>
+                        <p className="text-xs text-muted-foreground">
+                          Created: {selectedUser?.createdAtLabel || "Unknown"}
+                          <br />
+                          Updated: {selectedUser?.updatedAtLabel || "Unknown"}
+                        </p>
+                      </form>
+                    ) : (
+                      <div className="rounded-xl border border-dashed border-border p-8 text-sm text-muted-foreground">
+                        Select a user to edit them.
+                      </div>
+                    )}
+                  </div>
+                </section>
+              )}
+
+              {activeSection === "forms" && (
+                <section className="rounded-2xl border border-border bg-card p-6 shadow-lg">
+                  <div className="flex items-center justify-between gap-4">
+                    <div>
+                      <h2 className="text-2xl font-bold">Submitted Forms</h2>
+                      <p className="mt-1 text-sm text-muted-foreground">Real-time requests from the website.</p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => window.location.reload()}
+                      className="inline-flex items-center gap-2 rounded-lg border border-border px-3 py-2 text-sm font-medium transition hover:bg-secondary/40"
+                    >
+                      <RefreshCw className="h-4 w-4" />
+                      Refresh
+                    </button>
+                  </div>
+
+                  <div className="mt-6 space-y-4">
+                    {submissions.length === 0 ? (
+                      <div className="rounded-xl border border-dashed border-border p-12 text-center text-muted-foreground">
+                        <p className="text-lg font-medium">All caught up!</p>
+                        <p className="text-sm opacity-70">No new submissions found in the database.</p>
+                      </div>
+                    ) : (
+                      submissions.map((submission) => (
+                        <article
+                          key={submission.id}
+                          className={`rounded-xl border border-border bg-secondary/20 p-5 transition-all ${submission.status === "completed" ? "opacity-60 grayscale-[0.5]" : ""}`}
+                        >
+                          <div className="flex flex-wrap items-start justify-between gap-3">
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2">
+                                <h3 className="text-lg font-semibold">{submission.name}</h3>
+                                {submission.status === "completed" && (
+                                  <span className="inline-flex items-center rounded-full bg-emerald-500/10 px-2 py-0.5 text-[10px] font-medium text-emerald-500 ring-1 ring-inset ring-emerald-500/20">
+                                    Completed
+                                  </span>
+                                )}
+                              </div>
+                              <div className="mt-3 space-y-1 text-sm text-muted-foreground">
+                                <p><span className="font-medium text-foreground">Email:</span> {submission.email}</p>
+                                <p><span className="font-medium text-foreground">Company Name:</span> {submission.companyName}</p>
+                                <p><span className="font-medium text-foreground">Mobile Number:</span> {submission.contactNumber}</p>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <button
+                                onClick={() => handleComplete(submission.id, submission.status)}
+                                className={`rounded-lg p-2 transition-colors ${submission.status === "completed" ? "bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500/20" : "text-muted-foreground hover:bg-emerald-500/10 hover:text-emerald-500"}`}
+                                title={submission.status === "completed" ? "Mark as Pending" : "Mark as Completed"}
+                              >
+                                <CheckCircle className="h-5 w-5" />
+                              </button>
+                              <AlertDialog>
+                                <AlertDialogTrigger asChild>
+                                  <button
+                                    className="rounded-lg p-2 text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
+                                    title="Remove Request"
+                                  >
+                                    <Trash2 className="h-5 w-5" />
+                                  </button>
+                                </AlertDialogTrigger>
+                                <AlertDialogContent>
+                                  <AlertDialogHeader>
+                                    <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                                    <AlertDialogDescription>
+                                      This action cannot be undone. This will permanently delete the submission from {submission.name}.
+                                    </AlertDialogDescription>
+                                  </AlertDialogHeader>
+                                  <AlertDialogFooter>
+                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                    <AlertDialogAction
+                                      onClick={() => handleDelete(submission.id)}
+                                      className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                    >
+                                      Delete
+                                    </AlertDialogAction>
+                                  </AlertDialogFooter>
+                                </AlertDialogContent>
+                              </AlertDialog>
+                              <span className="ml-2 whitespace-nowrap text-xs text-muted-foreground">{submission.createdAtLabel}</span>
+                            </div>
+                          </div>
+                          <p className="mt-4 whitespace-pre-wrap text-sm leading-6 text-foreground/90">
+                            <span className="font-medium text-foreground">Query:</span> {submission.message}
+                          </p>
+                        </article>
                       ))
                     )}
                   </div>
-
-                  {selectedUserId ? (
-                    <form className="space-y-4 rounded-xl border border-border bg-secondary/20 p-4" onSubmit={handleUpdateUser}>
-                      <div>
-                        <p className="text-sm font-semibold">Selected User</p>
-                        <p className="mt-1 break-all text-xs text-muted-foreground">UID: {selectedUserId}</p>
-                      </div>
-                      <div className="space-y-2">
-                        <label className="text-sm font-medium">Email</label>
-                        <input
-                          type="email"
-                          value={selectedUserEmail}
-                          onChange={(event) => setSelectedUserEmail(event.target.value)}
-                          className="w-full rounded-lg border border-border bg-background px-4 py-3 outline-none transition-all focus:ring-2 focus:ring-primary/40"
-                        />
-                      </div>
-                      <div className="grid gap-4 md:grid-cols-2">
-                        <div className="space-y-2">
-                          <label className="text-sm font-medium">Role</label>
-                          <select
-                            value={selectedUserRole}
-                            onChange={(event) => setSelectedUserRole(event.target.value as "admin" | "user")}
-                            className="w-full rounded-lg border border-border bg-background px-4 py-3 outline-none transition-all focus:ring-2 focus:ring-primary/40"
-                          >
-                            <option value="user">Normal User</option>
-                            <option value="admin">Admin</option>
-                          </select>
-                        </div>
-                        <div className="space-y-2">
-                          <label className="text-sm font-medium">IP Link</label>
-                          <input
-                            type="text"
-                            value={selectedUserIpLink}
-                            onChange={(event) => setSelectedUserIpLink(event.target.value)}
-                            disabled={selectedUserRole === "admin"}
-                            className="w-full rounded-lg border border-border bg-background px-4 py-3 outline-none transition-all focus:ring-2 focus:ring-primary/40 disabled:cursor-not-allowed disabled:opacity-60"
-                            placeholder="User IP link"
-                          />
-                        </div>
-                      </div>
-                      <div className="grid grid-cols-2 gap-3">
-                        <button
-                          type="submit"
-                          disabled={updatingUser}
-                          className="inline-flex items-center justify-center gap-2 rounded-lg bg-primary px-4 py-3 font-semibold text-primary-foreground transition-all hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
-                        >
-                          <Shield className="h-4 w-4" />
-                          {updatingUser ? "Saving..." : "Save Changes"}
-                        </button>
-                        <button
-                          type="button"
-                          onClick={handleDeleteSelectedUser}
-                          disabled={deletingUser}
-                          className="inline-flex items-center justify-center gap-2 rounded-lg border border-destructive px-4 py-3 font-semibold text-destructive transition-all hover:bg-destructive/10 disabled:cursor-not-allowed disabled:opacity-60"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                          {deletingUser ? "Deleting..." : "Delete User"}
-                        </button>
-                      </div>
-                      <p className="text-xs text-muted-foreground">
-                        Created: {selectedUser?.createdAtLabel || "Unknown"}
-                        <br />
-                        Updated: {selectedUser?.updatedAtLabel || "Unknown"}
-                      </p>
-                    </form>
-                  ) : (
-                    <div className="rounded-xl border border-dashed border-border p-8 text-sm text-muted-foreground">
-                      Select a user to edit them.
-                    </div>
-                  )}
-                </div>
-              </section>
-
-              <section className="rounded-2xl border border-border bg-card p-6 shadow-lg">
-                <div className="flex items-center justify-between gap-4">
-                  <div>
-                    <h2 className="text-2xl font-bold">Submitted Forms</h2>
-                    <p className="mt-1 text-sm text-muted-foreground">Real-time requests from the website.</p>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => window.location.reload()}
-                    className="inline-flex items-center gap-2 rounded-lg border border-border px-3 py-2 text-sm font-medium transition hover:bg-secondary/40"
-                  >
-                    <RefreshCw className="h-4 w-4" />
-                    Refresh
-                  </button>
-                </div>
-
-                <div className="mt-6 space-y-4">
-                  {submissions.length === 0 ? (
-                    <div className="rounded-xl border border-dashed border-border p-12 text-center text-muted-foreground">
-                      <p className="text-lg font-medium">All caught up!</p>
-                      <p className="text-sm opacity-70">No new submissions found in the database.</p>
-                    </div>
-                  ) : (
-                    submissions.map((submission) => (
-                      <article
-                        key={submission.id}
-                        className={`rounded-xl border border-border bg-secondary/20 p-5 transition-all ${submission.status === "completed" ? "opacity-60 grayscale-[0.5]" : ""}`}
-                      >
-                        <div className="flex flex-wrap items-start justify-between gap-3">
-                          <div className="flex-1">
-                            <div className="flex items-center gap-2">
-                              <h3 className="text-lg font-semibold">{submission.name}</h3>
-                              {submission.status === "completed" && (
-                                <span className="inline-flex items-center rounded-full bg-emerald-500/10 px-2 py-0.5 text-[10px] font-medium text-emerald-500 ring-1 ring-inset ring-emerald-500/20">
-                                  Completed
-                                </span>
-                              )}
-                            </div>
-                            <div className="mt-3 space-y-1 text-sm text-muted-foreground">
-                              <p><span className="font-medium text-foreground">Email:</span> {submission.email}</p>
-                              <p><span className="font-medium text-foreground">Company Name:</span> {submission.companyName}</p>
-                              <p><span className="font-medium text-foreground">Mobile Number:</span> {submission.contactNumber}</p>
-                            </div>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <button
-                              onClick={() => handleComplete(submission.id, submission.status)}
-                              className={`rounded-lg p-2 transition-colors ${submission.status === "completed" ? "bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500/20" : "text-muted-foreground hover:bg-emerald-500/10 hover:text-emerald-500"}`}
-                              title={submission.status === "completed" ? "Mark as Pending" : "Mark as Completed"}
-                            >
-                              <CheckCircle className="h-5 w-5" />
-                            </button>
-                            <AlertDialog>
-                              <AlertDialogTrigger asChild>
-                                <button
-                                  className="rounded-lg p-2 text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
-                                  title="Remove Request"
-                                >
-                                  <Trash2 className="h-5 w-5" />
-                                </button>
-                              </AlertDialogTrigger>
-                              <AlertDialogContent>
-                                <AlertDialogHeader>
-                                  <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-                                  <AlertDialogDescription>
-                                    This action cannot be undone. This will permanently delete the submission from {submission.name}.
-                                  </AlertDialogDescription>
-                                </AlertDialogHeader>
-                                <AlertDialogFooter>
-                                  <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                  <AlertDialogAction
-                                    onClick={() => handleDelete(submission.id)}
-                                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                                  >
-                                    Delete
-                                  </AlertDialogAction>
-                                </AlertDialogFooter>
-                              </AlertDialogContent>
-                            </AlertDialog>
-                            <span className="ml-2 whitespace-nowrap text-xs text-muted-foreground">{submission.createdAtLabel}</span>
-                          </div>
-                        </div>
-                        <p className="mt-4 whitespace-pre-wrap text-sm leading-6 text-foreground/90">
-                          <span className="font-medium text-foreground">Query:</span> {submission.message}
-                        </p>
-                      </article>
-                    ))
-                  )}
-                </div>
-              </section>
+                </section>
+              )}
             </div>
           )}
         </div>
