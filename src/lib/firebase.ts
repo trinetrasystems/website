@@ -1,4 +1,4 @@
-import { initializeApp } from "firebase/app";
+import { getApps, initializeApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
 
@@ -27,7 +27,11 @@ const firebaseConfig = {
   measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID,
 };
 
-const app = initializeApp(firebaseConfig);
+const app = getApps().find((candidate) => candidate.name === "[DEFAULT]") ?? initializeApp(firebaseConfig);
+const adminApp =
+  getApps().find((candidate) => candidate.name === "admin-management") ??
+  initializeApp(firebaseConfig, "admin-management");
 
 export const auth = getAuth(app);
+export const adminAuth = getAuth(adminApp);
 export const db = getFirestore(app);

@@ -2,6 +2,8 @@ import { FormEvent, useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import {
+  createUserWithEmailAndPassword,
+  deleteUser,
   onAuthStateChanged,
   signInWithEmailAndPassword,
   signOut,
@@ -14,12 +16,14 @@ import {
   limit,
   onSnapshot,
   orderBy,
+  serverTimestamp,
   query,
   type Timestamp,
   deleteDoc,
+  setDoc,
   updateDoc,
 } from "firebase/firestore";
-import { auth, db } from "@/lib/firebase";
+import { adminAuth, auth, db } from "@/lib/firebase";
 import { Shield, LogIn, LogOut, RefreshCw, ArrowLeft, CheckCircle, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -67,6 +71,11 @@ const Admin = () => {
   const [ipLink, setIpLink] = useState<string>("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [newUserEmail, setNewUserEmail] = useState("");
+  const [newUserPassword, setNewUserPassword] = useState("");
+  const [newUserRole, setNewUserRole] = useState<"admin" | "user">("user");
+  const [newUserIpLink, setNewUserIpLink] = useState("");
+  const [creatingUser, setCreatingUser] = useState(false);
   const [status, setStatus] = useState("");
   const [submissions, setSubmissions] = useState<Submission[]>([]);
 
@@ -162,6 +171,55 @@ const Admin = () => {
       await signInWithEmailAndPassword(auth, email, password);
     } catch (error) {
       setStatus(error instanceof Error ? error.message : "Could not sign in.");
+    }
+  };
+
+  const handleCreateUser = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+
+    if (!isAdmin) {
+      setStatus("Only admins can create users.");
+      return;
+    }
+
+    if (!newUserEmail || !newUserPassword) {
+      setStatus("Email and password are required.");
+      return;
+    }
+
+    setCreatingUser(true);
+    setStatus("");
+
+    try {
+      const credential = await createUserWithEmailAndPassword(adminAuth, newUserEmail, newUserPassword);
+
+      try {
+        await setDoc(doc(db, "users", credential.user.uid), {
+          email: newUserEmail,
+          role: newUserRole,
+          ip_link: newUserRole === "user" ? newUserIpLink : "",
+          createdAt: serverTimestamp(),
+          updatedAt: serverTimestamp(),
+        });
+      } catch (profileError) {
+        await deleteUser(credential.user);
+        throw profileError;
+      } finally {
+        await signOut(adminAuth).catch(() => undefined);
+      }
+
+      setNewUserEmail("");
+      setNewUserPassword("");
+      setNewUserRole("user");
+      setNewUserIpLink("");
+      setStatus("User created successfully.");
+      toast.success("User created successfully");
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Could not create user.";
+      setStatus(message);
+      toast.error(message);
+    } finally {
+      setCreatingUser(false);
     }
   };
 
@@ -272,6 +330,63 @@ const Admin = () => {
                       <p className="font-medium text-primary">System Admin</p>
                       <p className="mt-1 text-muted-foreground truncate">{user.email}</p>
                     </div>
+                    <form className="space-y-4 rounded-lg border border-border bg-secondary/20 p-4" onSubmit={handleCreateUser}>
+                      <div>
+                        <p className="text-sm font-semibold">Create User</p>
+                        <p className="mt-1 text-xs text-muted-foreground">
+                          Creates a Firebase Auth account and saves the Firestore profile.
+                        </p>
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium">Email</label>
+                        <input
+                          type="email"
+                          value={newUserEmail}
+                          onChange={(event) => setNewUserEmail(event.target.value)}
+                          className="w-full rounded-lg border border-border bg-background px-4 py-3 outline-none focus:ring-2 focus:ring-primary/40 transition-all"
+                          placeholder="New user email"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium">Password</label>
+                        <input
+                          type="password"
+                          value={newUserPassword}
+                          onChange={(event) => setNewUserPassword(event.target.value)}
+                          className="w-full rounded-lg border border-border bg-background px-4 py-3 outline-none focus:ring-2 focus:ring-primary/40 transition-all"
+                          placeholder="New user password"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium">Role</label>
+                        <select
+                          value={newUserRole}
+                          onChange={(event) => setNewUserRole(event.target.value as "admin" | "user")}
+                          className="w-full rounded-lg border border-border bg-background px-4 py-3 outline-none focus:ring-2 focus:ring-primary/40 transition-all"
+                        >
+                          <option value="user">Normal User</option>
+                          <option value="admin">Admin</option>
+                        </select>
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium">IP Link</label>
+                        <input
+                          type="text"
+                          value={newUserIpLink}
+                          onChange={(event) => setNewUserIpLink(event.target.value)}
+                          className="w-full rounded-lg border border-border bg-background px-4 py-3 outline-none focus:ring-2 focus:ring-primary/40 transition-all"
+                          placeholder="Optional IP link"
+                        />
+                      </div>
+                      <button
+                        type="submit"
+                        disabled={creatingUser}
+                        className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-primary px-4 py-3 font-semibold text-primary-foreground transition-all hover:opacity-90 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60"
+                      >
+                        <Shield className="h-4 w-4" />
+                        {creatingUser ? "Creating..." : "Create User"}
+                      </button>
+                    </form>
                     <button
                       type="button"
                       onClick={handleSignOut}
