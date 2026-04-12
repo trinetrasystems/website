@@ -153,6 +153,12 @@
 
   body {
     @apply bg-background text-foreground;
+    font-family: 'Inter', sans-serif;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Outfit', sans-serif;
+    @apply tracking-tight;
   }
 
   html {
@@ -162,13 +168,15 @@
 
 @layer utilities {
   .glass {
-    @apply backdrop-blur-xl border border-border/60;
-    background-color: hsl(var(--surface-glass) / 0.82);
+    @apply backdrop-blur-xl border border-white/10 dark:border-white/5;
+    background-color: hsl(var(--surface-glass) / 0.7);
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
   }
 
   .glass-strong {
-    @apply backdrop-blur-2xl border border-border/70;
-    background-color: hsl(var(--surface-glass-strong) / 0.9);
+    @apply backdrop-blur-2xl border border-white/20 dark:border-white/10;
+    background-color: hsl(var(--surface-glass-strong) / 0.85);
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.4);
   }
 
   .header-surface {
@@ -182,15 +190,30 @@
   }
 
   .glow-primary {
-    box-shadow: 0 0 30px -5px hsl(var(--primary) / 0.3);
+    box-shadow: 0 0 20px -5px hsl(var(--primary) / 0.4);
   }
 
   .glow-accent {
-    box-shadow: 0 0 30px -5px hsl(var(--accent) / 0.3);
+    box-shadow: 0 0 20px -5px hsl(var(--accent) / 0.4);
   }
 
   .glow-hover:hover {
-    box-shadow: 0 0 40px -5px hsl(var(--primary) / 0.4);
+    @apply -translate-y-1;
+    box-shadow: 0 20px 40px -20px hsl(var(--primary) / 0.5);
+  }
+
+  .btn-premium {
+    @apply relative overflow-hidden transition-all duration-300 active:scale-95 px-8 py-4 rounded-xl font-bold inline-flex items-center gap-2;
+  }
+
+  .btn-premium::after {
+    content: '';
+    @apply absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full transition-transform duration-700;
+    transform: skewX(-30deg) translateX(-100%);
+  }
+
+  .btn-premium:hover::after {
+    @apply translate-x-full;
   }
 
   .text-gradient {

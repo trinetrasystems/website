@@ -88,7 +88,9 @@ const CategoryCarousel = ({
 const UseCases = () => {
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true, margin: "-100px" });
+  const [showAll, setShowAll] = useState(false);
 
+  // Show all on medium screens and above, or follow showAll state on mobile
   return (
     <section id="usecases" className="py-12 md:py-24 px-4 md:px-6" ref={ref}>
       <div className="max-w-7xl mx-auto">
@@ -106,19 +108,32 @@ const UseCases = () => {
           </p>
         </motion.div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
           {useCaseCategories.map((category, categoryIndex) => (
             <motion.div
               key={category.id}
               initial={{ opacity: 0, y: 24 }}
               animate={isInView ? { opacity: 1, y: 0 } : {}}
               transition={{ duration: 0.45, delay: categoryIndex * 0.08 }}
-              className="h-full"
+              className={`h-full ${categoryIndex >= 2 && !showAll ? "hidden md:block" : "block"}`}
             >
               <CategoryCarousel title={category.title} description={category.description} items={category.items} />
             </motion.div>
           ))}
         </div>
+
+        {useCaseCategories.length > 2 && (
+          <div className={`mt-12 flex justify-center md:hidden`}>
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => setShowAll(!showAll)}
+              className="px-8 py-3 rounded-full glass border-primary/20 text-primary font-bold shadow-glow-primary transition-all flex items-center gap-2"
+            >
+              {showAll ? "Show Less" : "Show More"}
+            </motion.button>
+          </div>
+        )}
       </div>
     </section>
   );
