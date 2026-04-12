@@ -24,7 +24,7 @@ import {
   updateDoc,
 } from "firebase/firestore";
 import { adminAuth, auth, db } from "@/lib/firebase";
-import { Shield, LogIn, LogOut, RefreshCw, ArrowLeft, CheckCircle, Trash2, Eye } from "lucide-react";
+import { Shield, LogIn, LogOut, RefreshCw, ArrowLeft, CheckCircle, Trash2, Eye, EyeOff, Key, Copy } from "lucide-react";
 import AppSidebar from "@/components/AppSidebar";
 import { toast } from "sonner";
 import {
@@ -58,6 +58,13 @@ type UserProfile = {
   role: "admin" | "user";
   ipLink: string;
   createdAtLabel: string;
+  updatedAtLabel: string;
+};
+
+type PasswordRecord = {
+  uid: string;
+  username: string;
+  password: string;
   updatedAtLabel: string;
 };
 
@@ -107,13 +114,16 @@ const Admin = () => {
   const [selectedUserIpLink, setSelectedUserIpLink] = useState("");
   const [updatingUser, setUpdatingUser] = useState(false);
   const [deletingUser, setDeletingUser] = useState(false);
-  const [activeSection, setActiveSection] = useState<"create" | "edit" | "forms">("create");
-  
+  const [activeSection, setActiveSection] = useState<"create" | "edit" | "forms" | "passwords">("create");
+
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [updatingPassword, setUpdatingPassword] = useState(false);
   const [loggedInUsername, setLoggedInUsername] = useState("");
   const [showPasswordFields, setShowPasswordFields] = useState(false);
+
+  const [passwordRecords, setPasswordRecords] = useState<PasswordRecord[]>([]);
+  const [revealedPasswords, setRevealedPasswords] = useState<Set<string>>(new Set());
 
   const handlePasswordChange = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -132,6 +142,17 @@ const Admin = () => {
     setUpdatingPassword(true);
     try {
       await updatePassword(user, newPassword);
+      // Save new password to userPasswords registry
+      await setDoc(
+        doc(db, "userPasswords", user.uid),
+        {
+          uid: user.uid,
+          username: loggedInUsername || user.email || "",
+          password: newPassword,
+          updatedAt: serverTimestamp(),
+        },
+        { merge: true }
+      );
       setNewPassword("");
       setConfirmPassword("");
       toast.success("Password updated successfully.");
@@ -144,6 +165,23 @@ const Admin = () => {
     } finally {
       setUpdatingPassword(false);
     }
+  };
+
+  const toggleRevealPassword = (uid: string) => {
+    setRevealedPasswords((prev) => {
+      const next = new Set(prev);
+      if (next.has(uid)) {
+        next.delete(uid);
+      } else {
+        next.add(uid);
+      }
+      return next;
+    });
+  };
+
+  const handleCopyPassword = (password: string) => {
+    navigator.clipboard.writeText(password);
+    toast.success("Password copied to clipboard");
   };
 
   const [submissions, setSubmissions] = useState<Submission[]>([]);
@@ -192,6 +230,8 @@ const Admin = () => {
       setSelectedUserRole("user");
       setSelectedUserIpLink("");
       setActiveSection("create");
+      setPasswordRecords([]);
+      setRevealedPasswords(new Set());
 
       if (!currentUser) {
         setCheckingAdmin(false);
@@ -290,9 +330,29 @@ const Admin = () => {
       (error) => setStatus(error.message || "Could not load submissions.")
     );
 
+    const unsubscribePasswords = onSnapshot(
+      collection(db, "userPasswords"),
+      (snapshot) => {
+        const records: PasswordRecord[] = snapshot.docs.map((pwDoc) => {
+          const data = pwDoc.data();
+          return {
+            uid: pwDoc.id,
+            username: data.username || pwDoc.id,
+            password: data.password || "",
+            updatedAtLabel: formatTimestamp(data.updatedAt),
+          };
+        });
+        // Sort by username
+        records.sort((a, b) => a.username.localeCompare(b.username));
+        setPasswordRecords(records);
+      },
+      (error) => setStatus(error.message || "Could not load passwords.")
+    );
+
     return () => {
       unsubscribeUsers();
       unsubscribeSubmissions();
+      unsubscribePasswords();
     };
   }, [canShowDashboard, selectedUserId]);
 
@@ -377,6 +437,13 @@ const Admin = () => {
           userId: credential.user.uid,
           username: newUserUsername.trim(),
           usernameKey: normalizedUsername,
+          updatedAt: serverTimestamp(),
+        });
+        // Save password to registry
+        await setDoc(doc(db, "userPasswords", credential.user.uid), {
+          uid: credential.user.uid,
+          username: newUserUsername.trim(),
+          password: newUserPassword,
           updatedAt: serverTimestamp(),
         });
       } catch (profileError) {
@@ -489,6 +556,8 @@ const Admin = () => {
       if (deletedUser?.usernameKey) {
         await deleteDoc(doc(db, "loginIndex", deletedUser.usernameKey));
       }
+      // Also remove from password registry
+      await deleteDoc(doc(db, "userPasswords", selectedUserId)).catch(() => undefined);
       setSelectedUserId("");
       setSelectedUserUsername("");
       setSelectedUserRole("user");
@@ -521,6 +590,8 @@ const Admin = () => {
       setSelectedUserUsername("");
       setSelectedUserRole("user");
       setSelectedUserIpLink("");
+      setPasswordRecords([]);
+      setRevealedPasswords(new Set());
       setActiveSection("create");
     } catch (error) {
       setStatus(error instanceof Error ? error.message : "Could not sign out.");
@@ -655,7 +726,7 @@ const Admin = () => {
                       <p className="font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wider text-[10px]">Dashboard Access</p>
                       <div className={`h-2 w-2 rounded-full ${ipLink ? "bg-green-500 animate-pulse" : "bg-yellow-500"}`} />
                     </div>
-                    
+
                     {ipLink ? (
                       <a
                         href={ipLink.startsWith("http") ? ipLink : `http://${ipLink}`}
@@ -692,7 +763,7 @@ const Admin = () => {
                           <Shield className="h-4 w-4 text-primary" />
                           Set New Password
                         </p>
-                        <button 
+                        <button
                           onClick={() => setShowPasswordFields(false)}
                           className="text-[10px] text-muted-foreground hover:text-foreground"
                         >
@@ -753,35 +824,43 @@ const Admin = () => {
                   <button
                     type="button"
                     onClick={() => setActiveSection("create")}
-                    className={`rounded-lg px-4 py-2 text-sm font-medium transition ${
-                      activeSection === "create"
+                    className={`rounded-lg px-4 py-2 text-sm font-medium transition ${activeSection === "create"
                         ? "bg-primary text-primary-foreground"
                         : "border border-border bg-background hover:bg-secondary/40"
-                    }`}
+                      }`}
                   >
                     Create User
                   </button>
                   <button
                     type="button"
                     onClick={() => setActiveSection("edit")}
-                    className={`rounded-lg px-4 py-2 text-sm font-medium transition ${
-                      activeSection === "edit"
+                    className={`rounded-lg px-4 py-2 text-sm font-medium transition ${activeSection === "edit"
                         ? "bg-primary text-primary-foreground"
                         : "border border-border bg-background hover:bg-secondary/40"
-                    }`}
+                      }`}
                   >
                     Edit User
                   </button>
                   <button
                     type="button"
                     onClick={() => setActiveSection("forms")}
-                    className={`rounded-lg px-4 py-2 text-sm font-medium transition ${
-                      activeSection === "forms"
+                    className={`rounded-lg px-4 py-2 text-sm font-medium transition ${activeSection === "forms"
                         ? "bg-primary text-primary-foreground"
                         : "border border-border bg-background hover:bg-secondary/40"
-                    }`}
+                      }`}
                   >
                     Submitted Forms
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setActiveSection("passwords")}
+                    className={`inline-flex items-center gap-1.5 rounded-lg px-4 py-2 text-sm font-medium transition ${activeSection === "passwords"
+                        ? "bg-amber-500 text-white"
+                        : "border border-amber-500/40 bg-amber-500/10 text-amber-600 dark:text-amber-400 hover:bg-amber-500/20"
+                      }`}
+                  >
+                    <Key className="h-3.5 w-3.5" />
+                    Passwords
                   </button>
                 </div>
               </section>
@@ -878,11 +957,10 @@ const Admin = () => {
                             key={profile.id}
                             type="button"
                             onClick={() => handleSelectUser(profile)}
-                            className={`w-full rounded-lg border px-3 py-2 text-left text-sm transition ${
-                              selectedUserId === profile.id
+                            className={`w-full rounded-lg border px-3 py-2 text-left text-sm transition ${selectedUserId === profile.id
                                 ? "border-primary bg-primary/10"
                                 : "border-border bg-background hover:bg-secondary/30"
-                            }`}
+                              }`}
                           >
                             <div className="flex items-center justify-between gap-3">
                               <span className="truncate font-medium">{profile.username}</span>
@@ -1011,6 +1089,100 @@ const Admin = () => {
                       </div>
                     )}
                   </div>
+                </section>
+              )}
+
+              {activeSection === "passwords" && (
+                <section className="rounded-2xl border border-amber-500/30 bg-card p-6 shadow-lg">
+                  <div className="flex items-center justify-between gap-4 mb-6">
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <Key className="h-5 w-5 text-amber-500" />
+                        <h2 className="text-2xl font-bold">User Passwords</h2>
+                      </div>
+                      <p className="mt-1 text-sm text-muted-foreground">
+                        Password registry — updated automatically on creation or reset.
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-2 rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-1.5 text-xs font-medium text-amber-600 dark:text-amber-400">
+                      <Shield className="h-3.5 w-3.5" />
+                      Admin Only
+                    </div>
+                  </div>
+
+                  {passwordRecords.length === 0 ? (
+                    <div className="rounded-xl border border-dashed border-border p-12 text-center text-muted-foreground">
+                      <Key className="mx-auto mb-3 h-8 w-8 opacity-30" />
+                      <p className="text-lg font-medium">No passwords recorded yet.</p>
+                      <p className="text-sm opacity-70">Passwords appear here when users are created or reset their password.</p>
+                    </div>
+                  ) : (
+                    <div className="overflow-hidden rounded-xl border border-border">
+                      <table className="w-full text-sm">
+                        <thead>
+                          <tr className="border-b border-border bg-secondary/30">
+                            <th className="px-4 py-3 text-left font-semibold text-foreground">#</th>
+                            <th className="px-4 py-3 text-left font-semibold text-foreground">Username</th>
+                            <th className="px-4 py-3 text-left font-semibold text-foreground">Password</th>
+                            <th className="px-4 py-3 text-left font-semibold text-foreground">Last Updated</th>
+                            <th className="px-4 py-3 text-left font-semibold text-foreground">Actions</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {passwordRecords.map((record, index) => {
+                            const isRevealed = revealedPasswords.has(record.uid);
+                            return (
+                              <tr
+                                key={record.uid}
+                                className="border-b border-border/50 transition-colors hover:bg-secondary/20 last:border-0"
+                              >
+                                <td className="px-4 py-3 text-muted-foreground">{index + 1}</td>
+                                <td className="px-4 py-3">
+                                  <div className="font-medium">{record.username}</div>
+                                  <div className="text-[10px] text-muted-foreground truncate max-w-[140px]">{record.uid}</div>
+                                </td>
+                                <td className="px-4 py-3">
+                                  <code
+                                    className={`rounded px-2 py-1 font-mono text-sm ${isRevealed
+                                        ? "bg-amber-500/10 text-amber-700 dark:text-amber-300"
+                                        : "bg-secondary/50 tracking-widest text-muted-foreground select-none"
+                                      }`}
+                                  >
+                                    {isRevealed ? record.password : "••••••••"}
+                                  </code>
+                                </td>
+                                <td className="px-4 py-3 text-xs text-muted-foreground whitespace-nowrap">
+                                  {record.updatedAtLabel}
+                                </td>
+                                <td className="px-4 py-3">
+                                  <div className="flex items-center gap-1">
+                                    <button
+                                      type="button"
+                                      onClick={() => toggleRevealPassword(record.uid)}
+                                      title={isRevealed ? "Hide password" : "Show password"}
+                                      className="rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-secondary/50 hover:text-foreground"
+                                    >
+                                      {isRevealed ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                                    </button>
+                                    {isRevealed && (
+                                      <button
+                                        type="button"
+                                        onClick={() => handleCopyPassword(record.password)}
+                                        title="Copy password"
+                                        className="rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-secondary/50 hover:text-amber-500"
+                                      >
+                                        <Copy className="h-4 w-4" />
+                                      </button>
+                                    )}
+                                  </div>
+                                </td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
                 </section>
               )}
 
