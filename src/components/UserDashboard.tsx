@@ -2,7 +2,6 @@ import { FormEvent, useState } from "react";
 import { motion } from "framer-motion";
 import {
   Eye,
-  Shield,
   LogOut,
   ArrowLeft,
   Clock,
@@ -11,11 +10,10 @@ import {
   ChevronRight,
   User,
   Lock,
-  CheckCircle,
   ExternalLink,
   Zap,
   Camera,
-  Bell,
+  Shield,
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { updatePassword, type User as FirebaseUser } from "firebase/auth";
@@ -160,7 +158,7 @@ const UserDashboard = ({ user, username, ipLink, onSignOut }: UserDashboardProps
             {/* Decorative elements */}
             <div className="absolute top-0 right-0 w-64 h-64 bg-primary/[0.05] rounded-full blur-[80px] -translate-y-1/2 translate-x-1/4" />
             <div className="absolute bottom-0 left-0 w-48 h-48 bg-accent/[0.05] rounded-full blur-[60px] translate-y-1/2 -translate-x-1/4" />
-            
+
             {/* Scan line effect */}
             <div className="absolute inset-0 overflow-hidden pointer-events-none">
               <div className="w-full h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent animate-scan-line" />
@@ -208,45 +206,39 @@ const UserDashboard = ({ user, username, ipLink, onSignOut }: UserDashboardProps
                 transition={{ delay: 0.6, duration: 0.5 }}
                 className="flex-shrink-0"
               >
-                <div className={`relative flex h-24 w-24 items-center justify-center rounded-2xl border ${
-                  dashboardUrl
+                <div className={`relative flex h-24 w-24 items-center justify-center rounded-2xl border ${dashboardUrl
                     ? "border-green-500/30 bg-green-500/10"
                     : "border-yellow-500/30 bg-yellow-500/10"
-                }`}>
-                  <div className={`absolute inset-0 rounded-2xl ${
-                    dashboardUrl ? "bg-green-500/5" : "bg-yellow-500/5"
-                  } animate-pulse`} />
-                  <Activity className={`h-10 w-10 ${
-                    dashboardUrl ? "text-green-500" : "text-yellow-500"
-                  }`} />
-                  <div className={`absolute -top-1 -right-1 h-4 w-4 rounded-full border-2 border-card ${
-                    dashboardUrl ? "bg-green-500" : "bg-yellow-500"
                   }`}>
-                    <div className={`absolute inset-0 rounded-full ${
-                      dashboardUrl ? "bg-green-500" : "bg-yellow-500"
-                    } animate-ping`} />
+                  <div className={`absolute inset-0 rounded-2xl ${dashboardUrl ? "bg-green-500/5" : "bg-yellow-500/5"
+                    } animate-pulse`} />
+                  <Activity className={`h-10 w-10 ${dashboardUrl ? "text-green-500" : "text-yellow-500"
+                    }`} />
+                  <div className={`absolute -top-1 -right-1 h-4 w-4 rounded-full border-2 border-card ${dashboardUrl ? "bg-green-500" : "bg-yellow-500"
+                    }`}>
+                    <div className={`absolute inset-0 rounded-full ${dashboardUrl ? "bg-green-500" : "bg-yellow-500"
+                      } animate-ping`} />
                   </div>
                 </div>
               </motion.div>
             </div>
           </motion.div>
 
-          {/* Main Grid */}
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          {/* Main Layout Area */}
+          <div className="flex flex-col gap-6 w-full max-w-4xl mx-auto">
 
-            {/* Live Dashboard Card - Takes 2 cols */}
+            {/* Live Dashboard Card - Takes full row */}
             <motion.div
               variants={scaleIn}
               initial="hidden"
               animate="visible"
               custom={3}
-              className="md:col-span-2 lg:col-span-2"
+              className="md:col-span-2"
             >
-              <div className={`group relative overflow-hidden rounded-2xl border p-6 shadow-lg transition-all duration-500 ${
-                dashboardUrl
+              <div className={`group relative overflow-hidden rounded-2xl border p-6 shadow-lg transition-all duration-500 ${dashboardUrl
                   ? "border-primary/20 bg-gradient-to-br from-primary/[0.06] via-card to-primary/[0.03] hover:border-primary/40 hover:shadow-primary/10"
                   : "border-border bg-card"
-              }`}>
+                }`}>
                 {/* Animated background */}
                 {dashboardUrl && (
                   <div className="absolute inset-0 pointer-events-none">
@@ -258,11 +250,10 @@ const UserDashboard = ({ user, username, ipLink, onSignOut }: UserDashboardProps
                 <div className="relative z-10">
                   <div className="flex items-center justify-between mb-5">
                     <div className="flex items-center gap-3">
-                      <div className={`flex h-11 w-11 items-center justify-center rounded-xl ${
-                        dashboardUrl
+                      <div className={`flex h-11 w-11 items-center justify-center rounded-xl ${dashboardUrl
                           ? "bg-primary/15 text-primary"
                           : "bg-muted text-muted-foreground"
-                      }`}>
+                        }`}>
                         <Camera className="h-5 w-5" />
                       </div>
                       <div>
@@ -327,157 +318,40 @@ const UserDashboard = ({ user, username, ipLink, onSignOut }: UserDashboardProps
               </div>
             </motion.div>
 
-            {/* Account Info Card */}
-            <motion.div
-              variants={scaleIn}
-              initial="hidden"
-              animate="visible"
-              custom={4}
-            >
-              <div className="h-full rounded-2xl border border-border bg-card/80 backdrop-blur-sm p-6 shadow-lg">
-                <div className="flex items-center gap-3 mb-5">
-                  <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-secondary">
-                    <User className="h-5 w-5 text-foreground" />
-                  </div>
-                  <div>
-                    <h3 className="text-lg font-bold">Account</h3>
-                    <p className="text-xs text-muted-foreground">Your profile info</p>
-                  </div>
-                </div>
 
-                <div className="space-y-3">
-                  <div className="rounded-xl bg-secondary/40 p-3.5">
-                    <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-1">Username</p>
-                    <p className="text-sm font-semibold truncate">{username || "Not set"}</p>
-                  </div>
-                  <div className="rounded-xl bg-secondary/40 p-3.5">
-                    <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-1">Role</p>
-                    <div className="flex items-center gap-2">
-                      <span className="inline-flex items-center gap-1.5 rounded-full bg-primary/10 border border-primary/20 px-2.5 py-1 text-xs font-bold text-primary">
-                        <Shield className="h-3 w-3" />
-                        User
-                      </span>
-                    </div>
-                  </div>
-                  <div className="rounded-xl bg-secondary/40 p-3.5">
-                    <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-1">Status</p>
-                    <div className="flex items-center gap-2 text-sm font-semibold text-green-500">
-                      <CheckCircle className="h-3.5 w-3.5" />
-                      Verified
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </motion.div>
 
-            {/* Security / Password Card */}
+            {/* Password Reset Card */}
             <motion.div
               variants={scaleIn}
               initial="hidden"
               animate="visible"
               custom={5}
-              className="md:col-span-2 lg:col-span-2"
             >
-              <div className="rounded-2xl border border-border bg-card/80 backdrop-blur-sm p-6 shadow-lg">
-                <div className="flex items-center justify-between mb-5">
-                  <div className="flex items-center gap-3">
-                    <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-amber-500/10">
-                      <Lock className="h-5 w-5 text-amber-500" />
-                    </div>
-                    <div>
-                      <h3 className="text-lg font-bold">Security</h3>
-                      <p className="text-xs text-muted-foreground">Password & account security</p>
-                    </div>
-                  </div>
-                  {!showPasswordForm && (
-                    <button
-                      type="button"
-                      onClick={() => setShowPasswordForm(true)}
-                      className="inline-flex items-center gap-2 rounded-xl border border-border px-4 py-2.5 text-sm font-medium transition-all hover:bg-secondary/40 hover:text-foreground"
-                    >
-                      <Shield className="h-4 w-4 text-primary" />
-                      Reset Password
-                      <ChevronRight className="h-3.5 w-3.5 text-muted-foreground" />
-                    </button>
-                  )}
-                </div>
-
+              <div className="h-full rounded-2xl border border-border bg-card/80 backdrop-blur-sm p-6 shadow-lg">
                 {!showPasswordForm ? (
-                  <div className="grid gap-3 sm:grid-cols-3">
-                    <div className="flex items-center gap-3 rounded-xl bg-green-500/[0.06] border border-green-500/15 p-4">
-                      <CheckCircle className="h-5 w-5 text-green-500 flex-shrink-0" />
-                      <div>
-                        <p className="text-xs font-bold text-green-600 dark:text-green-400">Password Set</p>
-                        <p className="text-[10px] text-muted-foreground">Account secured</p>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-3 rounded-xl bg-blue-500/[0.06] border border-blue-500/15 p-4">
-                      <Shield className="h-5 w-5 text-blue-500 flex-shrink-0" />
-                      <div>
-                        <p className="text-xs font-bold text-blue-600 dark:text-blue-400">Firebase Auth</p>
-                        <p className="text-[10px] text-muted-foreground">Encrypted</p>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-3 rounded-xl bg-primary/[0.06] border border-primary/15 p-4">
-                      <Clock className="h-5 w-5 text-primary flex-shrink-0" />
-                      <div>
-                        <p className="text-xs font-bold text-primary">Session</p>
-                        <p className="text-[10px] text-muted-foreground">Active now</p>
-                      </div>
-                    </div>
-                  </div>
-                ) : (
-                  <motion.form
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: "auto" }}
-                    exit={{ opacity: 0, height: 0 }}
-                    className="space-y-4"
-                    onSubmit={handlePasswordChange}
+                  <button
+                    type="button"
+                    onClick={() => setShowPasswordForm(true)}
+                    className="flex w-full items-center gap-3 rounded-xl border border-border bg-secondary/20 p-4 text-left transition-all hover:bg-secondary/40 hover:border-primary/20 group"
                   >
-                    <div className="grid gap-4 sm:grid-cols-2">
-                      <div className="space-y-2">
-                        <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-                          New Password
-                        </label>
-                        <input
-                          type="password"
-                          value={newPassword}
-                          onChange={(e) => setNewPassword(e.target.value)}
-                          placeholder="Enter new password"
-                          className="w-full rounded-xl border border-border bg-background px-4 py-3 text-sm outline-none transition-all focus:ring-2 focus:ring-primary/40 focus:border-primary/40"
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-                          Confirm Password
-                        </label>
-                        <input
-                          type="password"
-                          value={confirmPassword}
-                          onChange={(e) => setConfirmPassword(e.target.value)}
-                          placeholder="Confirm new password"
-                          className="w-full rounded-xl border border-border bg-background px-4 py-3 text-sm outline-none transition-all focus:ring-2 focus:ring-primary/40 focus:border-primary/40"
-                        />
-                      </div>
+                    <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-amber-500/10 transition-transform group-hover:scale-105">
+                      <Lock className="h-4.5 w-4.5 text-amber-500" />
                     </div>
-                    <div className="flex items-center gap-3">
-                      <button
-                        type="submit"
-                        disabled={updatingPassword}
-                        className="inline-flex items-center gap-2 rounded-xl bg-primary px-6 py-3 text-sm font-bold text-primary-foreground transition-all hover:opacity-90 active:scale-[0.98] disabled:opacity-50"
-                      >
-                        {updatingPassword ? (
-                          <>
-                            <div className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
-                            Updating...
-                          </>
-                        ) : (
-                          <>
-                            <CheckCircle className="h-4 w-4" />
-                            Update Password
-                          </>
-                        )}
-                      </button>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-semibold">Reset Password</p>
+                      <p className="text-xs text-muted-foreground">Update your account credentials</p>
+                    </div>
+                    <ChevronRight className="h-4 w-4 text-muted-foreground transition-transform group-hover:translate-x-0.5" />
+                  </button>
+                ) : (
+                  <div>
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center gap-2.5">
+                        <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-amber-500/10">
+                          <Lock className="h-4 w-4 text-amber-500" />
+                        </div>
+                        <p className="text-sm font-bold">Set New Password</p>
+                      </div>
                       <button
                         type="button"
                         onClick={() => {
@@ -485,66 +359,46 @@ const UserDashboard = ({ user, username, ipLink, onSignOut }: UserDashboardProps
                           setNewPassword("");
                           setConfirmPassword("");
                         }}
-                        className="rounded-xl border border-border px-4 py-3 text-sm font-medium text-muted-foreground transition-all hover:bg-secondary/40"
+                        className="text-xs text-muted-foreground hover:text-foreground transition-colors"
                       >
                         Cancel
                       </button>
                     </div>
-                  </motion.form>
+                    <form className="space-y-3" onSubmit={handlePasswordChange}>
+                      <div className="space-y-1.5">
+                        <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">New Password</label>
+                        <input
+                          type="password"
+                          value={newPassword}
+                          onChange={(e) => setNewPassword(e.target.value)}
+                          placeholder="Enter new password"
+                          className="w-full rounded-lg border border-border bg-background px-3.5 py-2.5 text-sm outline-none transition-all focus:ring-2 focus:ring-primary/30 focus:border-primary/30"
+                        />
+                      </div>
+                      <div className="space-y-1.5">
+                        <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Confirm Password</label>
+                        <input
+                          type="password"
+                          value={confirmPassword}
+                          onChange={(e) => setConfirmPassword(e.target.value)}
+                          placeholder="Confirm new password"
+                          className="w-full rounded-lg border border-border bg-background px-3.5 py-2.5 text-sm outline-none transition-all focus:ring-2 focus:ring-primary/30 focus:border-primary/30"
+                        />
+                      </div>
+                      <button
+                        type="submit"
+                        disabled={updatingPassword}
+                        className="w-full rounded-lg bg-primary py-2.5 text-sm font-bold text-primary-foreground transition-all hover:opacity-90 active:scale-[0.98] disabled:opacity-50"
+                      >
+                        {updatingPassword ? "Updating..." : "Update Password"}
+                      </button>
+                    </form>
+                  </div>
                 )}
               </div>
             </motion.div>
 
-            {/* Quick Actions Card */}
-            <motion.div
-              variants={scaleIn}
-              initial="hidden"
-              animate="visible"
-              custom={6}
-            >
-              <div className="h-full rounded-2xl border border-border bg-card/80 backdrop-blur-sm p-6 shadow-lg">
-                <div className="flex items-center gap-3 mb-5">
-                  <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-accent/10">
-                    <Zap className="h-5 w-5 text-accent" />
-                  </div>
-                  <div>
-                    <h3 className="text-lg font-bold">Quick Actions</h3>
-                    <p className="text-xs text-muted-foreground">Common tasks</p>
-                  </div>
-                </div>
 
-                <div className="space-y-2">
-                  {dashboardUrl && (
-                    <a
-                      href={dashboardUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-center gap-3 rounded-xl border border-border p-3.5 text-sm font-medium transition-all hover:bg-secondary/40 hover:border-primary/20 group"
-                    >
-                      <Eye className="h-4 w-4 text-primary transition-transform group-hover:scale-110" />
-                      <span className="flex-1">View Live Feed</span>
-                      <ExternalLink className="h-3.5 w-3.5 text-muted-foreground" />
-                    </a>
-                  )}
-                  <button
-                    onClick={() => setShowPasswordForm(true)}
-                    className="flex w-full items-center gap-3 rounded-xl border border-border p-3.5 text-sm font-medium transition-all hover:bg-secondary/40 hover:border-amber-500/20 group text-left"
-                  >
-                    <Lock className="h-4 w-4 text-amber-500 transition-transform group-hover:scale-110" />
-                    <span className="flex-1">Change Password</span>
-                    <ChevronRight className="h-3.5 w-3.5 text-muted-foreground" />
-                  </button>
-                  <Link
-                    to="/"
-                    className="flex items-center gap-3 rounded-xl border border-border p-3.5 text-sm font-medium transition-all hover:bg-secondary/40 hover:border-accent/20 group"
-                  >
-                    <Bell className="h-4 w-4 text-accent transition-transform group-hover:scale-110" />
-                    <span className="flex-1">Contact Support</span>
-                    <ChevronRight className="h-3.5 w-3.5 text-muted-foreground" />
-                  </Link>
-                </div>
-              </div>
-            </motion.div>
           </div>
 
           {/* Footer Info */}
