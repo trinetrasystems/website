@@ -124,6 +124,7 @@ const Admin = () => {
   const [showPasswordFields, setShowPasswordFields] = useState(false);
 
   const [passwordRecords, setPasswordRecords] = useState<PasswordRecord[]>([]);
+  const [passwordSearch, setPasswordSearch] = useState("");
   const [revealedPasswords, setRevealedPasswords] = useState<Set<string>>(new Set());
 
   const handlePasswordChange = async (event: FormEvent<HTMLFormElement>) => {
@@ -213,6 +214,16 @@ const Admin = () => {
     });
   }, [users, userSearch]);
 
+  const filteredPasswords = useMemo(() => {
+    const searchValue = passwordSearch.trim().toLowerCase();
+    if (!searchValue) {
+      return passwordRecords;
+    }
+    return passwordRecords.filter((record) => {
+      return record.username.toLowerCase().includes(searchValue);
+    });
+  }, [passwordRecords, passwordSearch]);
+
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
       setUser(currentUser);
@@ -232,6 +243,7 @@ const Admin = () => {
       setSelectedUserIpLink("");
       setActiveSection("create");
       setPasswordRecords([]);
+      setPasswordSearch("");
       setRevealedPasswords(new Set());
 
       if (!currentUser) {
@@ -841,8 +853,8 @@ const Admin = () => {
                     type="button"
                     onClick={() => setActiveSection("create")}
                     className={`rounded-lg px-4 py-2 text-sm font-medium transition ${activeSection === "create"
-                        ? "bg-primary text-primary-foreground"
-                        : "border border-border bg-background hover:bg-secondary/40"
+                      ? "bg-primary text-primary-foreground"
+                      : "border border-border bg-background hover:bg-secondary/40"
                       }`}
                   >
                     Create User
@@ -851,8 +863,8 @@ const Admin = () => {
                     type="button"
                     onClick={() => setActiveSection("edit")}
                     className={`rounded-lg px-4 py-2 text-sm font-medium transition ${activeSection === "edit"
-                        ? "bg-primary text-primary-foreground"
-                        : "border border-border bg-background hover:bg-secondary/40"
+                      ? "bg-primary text-primary-foreground"
+                      : "border border-border bg-background hover:bg-secondary/40"
                       }`}
                   >
                     Edit User
@@ -861,8 +873,8 @@ const Admin = () => {
                     type="button"
                     onClick={() => setActiveSection("forms")}
                     className={`rounded-lg px-4 py-2 text-sm font-medium transition ${activeSection === "forms"
-                        ? "bg-primary text-primary-foreground"
-                        : "border border-border bg-background hover:bg-secondary/40"
+                      ? "bg-primary text-primary-foreground"
+                      : "border border-border bg-background hover:bg-secondary/40"
                       }`}
                   >
                     Submitted Forms
@@ -871,8 +883,8 @@ const Admin = () => {
                     type="button"
                     onClick={() => setActiveSection("passwords")}
                     className={`inline-flex items-center gap-1.5 rounded-lg px-4 py-2 text-sm font-medium transition ${activeSection === "passwords"
-                        ? "bg-amber-500 text-white"
-                        : "border border-amber-500/40 bg-amber-500/10 text-amber-600 dark:text-amber-400 hover:bg-amber-500/20"
+                      ? "bg-amber-500 text-white"
+                      : "border border-amber-500/40 bg-amber-500/10 text-amber-600 dark:text-amber-400 hover:bg-amber-500/20"
                       }`}
                   >
                     <Key className="h-3.5 w-3.5" />
@@ -974,8 +986,8 @@ const Admin = () => {
                             type="button"
                             onClick={() => handleSelectUser(profile)}
                             className={`w-full rounded-lg border px-3 py-2 text-left text-sm transition ${selectedUserId === profile.id
-                                ? "border-primary bg-primary/10"
-                                : "border-border bg-background hover:bg-secondary/30"
+                              ? "border-primary bg-primary/10"
+                              : "border-border bg-background hover:bg-secondary/30"
                               }`}
                           >
                             <div className="flex items-center justify-between gap-3">
@@ -1110,7 +1122,7 @@ const Admin = () => {
 
               {activeSection === "passwords" && (
                 <section className="rounded-2xl border border-amber-500/30 bg-card p-6 shadow-lg">
-                  <div className="flex items-center justify-between gap-4 mb-6">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
                     <div>
                       <div className="flex items-center gap-2">
                         <Key className="h-5 w-5 text-amber-500" />
@@ -1120,17 +1132,26 @@ const Admin = () => {
                         Password registry — updated automatically on creation or reset.
                       </p>
                     </div>
-                    <div className="flex items-center gap-2 rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-1.5 text-xs font-medium text-amber-600 dark:text-amber-400">
-                      <Shield className="h-3.5 w-3.5" />
-                      Admin Only
+                    <div className="flex flex-col sm:flex-row items-end sm:items-center gap-3">
+                      <input
+                        type="text"
+                        placeholder="Search passwords..."
+                        value={passwordSearch}
+                        onChange={(e) => setPasswordSearch(e.target.value)}
+                        className="w-full sm:w-64 rounded-lg border border-border bg-background px-4 py-2 text-sm outline-none transition-all focus:ring-2 focus:border-amber-500/50 focus:ring-amber-500/20"
+                      />
+                      <div className="flex items-center gap-2 rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-xs font-medium text-amber-600 dark:text-amber-400 hidden sm:flex">
+                        <Shield className="h-3.5 w-3.5" />
+                        Admin Only
+                      </div>
                     </div>
                   </div>
 
-                  {passwordRecords.length === 0 ? (
+                  {filteredPasswords.length === 0 ? (
                     <div className="rounded-xl border border-dashed border-border p-12 text-center text-muted-foreground">
                       <Key className="mx-auto mb-3 h-8 w-8 opacity-30" />
-                      <p className="text-lg font-medium">No passwords recorded yet.</p>
-                      <p className="text-sm opacity-70">Passwords appear here when users are created or reset their password.</p>
+                      <p className="text-lg font-medium">{passwordRecords.length === 0 ? "No passwords recorded yet." : "No passwords found matching your search."}</p>
+                      <p className="text-sm opacity-70">{passwordRecords.length === 0 ? "Passwords appear here when users are created or reset their password." : "Try adjusting your search criteria."}</p>
                     </div>
                   ) : (
                     <div className="overflow-hidden rounded-xl border border-border">
@@ -1145,8 +1166,10 @@ const Admin = () => {
                           </tr>
                         </thead>
                         <tbody>
-                          {passwordRecords.map((record, index) => {
+                          {filteredPasswords.map((record, index) => {
                             const isRevealed = revealedPasswords.has(record.uid);
+                            const linkedUser = users.find(u => u.id === record.uid || u.username === record.username);
+                            const isRecordAdmin = linkedUser?.role === "admin";
                             return (
                               <tr
                                 key={record.uid}
@@ -1154,14 +1177,21 @@ const Admin = () => {
                               >
                                 <td className="px-4 py-3 text-muted-foreground">{index + 1}</td>
                                 <td className="px-4 py-3">
-                                  <div className="font-medium">{record.username}</div>
-                                  <div className="text-[10px] text-muted-foreground truncate max-w-[140px]">{record.uid}</div>
+                                  <div className="font-medium flex items-center gap-2">
+                                    {record.username}
+                                    {isRecordAdmin && (
+                                      <span className="flex items-center gap-1 rounded bg-amber-500/10 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-amber-600 dark:text-amber-500">
+                                        <Shield className="h-3 w-3" /> Admin
+                                      </span>
+                                    )}
+                                  </div>
+                                  <div className="text-[10px] text-muted-foreground truncate max-w-[140px] mt-0.5">{record.uid}</div>
                                 </td>
                                 <td className="px-4 py-3">
                                   <code
                                     className={`rounded px-2 py-1 font-mono text-sm ${isRevealed
-                                        ? "bg-amber-500/10 text-amber-700 dark:text-amber-300"
-                                        : "bg-secondary/50 tracking-widest text-muted-foreground select-none"
+                                      ? "bg-amber-500/10 text-amber-700 dark:text-amber-300"
+                                      : "bg-secondary/50 tracking-widest text-muted-foreground select-none"
                                       }`}
                                   >
                                     {isRevealed ? record.password : "••••••••"}
