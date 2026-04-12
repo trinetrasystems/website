@@ -1,8 +1,11 @@
-import { MouseEvent, useState } from "react";
+import { MouseEvent, useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Eye, Home, Layers, Grid3X3, Shield, Mail, Lock, Menu, X } from "lucide-react";
 import { Link } from "react-router-dom";
 import { ThemeToggle } from "./ThemeToggle";
+import { auth, db } from "@/lib/firebase";
+import { onAuthStateChanged } from "firebase/auth";
+import { doc, getDoc } from "firebase/firestore";
 
 const navItems = [
   { title: "Home", href: "#home", icon: Home },
@@ -14,6 +17,30 @@ const navItems = [
 
 const AppSidebar = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [userRole, setUserRole] = useState<string | null>(null);
+  const [ipLink, setIpLink] = useState<string | null>(null);
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        try {
+          const profileDoc = await getDoc(doc(db, "users", user.uid));
+          if (profileDoc.exists()) {
+            const data = profileDoc.data();
+            setUserRole(data.role || "user");
+            setIpLink(data.ip_link || null);
+          }
+        } catch (error) {
+          console.error("Error fetching user profile:", error);
+        }
+      } else {
+        setUserRole(null);
+        setIpLink(null);
+      }
+    });
+
+    return () => unsubscribe();
+  }, []);
 
   const handleHashNavigation = (href: string) => (event: MouseEvent<HTMLAnchorElement>) => {
     event.preventDefault();
@@ -45,7 +72,11 @@ const AppSidebar = () => {
     <>
       <header className="fixed top-0 left-0 right-0 z-[60] header-surface bg-background/95">
         <div className="flex h-16 w-full items-center justify-between px-3 md:px-5">
-          <a href="#home" className="flex items-center gap-2">
+          <a
+            href="#home"
+            onClick={handleHashNavigation("#home")}
+            className="flex items-center gap-2"
+          >
             <Eye className="w-6 h-6 text-primary" />
             <span className="text-base sm:text-lg font-bold text-primary dark:text-gradient">Trinetra Systems</span>
           </a>
@@ -75,9 +106,34 @@ const AppSidebar = () => {
             ))}
           </nav>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 sm:gap-2">
+            {userRole === "user" && ipLink && (
+              <a
+                href={ipLink.startsWith("http") ? ipLink : `http://${ipLink}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex lg:hidden items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-bold bg-primary text-primary-foreground animate-pulse-subtle"
+                title="Live Dashboard"
+              >
+                <Eye className="w-3.5 h-3.5" />
+                <span>Live</span>
+              </a>
+            )}
+            
             <ThemeToggle />
-            <div className="hidden lg:flex">
+            
+            <div className="hidden lg:flex items-center gap-2">
+              {userRole === "user" && ipLink && (
+                <a
+                  href={ipLink.startsWith("http") ? ipLink : `http://${ipLink}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-semibold bg-primary text-primary-foreground hover:opacity-90 transition-all duration-200 animate-pulse-subtle"
+                >
+                  <Eye className="w-4 h-4" />
+                  <span>Live</span>
+                </a>
+              )}
               <Link
                 to="/admin"
                 className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-all duration-200"
@@ -141,6 +197,18 @@ const AppSidebar = () => {
                     </Link>
                   )
                 ))}
+                {userRole === "user" && ipLink && (
+                  <a
+                    href={ipLink.startsWith("http") ? ipLink : `http://${ipLink}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={() => setMobileOpen(false)}
+                    className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-semibold bg-primary text-primary-foreground transition-all duration-200"
+                  >
+                    <Eye className="w-4 h-4" />
+                    <span>Live Dashboard</span>
+                  </a>
+                )}
                 <Link
                   to="/admin"
                   onClick={() => setMobileOpen(false)}
