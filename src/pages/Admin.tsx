@@ -1,4 +1,4 @@
-﻿import { FormEvent, useEffect, useMemo, useState } from "react";
+import { FormEvent, useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import {
   createUserWithEmailAndPassword,
@@ -6,6 +6,7 @@ import {
   onAuthStateChanged,
   signInWithEmailAndPassword,
   signOut,
+  updatePassword,
   type User,
 } from "firebase/auth";
 import {
@@ -23,7 +24,8 @@ import {
   updateDoc,
 } from "firebase/firestore";
 import { adminAuth, auth, db } from "@/lib/firebase";
-import { Shield, LogIn, LogOut, RefreshCw, ArrowLeft, CheckCircle, Trash2 } from "lucide-react";
+import { Shield, LogIn, LogOut, RefreshCw, ArrowLeft, CheckCircle, Trash2, Eye } from "lucide-react";
+import AppSidebar from "@/components/AppSidebar";
 import { toast } from "sonner";
 import {
   AlertDialog,
@@ -106,6 +108,41 @@ const Admin = () => {
   const [updatingUser, setUpdatingUser] = useState(false);
   const [deletingUser, setDeletingUser] = useState(false);
   const [activeSection, setActiveSection] = useState<"create" | "edit" | "forms">("create");
+  
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [updatingPassword, setUpdatingPassword] = useState(false);
+
+  const handlePasswordChange = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!user) return;
+
+    if (newPassword !== confirmPassword) {
+      toast.error("Passwords do not match.");
+      return;
+    }
+
+    if (newPassword.length < 6) {
+      toast.error("Password should be at least 6 characters.");
+      return;
+    }
+
+    setUpdatingPassword(true);
+    try {
+      await updatePassword(user, newPassword);
+      setNewPassword("");
+      setConfirmPassword("");
+      toast.success("Password updated successfully.");
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Could not update password.";
+      toast.error(message);
+      if (message.includes("requires-recent-login")) {
+        toast.info("Please logout and login again to change your password.");
+      }
+    } finally {
+      setUpdatingPassword(false);
+    }
+  };
 
   const [submissions, setSubmissions] = useState<Submission[]>([]);
 
@@ -515,7 +552,8 @@ const Admin = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background px-4 py-8 text-foreground md:px-8">
+    <div className="min-h-screen bg-background px-4 pt-24 pb-8 text-foreground md:px-8">
+      <AppSidebar />
       <div className="mx-auto max-w-6xl space-y-6">
         <div className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-border bg-card px-5 py-4 shadow-lg">
           <div>
@@ -599,7 +637,20 @@ const Admin = () => {
                   <p className="mt-1 truncate text-muted-foreground">{user.email}</p>
                 </div>
                 <div className="rounded-lg border border-blue-500/30 bg-blue-500/10 p-4 text-sm">
-                  <p className="font-medium text-blue-600 dark:text-blue-400">IP Link</p>
+                  <div className="flex items-center justify-between">
+                    <p className="font-medium text-blue-600 dark:text-blue-400">IP Link</p>
+                    {ipLink && (
+                      <a
+                        href={ipLink.startsWith("http") ? ipLink : `http://${ipLink}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1.5 rounded-md bg-blue-600 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-blue-700 active:scale-95"
+                      >
+                        <Eye className="h-3.5 w-3.5" />
+                        Live
+                      </a>
+                    )}
+                  </div>
                   {ipLink ? (
                     <p className="mt-2 rounded bg-background/50 p-2 font-mono text-xs break-all text-muted-foreground">
                       {ipLink}
@@ -607,6 +658,42 @@ const Admin = () => {
                   ) : (
                     <p className="mt-1 italic text-muted-foreground">No IP link assigned yet.</p>
                   )}
+                </div>
+
+                <div className="rounded-lg border border-border bg-secondary/10 p-4">
+                  <p className="text-sm font-semibold text-foreground flex items-center gap-2">
+                    <Shield className="h-4 w-4 text-primary" />
+                    Change Password
+                  </p>
+                  <form className="mt-4 space-y-3" onSubmit={handlePasswordChange}>
+                    <div className="space-y-1">
+                      <label className="text-[10px] uppercase font-bold text-muted-foreground">New Password</label>
+                      <input
+                        type="password"
+                        value={newPassword}
+                        onChange={(e) => setNewPassword(e.target.value)}
+                        placeholder="Enter new password"
+                        className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-primary/40"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-[10px] uppercase font-bold text-muted-foreground">Confirm Password</label>
+                      <input
+                        type="password"
+                        value={confirmPassword}
+                        onChange={(e) => setConfirmPassword(e.target.value)}
+                        placeholder="Confirm new password"
+                        className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-primary/40"
+                      />
+                    </div>
+                    <button
+                      type="submit"
+                      disabled={updatingPassword}
+                      className="w-full rounded-md bg-primary/10 py-2 text-xs font-bold text-primary transition hover:bg-primary hover:text-primary-foreground disabled:opacity-50"
+                    >
+                      {updatingPassword ? "Updating..." : "Update Password"}
+                    </button>
+                  </form>
                 </div>
               </div>
             ) : (
