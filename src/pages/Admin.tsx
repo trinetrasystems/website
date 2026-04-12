@@ -26,6 +26,7 @@ import {
 import { adminAuth, auth, db } from "@/lib/firebase";
 import { Shield, LogIn, LogOut, RefreshCw, ArrowLeft, CheckCircle, Trash2, Eye, EyeOff, Key, Copy } from "lucide-react";
 import AppSidebar from "@/components/AppSidebar";
+import UserDashboard from "@/components/UserDashboard";
 import { toast } from "sonner";
 import {
   AlertDialog,
@@ -624,6 +625,21 @@ const Admin = () => {
           Loading admin page...
         </div>
       </div>
+    );
+  }
+
+  // Full-page user dashboard for non-admin users
+  if (user && userRole === "user" && !checkingAdmin) {
+    return (
+      <>
+        <AppSidebar />
+        <UserDashboard
+          user={user}
+          username={loggedInUsername}
+          ipLink={ipLink}
+          onSignOut={handleSignOut}
+        />
+      </>
     );
   }
 
