@@ -53,13 +53,13 @@ const Solutions = () => {
               initial={{ opacity: 0, y: 30 }}
               animate={isInView ? { opacity: 1, y: 0 } : {}}
               transition={{ duration: 0.5, delay: i * 0.15 }}
-              className="glass rounded-2xl p-8 glow-hover transition-all duration-300 group"
+              className="glass rounded-3xl p-10 glow-hover transition-all duration-500 border-white/5 group hover:border-primary/20"
             >
-              <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center mb-6 group-hover:bg-primary/20 transition-colors">
-                <s.icon className="w-8 h-8 text-primary" />
+              <div className="w-20 h-20 rounded-2xl bg-gradient-to-tr from-primary/30 to-primary/5 flex items-center justify-center mb-10 group-hover:rotate-6 transition-all duration-500 shadow-xl shadow-primary/10">
+                <s.icon className="w-10 h-10 text-primary" />
               </div>
-              <h3 className="text-xl font-bold mb-3">{s.title}</h3>
-              <p className="text-muted-foreground leading-relaxed">{s.description}</p>
+              <h3 className="text-2xl font-bold mb-4 tracking-tight group-hover:translate-x-1 transition-transform">{s.title}</h3>
+              <p className="text-muted-foreground leading-relaxed text-lg">{s.description}</p>
             </motion.div>
           ))}
         </div>

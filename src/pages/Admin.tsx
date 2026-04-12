@@ -552,7 +552,7 @@ const Admin = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background px-4 pt-24 pb-8 text-foreground md:px-8">
+    <div className="min-h-screen bg-background px-4 pt-24 lg:pt-28 pb-8 text-foreground md:px-8">
       <AppSidebar />
       <div className="mx-auto max-w-6xl space-y-6">
         <div className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-border bg-card px-5 py-4 shadow-lg">

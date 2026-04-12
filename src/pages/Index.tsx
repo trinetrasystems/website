@@ -33,7 +33,7 @@ const Index = () => {
   return (
     <div className="min-h-screen">
       <AppSidebar />
-      <main className="pt-16">
+      <main className="pt-16 lg:pt-20">
         <Hero />
         <About />
         <Solutions />

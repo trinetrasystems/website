@@ -50,18 +50,18 @@ const Hero = () => {
               href="#contact"
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              className="inline-flex items-center gap-2 px-8 py-4 rounded-lg bg-primary text-primary-foreground font-semibold glow-primary transition-all"
+              className="btn-premium bg-gradient-to-r from-primary to-primary/80 text-white shadow-xl hover:shadow-primary/30"
             >
               Request Demo
-              <ArrowRight className="w-5 h-5" />
+              <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
             </motion.a>
             <motion.a
               href="#solutions"
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              className="inline-flex items-center gap-2 px-8 py-4 rounded-lg glass text-foreground font-semibold glow-hover transition-all"
+              className="btn-premium glass-strong text-foreground border-white/10 hover:bg-white/5"
             >
-              <Play className="w-5 h-5" />
+              <Play className="w-5 h-5 fill-current" />
               Explore Solutions
             </motion.a>
           </div>

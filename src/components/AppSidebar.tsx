@@ -71,14 +71,14 @@ const AppSidebar = () => {
   return (
     <>
       <header className="fixed top-0 left-0 right-0 z-[60] header-surface bg-background/95">
-        <div className="flex h-16 w-full items-center justify-between px-3 md:px-5">
+        <div className="flex h-16 lg:h-20 w-full items-center justify-between px-3 md:px-5 lg:px-8">
           <a
             href="#home"
             onClick={handleHashNavigation("#home")}
             className="flex items-center gap-2"
           >
-            <Eye className="w-6 h-6 text-primary" />
-            <span className="text-base sm:text-lg font-bold text-primary dark:text-gradient">Trinetra Systems</span>
+            <Eye className="w-6 h-6 lg:w-8 lg:h-8 text-primary" />
+            <span className="text-base sm:text-lg lg:text-xl font-bold text-primary dark:text-gradient">Trinetra Systems</span>
           </a>
 
           <nav className="hidden lg:flex items-center gap-1">
@@ -88,18 +88,18 @@ const AppSidebar = () => {
                   key={item.title}
                   href={item.href}
                   onClick={handleHashNavigation(item.href)}
-                  className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-all duration-200"
+                  className="flex items-center gap-2 px-3 py-2 lg:px-4 lg:py-2.5 rounded-lg text-sm lg:text-base text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-all duration-200"
                 >
-                  <item.icon className="w-4 h-4" />
+                  <item.icon className="w-4 h-4 lg:w-5 lg:h-5" />
                   <span>{item.title}</span>
                 </a>
               ) : (
                 <Link
                   key={item.title}
                   to={item.href}
-                  className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-all duration-200"
+                  className="flex items-center gap-2 px-3 py-2 lg:px-4 lg:py-2.5 rounded-lg text-sm lg:text-base text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-all duration-200"
                 >
-                  <item.icon className="w-4 h-4" />
+                  <item.icon className="w-4 h-4 lg:w-5 lg:h-5" />
                   <span>{item.title}</span>
                 </Link>
               )
@@ -128,17 +128,17 @@ const AppSidebar = () => {
                   href={ipLink.startsWith("http") ? ipLink : `http://${ipLink}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-semibold bg-primary text-primary-foreground hover:opacity-90 transition-all duration-200 animate-pulse-subtle"
+                  className="flex items-center gap-2 px-3 py-2 lg:px-4 lg:py-2.5 rounded-lg text-sm lg:text-base font-semibold bg-primary text-primary-foreground hover:opacity-90 transition-all duration-200 animate-pulse-subtle"
                 >
-                  <Eye className="w-4 h-4" />
+                  <Eye className="w-4 h-4 lg:w-5 lg:h-5" />
                   <span>Live</span>
                 </a>
               )}
               <Link
                 to="/admin"
-                className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-all duration-200"
+                className="flex items-center gap-2 px-3 py-2 lg:px-4 lg:py-2.5 rounded-lg text-sm lg:text-base text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-all duration-200"
               >
-                <Lock className="w-4 h-4" />
+                <Lock className="w-4 h-4 lg:w-5 lg:h-5" />
                 <span>Login</span>
               </Link>
             </div>
@@ -154,7 +154,7 @@ const AppSidebar = () => {
         </div>
       </header>
 
-      <div className="fixed top-16 left-0 right-0 z-50 h-6 pointer-events-none bg-gradient-to-b from-background/65 to-transparent dark:from-background/75" />
+      <div className="fixed top-16 lg:top-20 left-0 right-0 z-50 h-6 pointer-events-none bg-gradient-to-b from-background/65 to-transparent dark:from-background/75" />
 
       <AnimatePresence>
         {mobileOpen && (
