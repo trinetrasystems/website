@@ -112,6 +112,8 @@ const Admin = () => {
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [updatingPassword, setUpdatingPassword] = useState(false);
+  const [loggedInUsername, setLoggedInUsername] = useState("");
+  const [showPasswordFields, setShowPasswordFields] = useState(false);
 
   const handlePasswordChange = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -152,7 +154,7 @@ const Admin = () => {
   const pageSubtitle = isAdmin
     ? "User Management"
     : userRole === "user"
-      ? "Your account details and IP link"
+      ? "Your account details"
       : "Sign in to continue";
   const filteredUsers = useMemo(() => {
     const searchValue = userSearch.trim().toLowerCase();
@@ -179,6 +181,8 @@ const Admin = () => {
       setIsAdmin(false);
       setUserRole(null);
       setIpLink("");
+      setLoggedInUsername("");
+      setShowPasswordFields(false);
       setStatus("");
       setSubmissions([]);
       setUsers([]);
@@ -201,6 +205,7 @@ const Admin = () => {
           const data = profileDoc.data();
           const role = (data.role || "user") as "admin" | "user";
           setUserRole(role);
+          setLoggedInUsername(data.username || "");
           if (role === "admin") {
             setIsAdmin(true);
             setStatus("Admin access confirmed.");
@@ -586,8 +591,12 @@ const Admin = () => {
 
         <div className={`grid gap-6 ${canShowDashboard ? "lg:grid-cols-[380px_minmax(0,1fr)]" : "max-w-md mx-auto"}`}>
           <section className="h-fit rounded-2xl border border-border bg-card p-6 shadow-lg">
-            <h2 className="text-3xl font-bold">Login</h2>
-            <p className="mt-2 text-sm text-muted-foreground">Sign in with your username and password.</p>
+            <h2 className="text-3xl font-bold">
+              {user ? `Welcome, ${(loggedInUsername || 'User').replace(/\d+$/, '') || loggedInUsername || 'User'}` : "Login"}
+            </h2>
+            <p className="mt-2 text-sm text-muted-foreground">
+              {user ? "You are securely signed in." : "Sign in with your username and password."}
+            </p>
 
             {!user ? (
               <form className="mt-6 space-y-4" onSubmit={handleLogin}>
@@ -624,7 +633,9 @@ const Admin = () => {
               <div className="mt-6 space-y-4">
                 <div className="rounded-lg border border-border bg-secondary/30 p-4 text-sm">
                   <p className="font-medium text-primary">System Admin</p>
-                  <p className="mt-1 truncate text-muted-foreground">{user.email}</p>
+                  <p className="mt-1 truncate text-muted-foreground">
+                    {loggedInUsername || (user?.email)}
+                  </p>
                 </div>
                 <div className="rounded-lg border border-border bg-secondary/20 p-4 text-sm text-muted-foreground">
                   Use the sections on the right to create users, edit users, and review submissions.
@@ -634,66 +645,91 @@ const Admin = () => {
               <div className="mt-6 space-y-4">
                 <div className="rounded-lg border border-border bg-secondary/30 p-4 text-sm">
                   <p className="font-medium text-primary">User Account</p>
-                  <p className="mt-1 truncate text-muted-foreground">{user.email}</p>
+                  <p className="mt-1 truncate text-muted-foreground">
+                    {loggedInUsername || (user?.email)}
+                  </p>
                 </div>
-                <div className="rounded-lg border border-blue-500/30 bg-blue-500/10 p-4 text-sm">
-                  <div className="flex items-center justify-between">
-                    <p className="font-medium text-blue-600 dark:text-blue-400">IP Link</p>
-                    {ipLink && (
+                <div className="rounded-lg border border-blue-500/30 bg-blue-500/10 p-5 text-sm">
+                  <div className="flex flex-col gap-4">
+                    <div className="flex items-center justify-between">
+                      <p className="font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wider text-[10px]">Dashboard Access</p>
+                      <div className={`h-2 w-2 rounded-full ${ipLink ? "bg-green-500 animate-pulse" : "bg-yellow-500"}`} />
+                    </div>
+                    
+                    {ipLink ? (
                       <a
                         href={ipLink.startsWith("http") ? ipLink : `http://${ipLink}`}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1.5 rounded-md bg-blue-600 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-blue-700 active:scale-95"
+                        className="group flex items-center justify-center gap-2 rounded-xl bg-blue-600 py-3.5 text-sm font-bold text-white shadow-lg shadow-blue-500/20 transition-all hover:bg-blue-700 hover:shadow-blue-500/40 active:scale-[0.98]"
                       >
-                        <Eye className="h-3.5 w-3.5" />
-                        Live
+                        <Eye className="h-4 w-4 transition-transform group-hover:scale-110" />
+                        Click here to show live dashboard
                       </a>
+                    ) : (
+                      <div className="flex items-center gap-2 rounded-lg bg-background/50 p-3 italic text-muted-foreground">
+                        <Shield className="h-4 w-4 opacity-50" />
+                        No IP link assigned yet.
+                      </div>
                     )}
                   </div>
-                  {ipLink ? (
-                    <p className="mt-2 rounded bg-background/50 p-2 font-mono text-xs break-all text-muted-foreground">
-                      {ipLink}
-                    </p>
-                  ) : (
-                    <p className="mt-1 italic text-muted-foreground">No IP link assigned yet.</p>
-                  )}
                 </div>
 
                 <div className="rounded-lg border border-border bg-secondary/10 p-4">
-                  <p className="text-sm font-semibold text-foreground flex items-center gap-2">
-                    <Shield className="h-4 w-4 text-primary" />
-                    Change Password
-                  </p>
-                  <form className="mt-4 space-y-3" onSubmit={handlePasswordChange}>
-                    <div className="space-y-1">
-                      <label className="text-[10px] uppercase font-bold text-muted-foreground">New Password</label>
-                      <input
-                        type="password"
-                        value={newPassword}
-                        onChange={(e) => setNewPassword(e.target.value)}
-                        placeholder="Enter new password"
-                        className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-primary/40"
-                      />
-                    </div>
-                    <div className="space-y-1">
-                      <label className="text-[10px] uppercase font-bold text-muted-foreground">Confirm Password</label>
-                      <input
-                        type="password"
-                        value={confirmPassword}
-                        onChange={(e) => setConfirmPassword(e.target.value)}
-                        placeholder="Confirm new password"
-                        className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-primary/40"
-                      />
-                    </div>
+                  {!showPasswordFields ? (
                     <button
-                      type="submit"
-                      disabled={updatingPassword}
-                      className="w-full rounded-md bg-primary/10 py-2 text-xs font-bold text-primary transition hover:bg-primary hover:text-primary-foreground disabled:opacity-50"
+                      type="button"
+                      onClick={() => setShowPasswordFields(true)}
+                      className="flex w-full items-center justify-center gap-2 rounded-lg border border-border bg-background py-2.5 text-sm font-semibold transition hover:bg-secondary/40"
                     >
-                      {updatingPassword ? "Updating..." : "Update Password"}
+                      <Shield className="h-4 w-4 text-primary" />
+                      Reset Password
                     </button>
-                  </form>
+                  ) : (
+                    <>
+                      <div className="flex items-center justify-between mb-4">
+                        <p className="text-sm font-semibold text-foreground flex items-center gap-2">
+                          <Shield className="h-4 w-4 text-primary" />
+                          Set New Password
+                        </p>
+                        <button 
+                          onClick={() => setShowPasswordFields(false)}
+                          className="text-[10px] text-muted-foreground hover:text-foreground"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                      <form className="space-y-3" onSubmit={handlePasswordChange}>
+                        <div className="space-y-1">
+                          <label className="text-[10px] uppercase font-bold text-muted-foreground">New Password</label>
+                          <input
+                            type="password"
+                            value={newPassword}
+                            onChange={(e) => setNewPassword(e.target.value)}
+                            placeholder="Enter new password"
+                            className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-primary/40"
+                          />
+                        </div>
+                        <div className="space-y-1">
+                          <label className="text-[10px] uppercase font-bold text-muted-foreground">Confirm Password</label>
+                          <input
+                            type="password"
+                            value={confirmPassword}
+                            onChange={(e) => setConfirmPassword(e.target.value)}
+                            placeholder="Confirm new password"
+                            className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-primary/40"
+                          />
+                        </div>
+                        <button
+                          type="submit"
+                          disabled={updatingPassword}
+                          className="w-full rounded-md bg-primary py-2.5 text-xs font-bold text-primary-foreground transition hover:opacity-90 disabled:opacity-50"
+                        >
+                          {updatingPassword ? "Updating..." : "Update Password"}
+                        </button>
+                      </form>
+                    </>
+                  )}
                 </div>
               </div>
             ) : (
@@ -708,16 +744,6 @@ const Admin = () => {
               </div>
             )}
 
-            {user && (
-              <button
-                type="button"
-                onClick={handleSignOut}
-                className="mt-6 inline-flex w-full items-center justify-center gap-2 rounded-lg border border-border px-4 py-3 font-semibold transition-all hover:bg-secondary/40 active:scale-[0.98]"
-              >
-                <LogOut className="h-4 w-4" />
-                Logout
-              </button>
-            )}
           </section>
 
           {canShowDashboard && (
