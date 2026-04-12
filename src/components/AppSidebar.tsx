@@ -19,6 +19,7 @@ const AppSidebar = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [userRole, setUserRole] = useState<string | null>(null);
   const [ipLink, setIpLink] = useState<string | null>(null);
+  const [username, setUsername] = useState<string | null>(null);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
@@ -29,6 +30,7 @@ const AppSidebar = () => {
             const data = profileDoc.data();
             setUserRole(data.role || "user");
             setIpLink(data.ip_link || null);
+            setUsername(data.username || data.email || "User");
           }
         } catch (error) {
           console.error("Error fetching user profile:", error);
@@ -36,6 +38,7 @@ const AppSidebar = () => {
       } else {
         setUserRole(null);
         setIpLink(null);
+        setUsername(null);
       }
     });
 
@@ -119,9 +122,9 @@ const AppSidebar = () => {
                 <span>Live</span>
               </a>
             )}
-            
+
             <ThemeToggle />
-            
+
             <div className="hidden lg:flex items-center gap-2">
               {userRole === "user" && ipLink && (
                 <a
@@ -139,7 +142,7 @@ const AppSidebar = () => {
                 className="flex items-center gap-2 px-3 py-2 lg:px-4 lg:py-2.5 rounded-lg text-sm lg:text-base text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-all duration-200"
               >
                 <Lock className="w-4 h-4 lg:w-5 lg:h-5" />
-                <span>Login</span>
+                <span>{userRole ? "Access Portal" : "Login"}</span>
               </Link>
             </div>
 
@@ -174,6 +177,14 @@ const AppSidebar = () => {
               className="fixed top-16 left-0 right-0 z-[70] lg:hidden header-surface"
             >
               <div className="px-4 py-3 space-y-1">
+                {username && (
+                  <div className="px-3 py-4 mb-2 border-b border-border/50">
+                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Welcome back,</p>
+                    <p className="text-lg font-bold text-primary truncate">
+                      {username.replace(/\d+$/, '') || username}
+                    </p>
+                  </div>
+                )}
                 {navItems.map((item) => (
                   item.href.startsWith("#") ? (
                     <a
@@ -215,7 +226,7 @@ const AppSidebar = () => {
                   className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-all duration-200"
                 >
                   <Lock className="w-4 h-4" />
-                  <span>Login</span>
+                  <span>{userRole ? "Access Portal" : "Login"}</span>
                 </Link>
               </div>
             </motion.nav>
