@@ -207,8 +207,8 @@ const UserDashboard = ({ user, username, ipLink, onSignOut }: UserDashboardProps
                 className="flex-shrink-0"
               >
                 <div className={`relative flex h-24 w-24 items-center justify-center rounded-2xl border ${dashboardUrl
-                    ? "border-green-500/30 bg-green-500/10"
-                    : "border-yellow-500/30 bg-yellow-500/10"
+                  ? "border-green-500/30 bg-green-500/10"
+                  : "border-yellow-500/30 bg-yellow-500/10"
                   }`}>
                   <div className={`absolute inset-0 rounded-2xl ${dashboardUrl ? "bg-green-500/5" : "bg-yellow-500/5"
                     } animate-pulse`} />
@@ -225,7 +225,7 @@ const UserDashboard = ({ user, username, ipLink, onSignOut }: UserDashboardProps
           </motion.div>
 
           {/* Main Layout Area */}
-          <div className="flex flex-col gap-6 w-full max-w-4xl mx-auto">
+          <div className="flex flex-col gap-6 w-full">
 
             {/* Live Dashboard Card - Takes full row */}
             <motion.div
@@ -236,8 +236,8 @@ const UserDashboard = ({ user, username, ipLink, onSignOut }: UserDashboardProps
               className="md:col-span-2"
             >
               <div className={`group relative overflow-hidden rounded-2xl border p-6 shadow-lg transition-all duration-500 ${dashboardUrl
-                  ? "border-primary/20 bg-gradient-to-br from-primary/[0.06] via-card to-primary/[0.03] hover:border-primary/40 hover:shadow-primary/10"
-                  : "border-border bg-card"
+                ? "border-primary/20 bg-gradient-to-br from-primary/[0.06] via-card to-primary/[0.03] hover:border-primary/40 hover:shadow-primary/10"
+                : "border-border bg-card"
                 }`}>
                 {/* Animated background */}
                 {dashboardUrl && (
@@ -251,8 +251,8 @@ const UserDashboard = ({ user, username, ipLink, onSignOut }: UserDashboardProps
                   <div className="flex items-center justify-between mb-5">
                     <div className="flex items-center gap-3">
                       <div className={`flex h-11 w-11 items-center justify-center rounded-xl ${dashboardUrl
-                          ? "bg-primary/15 text-primary"
-                          : "bg-muted text-muted-foreground"
+                        ? "bg-primary/15 text-primary"
+                        : "bg-muted text-muted-foreground"
                         }`}>
                         <Camera className="h-5 w-5" />
                       </div>
@@ -372,7 +372,7 @@ const UserDashboard = ({ user, username, ipLink, onSignOut }: UserDashboardProps
                           value={newPassword}
                           onChange={(e) => setNewPassword(e.target.value)}
                           placeholder="Enter new password"
-                          className="w-full rounded-lg border border-border bg-background px-3.5 py-2.5 text-sm outline-none transition-all focus:ring-2 focus:ring-primary/30 focus:border-primary/30"
+                          className="w-full rounded-lg border border-border bg-background px-3.5 py-2.5 text-sm text-foreground outline-none transition-all focus:ring-2 focus:ring-primary/30 focus:border-primary/30 placeholder:text-muted-foreground"
                         />
                       </div>
                       <div className="space-y-1.5">
@@ -382,7 +382,7 @@ const UserDashboard = ({ user, username, ipLink, onSignOut }: UserDashboardProps
                           value={confirmPassword}
                           onChange={(e) => setConfirmPassword(e.target.value)}
                           placeholder="Confirm new password"
-                          className="w-full rounded-lg border border-border bg-background px-3.5 py-2.5 text-sm outline-none transition-all focus:ring-2 focus:ring-primary/30 focus:border-primary/30"
+                          className="w-full rounded-lg border border-border bg-background px-3.5 py-2.5 text-sm text-foreground outline-none transition-all focus:ring-2 focus:ring-primary/30 focus:border-primary/30 placeholder:text-muted-foreground"
                         />
                       </div>
                       <button
@@ -416,7 +416,7 @@ const UserDashboard = ({ user, username, ipLink, onSignOut }: UserDashboardProps
                   <span>System Operational</span>
                 </div>
                 <span className="hidden sm:inline text-border">•</span>
-                <span className="hidden sm:inline">Powered by Trinetra AI</span>
+                <span className="hidden sm:inline">Powered by Trinetra Systems</span>
               </div>
               <div className="flex items-center gap-2 text-xs text-muted-foreground">
                 <Clock className="h-3.5 w-3.5" />
