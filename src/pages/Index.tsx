@@ -11,6 +11,7 @@ import ResponseTime from "@/components/ResponseTime";
 import CTA from "@/components/CTA";
 import Contact from "@/components/Contact";
 import Footer from "@/components/Footer";
+import Pricing from "@/components/Pricing";
 
 const Index = () => {
   const navigate = useNavigate();
@@ -37,10 +38,11 @@ const Index = () => {
         <Hero />
         <About />
         <Solutions />
-        <UseCases />
         <Features />
+        <UseCases />
         <ResponseTime />
         <SLA />
+        <Pricing />
         <CTA />
         <Contact />
         <Footer />

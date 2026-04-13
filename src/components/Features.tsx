@@ -1,13 +1,14 @@
 import { motion, useInView } from "framer-motion";
 import { useRef } from "react";
-import { Bell, Brain, BarChart3, Cloud, Network } from "lucide-react";
+import { Bell, Shield, Target, Layout, MessageSquare, Plug } from "lucide-react";
 
 const features = [
-  { icon: Bell, title: "Real-time Alerts", desc: "Instant push notifications for detected events across all camera feeds." },
-  { icon: Brain, title: "AI-Powered Detection", desc: "State-of-the-art YOLO models for accurate object and behavior detection." },
-  { icon: BarChart3, title: "Heatmaps & Analytics", desc: "Visual analytics dashboards with movement heatmaps and trend analysis." },
-  { icon: Cloud, title: "Edge Deployment", desc: "Flexible deployment on cloud infrastructure or edge devices for low latency." },
-  { icon: Network, title: "Scalable Architecture", desc: "Handle thousands of camera feeds with distributed processing architecture." },
+  { icon: Bell, title: "Near Real-Time Alerts", desc: "Get instant alerts with minimal delay for immediate action" },
+  { icon: Shield, title: "On-Premise Processing", desc: "Your data stays inside your facility — no cloud dependency" },
+  { icon: Target, title: "Custom AI Detection", desc: "Helmet, fire, intrusion, or any custom use-case" },
+  { icon: Layout, title: "Live Dashboard", desc: "Monitor all cameras with real-time insights and event tracking" },
+  { icon: MessageSquare, title: "WhatsApp Alerts", desc: "Get instant alerts directly on your phone" },
+  { icon: Plug, title: "No Hardware Change", desc: "Works with your existing CCTV setup" },
 ];
 
 const Features = () => {
@@ -21,17 +22,14 @@ const Features = () => {
           initial={{ opacity: 0, y: 40 }}
           animate={isInView ? { opacity: 1, y: 0 } : {}}
           transition={{ duration: 0.6 }}
-          className="text-center mb-8 md:mb-16"
+          className="text-center mb-12"
         >
           <h2 className="text-3xl md:text-5xl font-bold mb-6">
-            Powerful <span className="text-gradient">Features</span>
+            Core <span className="text-gradient">Features</span>
           </h2>
-          <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-            Built for scale, speed, and accuracy.
-          </p>
         </motion.div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {features.map((f, i) => (
             <motion.div
               key={f.title}
@@ -40,8 +38,8 @@ const Features = () => {
               transition={{ duration: 0.5, delay: i * 0.1 }}
               className="glass rounded-xl p-6 glow-hover transition-all duration-300 group"
             >
-              <div className="w-12 h-12 rounded-xl bg-accent/10 flex items-center justify-center mb-4 group-hover:bg-accent/20 transition-colors">
-                <f.icon className="w-6 h-6 text-accent" />
+              <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mb-4 group-hover:bg-primary/20 transition-colors">
+                <f.icon className="w-6 h-6 text-primary" />
               </div>
               <h3 className="text-lg font-bold mb-2">{f.title}</h3>
               <p className="text-sm text-muted-foreground leading-relaxed">{f.desc}</p>

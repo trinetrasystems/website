@@ -43,8 +43,13 @@ const Footer = () => {
           </div>
         </div>
 
-        <div className="border-t border-border/30 pt-8 text-center text-sm text-muted-foreground">
-          © {new Date().getFullYear()} Trinetra Systems. All rights reserved.
+        <div className="border-t border-border/30 pt-8 text-center">
+          <p className="text-lg font-semibold text-gradient mb-6">
+            Smart AI monitoring. Real-time alerts. Complete data privacy.
+          </p>
+          <p className="text-sm text-muted-foreground">
+            © {new Date().getFullYear()} Trinetra Systems. All rights reserved.
+          </p>
         </div>
       </div>
     </footer>
