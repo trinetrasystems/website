@@ -1,13 +1,11 @@
 import { motion, useInView } from "framer-motion";
 import { useRef } from "react";
-import { CheckCircle } from "lucide-react";
 
-const reasons = [
-  { title: "Fully customizable AI", desc: "Not fixed features, we build what you need" },
-  { title: "Near real-time alerts", desc: "No delayed cloud alerts, instant notifications" },
-  { title: "On-device processing", desc: "Complete privacy, data never leaves your premises" },
-  { title: "Faster deployment than enterprise solutions", desc: "Ready in days, not months" },
-  { title: "Cost-effective and scalable", desc: "Affordable solutions that grow with your business" },
+const slaData = [
+  { severity: "Critical", description: "System down, no alerts", response: "1 hour", resolution: "4 hours", color: "bg-red-500/20 text-red-400 border-red-500/30" },
+  { severity: "High", description: "Major detection not working", response: "4 hours", resolution: "24 hours", color: "bg-orange-500/20 text-orange-400 border-orange-500/30" },
+  { severity: "Medium", description: "Minor detection issue", response: "24 hours", resolution: "72 hours", color: "bg-yellow-500/20 text-yellow-400 border-yellow-500/30" },
+  { severity: "Low", description: "Feature request, optimization", response: "72 hours", resolution: "Next release", color: "bg-green-500/20 text-green-400 border-green-500/30" },
 ];
 
 const SLA = () => {
@@ -15,7 +13,7 @@ const SLA = () => {
   const isInView = useInView(ref, { once: true, margin: "-100px" });
 
   return (
-    <section id="why-choose-us" className="py-12 md:py-24 px-4 md:px-6 bg-gradient-dark" ref={ref}>
+    <section id="sla" className="py-12 md:py-24 px-4 md:px-6 bg-gradient-dark" ref={ref}>
       <div className="max-w-5xl mx-auto">
         <motion.div
           initial={{ opacity: 0, y: 40 }}
@@ -24,27 +22,55 @@ const SLA = () => {
           className="text-center mb-12 md:mb-16"
         >
           <h2 className="text-3xl md:text-5xl font-bold mb-6">
-            Why <span className="text-gradient">Trinetra Systems</span>
+            <span className="text-gradient">SLA</span> & Support
           </h2>
+          <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
+            Guaranteed response times for every severity level. Your security never waits.
+          </p>
         </motion.div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {reasons.map((r, i) => (
-            <motion.div
-              key={i}
-              initial={{ opacity: 0, x: -20 }}
-              animate={isInView ? { opacity: 1, x: 0 } : {}}
-              transition={{ duration: 0.4, delay: i * 0.1 }}
-              className="flex items-start gap-4 glass p-6 rounded-2xl hover:bg-secondary/30 transition-colors border-white/5"
-            >
-              <CheckCircle className="w-6 h-6 text-primary shrink-0 mt-1" />
-              <div>
-                <h3 className="text-xl font-bold mb-1">{r.title}</h3>
-                <p className="text-muted-foreground">{r.desc}</p>
-              </div>
-            </motion.div>
-          ))}
-        </div>
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          animate={isInView ? { opacity: 1, y: 0 } : {}}
+          transition={{ duration: 0.6, delay: 0.2 }}
+          className="glass rounded-2xl overflow-hidden shadow-2xl border-white/5"
+        >
+          {/* Header */}
+          <div className="hidden md:grid grid-cols-4 gap-4 px-8 py-5 border-b border-border/50 text-sm font-bold text-muted-foreground bg-secondary/20">
+            <span>Severity</span>
+            <span>Description</span>
+            <span>Response Time</span>
+            <span>Resolution Time</span>
+          </div>
+
+          {/* Rows */}
+          <div className="divide-y divide-border/30">
+            {slaData.map((row, i) => (
+              <motion.div
+                key={row.severity}
+                initial={{ opacity: 0, x: -20 }}
+                animate={isInView ? { opacity: 1, x: 0 } : {}}
+                transition={{ duration: 0.4, delay: 0.3 + i * 0.1 }}
+                className="grid grid-cols-1 md:grid-cols-4 gap-3 md:gap-4 px-8 py-6 hover:bg-secondary/30 transition-colors"
+              >
+                <div>
+                  <span className={`inline-flex px-3 py-1 rounded-full text-xs font-bold border ${row.color}`}>
+                    {row.severity}
+                  </span>
+                </div>
+                <span className="text-sm font-medium text-foreground/80">{row.description}</span>
+                <div className="flex flex-col md:block">
+                  <span className="text-xs text-muted-foreground md:hidden mb-1 uppercase tracking-wider">Response</span>
+                  <span className="text-sm font-bold">{row.response}</span>
+                </div>
+                <div className="flex flex-col md:block">
+                  <span className="text-xs text-muted-foreground md:hidden mb-1 uppercase tracking-wider">Resolution</span>
+                  <span className="text-sm font-bold">{row.resolution}</span>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </motion.div>
       </div>
     </section>
   );

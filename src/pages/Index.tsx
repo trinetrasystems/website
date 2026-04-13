@@ -6,6 +6,7 @@ import About from "@/components/About";
 import Solutions from "@/components/Solutions";
 import UseCases from "@/components/UseCases";
 import SLA from "@/components/SLA";
+import WhyChooseUs from "@/components/WhyChooseUs";
 import Features from "@/components/Features";
 import ResponseTime from "@/components/ResponseTime";
 import CTA from "@/components/CTA";
@@ -41,6 +42,7 @@ const Index = () => {
         <Features />
         <UseCases />
         <ResponseTime />
+        <WhyChooseUs />
         <SLA />
         <Pricing />
         <CTA />
