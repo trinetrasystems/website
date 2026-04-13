@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { ArrowRight, Play } from "lucide-react";
+import { ArrowRight, Play, Zap, Shield, Target, Plug, Rocket } from "lucide-react";
 import { Link } from "react-router-dom";
 import lightBg from "../../videosandphotoes/light.PNG";
 import darkBg from "../../videosandphotoes/dark.PNG";
@@ -11,8 +11,9 @@ const Hero = () => {
       <div className="absolute inset-0">
         <img src={lightBg} alt="" className="absolute inset-0 w-full h-full object-cover object-center dark:hidden" />
         <img src={darkBg} alt="" className="absolute inset-0 w-full h-full object-cover object-center hidden dark:block" />
-        <div className="absolute inset-0 bg-gradient-to-r from-black/25 via-black/15 to-black/25 dark:from-black/50 dark:via-black/40 dark:to-black/50" />
-        <div className="absolute inset-0 bg-grid opacity-18 dark:opacity-12" />
+        {/* Stronger overlay for better text contrast */}
+        <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-black/40 to-black/60 dark:from-black/80 dark:via-black/60 dark:to-black/80" />
+        <div className="absolute inset-0 bg-grid opacity-20 dark:opacity-10" />
       </div>
 
       {/* Animated scan line */}
@@ -32,37 +33,41 @@ const Hero = () => {
           </div>
 
           <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold leading-tight mb-6 drop-shadow-[0_2px_10px_rgba(0,0,0,0.8)]">
-            <span className="text-white drop-shadow-[0_2px_8px_rgba(0,0,0,0.7)]">Trinetra Systems</span>
+            <span className="text-white drop-shadow-[0_2px_8px_rgba(0,0,0,0.7)]">Turn Your Existing CCTV Into a</span>
             <br />
-            <span className="bg-gradient-to-r from-amber-500 to-orange-600 dark:from-[#ffb300] dark:to-[#ff6f00] bg-clip-text text-transparent drop-shadow-[0_2px_8px_rgba(0,0,0,0.8)]">AI-Powered</span>
-            <br />
-            <span className="text-white drop-shadow-[0_2px_8px_rgba(0,0,0,0.8)]">Surveillance</span>
+            <span className="bg-gradient-to-r from-amber-500 to-orange-600 dark:from-[#ffb300] dark:to-[#ff6f00] bg-clip-text text-transparent drop-shadow-[0_2px_8px_rgba(0,0,0,0.8)]">Real-Time AI Safety System</span>
           </h1>
 
-          <p className="max-w-2xl mb-10 leading-relaxed text-slate-200 drop-shadow-[0_2px_8px_rgba(0,0,0,0.35)]">
-            <span className="block text-xl md:text-2xl font-semibold text-white drop-shadow-[0_2px_6px_rgba(0,0,0,0.45)]">
-              AI Where You Need It.
-            </span>
+          <p className="max-w-3xl mb-10 text-2xl md:text-3xl font-bold text-white drop-shadow-lg leading-tight">
+            Monitor everything. Miss nothing. <span className="bg-gradient-to-r from-amber-500 to-orange-600 dark:from-[#ffb300] dark:to-[#ff6f00] bg-clip-text text-transparent drop-shadow-[0_2px_8px_rgba(0,0,0,0.8)] italic">Instant alerts</span> powered by Edge AI.
           </p>
+
+          <ul className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-12 text-white font-bold">
+            {[
+              { icon: Zap, text: "Near real-time alerts (minimal delay)" },
+              { icon: Shield, text: "100% data privacy (no cloud)" },
+              { icon: Target, text: "Custom AI detections" },
+              { icon: Plug, text: "Works with existing CCTV" },
+              { icon: Rocket, text: "Setup in 3–5 days" }
+            ].map((item, i) => (
+              <li key={i} className="flex items-center gap-3 text-base md:text-lg drop-shadow-md group">
+                <div className="w-8 h-8 rounded-full bg-black/40 border border-white/20 flex items-center justify-center shrink-0 group-hover:bg-primary/20 group-hover:border-primary/40 transition-all">
+                  <item.icon className="w-4 h-4 text-amber-500" />
+                </div>
+                <span>{item.text}</span>
+              </li>
+            ))}
+          </ul>
 
           <div className="flex flex-wrap gap-4 justify-start">
             <motion.a
               href="#contact"
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              className="btn-premium bg-gradient-to-r from-primary to-primary/80 text-white shadow-xl hover:shadow-primary/30"
+              className="px-10 py-5 rounded-xl bg-gradient-to-r from-primary to-primary/80 text-white font-black text-xl shadow-2xl hover:shadow-primary/40 transition-all flex items-center gap-3"
             >
-              Request Demo
-              <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-            </motion.a>
-            <motion.a
-              href="#solutions"
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              className="btn-premium glass-strong text-foreground border-white/10 hover:bg-white/5"
-            >
-              <Play className="w-5 h-5 fill-current" />
-              Explore Solutions
+              Book Free Demo
+              <ArrowRight className="w-6 h-6" />
             </motion.a>
           </div>
         </motion.div>

@@ -6,11 +6,14 @@ import About from "@/components/About";
 import Solutions from "@/components/Solutions";
 import UseCases from "@/components/UseCases";
 import SLA from "@/components/SLA";
+import WhyChooseUs from "@/components/WhyChooseUs";
 import Features from "@/components/Features";
 import ResponseTime from "@/components/ResponseTime";
 import CTA from "@/components/CTA";
 import Contact from "@/components/Contact";
 import Footer from "@/components/Footer";
+import Pricing from "@/components/Pricing";
+import SeeItInAction from "@/components/SeeItInAction";
 
 const Index = () => {
   const navigate = useNavigate();
@@ -37,10 +40,13 @@ const Index = () => {
         <Hero />
         <About />
         <Solutions />
-        <UseCases />
+        <SeeItInAction />
         <Features />
+        <UseCases />
         <ResponseTime />
+        <WhyChooseUs />
         <SLA />
+        <Pricing />
         <CTA />
         <Contact />
         <Footer />

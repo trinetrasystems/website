@@ -1,28 +1,13 @@
 import { motion, useInView } from "framer-motion";
 import { useRef } from "react";
-import { Camera, ShoppingCart, Factory, HardHat } from "lucide-react";
+import { Camera, ShoppingCart, Factory, HardHat, CheckCircle2 } from "lucide-react";
+import solutionImg from "@/assets/ai-monitoring.png";
 
 const solutions = [
-  {
-    icon: Camera,
-    title: "Smart Surveillance",
-    description: "AI-powered video analytics for real-time threat detection, behavioral analysis, and automated response across all camera feeds.",
-  },
-  {
-    icon: ShoppingCart,
-    title: "Retail Intelligence",
-    description: "Customer behavior analytics, theft prevention, heatmap tracking, and automated checkout powered by computer vision.",
-  },
-  {
-    icon: Factory,
-    title: "Industrial Automation",
-    description: "Production line monitoring, quality control, anomaly detection, and predictive maintenance using visual AI.",
-  },
-  {
-    icon: HardHat,
-    title: "Safety & Compliance",
-    description: "Automated PPE detection, zone monitoring, fall detection, and safety compliance verification in real-time.",
-  },
+  "Automatically monitors all cameras",
+  "Sends near real-time alerts",
+  "Runs completely on your premises",
+  "Reduces risks, accidents, and manual effort",
 ];
 
 const Solutions = () => {
@@ -36,33 +21,30 @@ const Solutions = () => {
           initial={{ opacity: 0, y: 40 }}
           animate={isInView ? { opacity: 1, y: 0 } : {}}
           transition={{ duration: 0.6 }}
-          className="text-center mb-8 md:mb-16"
+          className="text-center mb-12 md:mb-16"
         >
           <h2 className="text-3xl md:text-5xl font-bold mb-6">
-            Our <span className="text-gradient">Solutions</span>
+            AI Monitoring That <span className="text-gradient">Works For You</span>
           </h2>
-          <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-            Comprehensive AI-powered solutions tailored for every industry and use case.
-          </p>
         </motion.div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          {solutions.map((s, i) => (
-            <motion.div
-              key={s.title}
-              initial={{ opacity: 0, y: 30 }}
-              animate={isInView ? { opacity: 1, y: 0 } : {}}
-              transition={{ duration: 0.5, delay: i * 0.15 }}
-              className="glass rounded-3xl p-10 glow-hover transition-all duration-500 border-white/5 group hover:border-primary/20"
-            >
-              <div className="w-20 h-20 rounded-2xl bg-gradient-to-tr from-primary/30 to-primary/5 flex items-center justify-center mb-10 group-hover:rotate-6 transition-all duration-500 shadow-xl shadow-primary/10">
-                <s.icon className="w-10 h-10 text-primary" />
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={isInView ? { opacity: 1, scale: 1 } : {}}
+          transition={{ duration: 0.7 }}
+          className="glass rounded-[2.5rem] p-8 md:p-16 border-white/5 bg-secondary/5 overflow-hidden shadow-2xl mx-auto max-w-3xl"
+        >
+          <div className="space-y-8">
+            {solutions.map((s, i) => (
+              <div key={i} className="flex gap-6 group items-center">
+                <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center shrink-0 group-hover:scale-110 group-hover:bg-primary/20 transition-all duration-300">
+                  <CheckCircle2 className="w-7 h-7 text-primary" />
+                </div>
+                <h3 className="text-xl md:text-2xl font-bold tracking-tight group-hover:text-primary transition-colors">{s}</h3>
               </div>
-              <h3 className="text-2xl font-bold mb-4 tracking-tight group-hover:translate-x-1 transition-transform">{s.title}</h3>
-              <p className="text-muted-foreground leading-relaxed text-lg">{s.description}</p>
-            </motion.div>
-          ))}
-        </div>
+            ))}
+          </div>
+        </motion.div>
       </div>
     </section>
   );

@@ -1,13 +1,14 @@
 import { motion, useInView } from "framer-motion";
 import { useRef } from "react";
-import { Bell, Brain, BarChart3, Cloud, Network } from "lucide-react";
+import { Zap, Shield, Target, LayoutDashboard, MessageCircle, Plug } from "lucide-react";
 
 const features = [
-  { icon: Bell, title: "Real-time Alerts", desc: "Instant push notifications for detected events across all camera feeds." },
-  { icon: Brain, title: "AI-Powered Detection", desc: "State-of-the-art YOLO models for accurate object and behavior detection." },
-  { icon: BarChart3, title: "Heatmaps & Analytics", desc: "Visual analytics dashboards with movement heatmaps and trend analysis." },
-  { icon: Cloud, title: "Edge Deployment", desc: "Flexible deployment on cloud infrastructure or edge devices for low latency." },
-  { icon: Network, title: "Scalable Architecture", desc: "Handle thousands of camera feeds with distributed processing architecture." },
+  { icon: Zap, title: "Near Real-Time Alerts", desc: "Get instant alerts with minimal delay for immediate action", color: "text-amber-500", bg: "bg-amber-500/10" },
+  { icon: Shield, title: "On-Premise Processing", desc: "Your data stays inside your facility — no cloud dependency", color: "text-emerald-500", bg: "bg-emerald-500/10" },
+  { icon: Target, title: "Custom AI Detection", desc: "Helmet, fire, intrusion, or any custom use-case", color: "text-purple-500", bg: "bg-purple-500/10" },
+  { icon: LayoutDashboard, title: "Live Dashboard", desc: "Monitor all cameras with real-time insights and event tracking", color: "text-blue-500", bg: "bg-blue-500/10" },
+  { icon: MessageCircle, title: "WhatsApp Alerts", desc: "Get instant alerts directly on your phone", color: "text-green-500", bg: "bg-green-500/10" },
+  { icon: Plug, title: "No Hardware Change", desc: "Works with your existing CCTV setup", color: "text-indigo-500", bg: "bg-indigo-500/10" },
 ];
 
 const Features = () => {
@@ -21,30 +22,27 @@ const Features = () => {
           initial={{ opacity: 0, y: 40 }}
           animate={isInView ? { opacity: 1, y: 0 } : {}}
           transition={{ duration: 0.6 }}
-          className="text-center mb-8 md:mb-16"
+          className="text-center mb-12"
         >
           <h2 className="text-3xl md:text-5xl font-bold mb-6">
-            Powerful <span className="text-gradient">Features</span>
+            Core <span className="text-gradient">Features</span>
           </h2>
-          <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-            Built for scale, speed, and accuracy.
-          </p>
         </motion.div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-8">
           {features.map((f, i) => (
             <motion.div
               key={f.title}
               initial={{ opacity: 0, y: 30 }}
               animate={isInView ? { opacity: 1, y: 0 } : {}}
               transition={{ duration: 0.5, delay: i * 0.1 }}
-              className="glass rounded-xl p-6 glow-hover transition-all duration-300 group"
+              className="glass rounded-xl p-4 md:p-8 glow-hover transition-all duration-300 group"
             >
-              <div className="w-12 h-12 rounded-xl bg-accent/10 flex items-center justify-center mb-4 group-hover:bg-accent/20 transition-colors">
-                <f.icon className="w-6 h-6 text-accent" />
+              <div className={`w-10 h-10 md:w-14 md:h-14 rounded-2xl ${f.bg} flex items-center justify-center mb-4 md:mb-6 group-hover:scale-110 transition-transform`}>
+                <f.icon className={`w-5 h-5 md:w-7 md:h-7 ${f.color}`} />
               </div>
-              <h3 className="text-lg font-bold mb-2">{f.title}</h3>
-              <p className="text-sm text-muted-foreground leading-relaxed">{f.desc}</p>
+              <h3 className="text-sm md:text-xl font-bold mb-2 md:mb-3 line-clamp-1 md:line-clamp-none">{f.title}</h3>
+              <p className="text-[10px] md:text-sm text-muted-foreground leading-relaxed line-clamp-2 md:line-clamp-none">{f.desc}</p>
             </motion.div>
           ))}
         </div>

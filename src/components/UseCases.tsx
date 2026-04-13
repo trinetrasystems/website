@@ -90,7 +90,6 @@ const UseCases = () => {
   const isInView = useInView(ref, { once: true, margin: "-100px" });
   const [showAll, setShowAll] = useState(false);
 
-  // Show all on medium screens and above, or follow showAll state on mobile
   return (
     <section id="usecases" className="py-12 md:py-24 px-4 md:px-6" ref={ref}>
       <div className="max-w-7xl mx-auto">
@@ -104,7 +103,7 @@ const UseCases = () => {
             <span className="text-gradient">Use Cases</span>
           </h2>
           <p className="text-muted-foreground text-sm md:text-lg max-w-2xl mx-auto">
-            Category-wise auto-scrolling showcases with one larger photo visible at a time.
+            Category-wise auto-scrolling showcases with real-world detection examples.
           </p>
         </motion.div>
 

@@ -19,7 +19,7 @@ const SLA = () => {
           initial={{ opacity: 0, y: 40 }}
           animate={isInView ? { opacity: 1, y: 0 } : {}}
           transition={{ duration: 0.6 }}
-          className="text-center mb-8 md:mb-16"
+          className="text-center mb-12 md:mb-16"
         >
           <h2 className="text-3xl md:text-5xl font-bold mb-6">
             <span className="text-gradient">SLA</span> & Support
@@ -33,35 +33,37 @@ const SLA = () => {
           initial={{ opacity: 0, y: 30 }}
           animate={isInView ? { opacity: 1, y: 0 } : {}}
           transition={{ duration: 0.6, delay: 0.2 }}
-          className="glass rounded-2xl overflow-hidden"
+          className="glass rounded-2xl overflow-hidden shadow-2xl border-white/5"
         >
           {/* Header */}
-          <div className="hidden md:grid grid-cols-4 gap-4 px-6 py-4 border-b border-border/50 text-sm font-semibold text-muted-foreground">
+          <div className="grid grid-cols-4 gap-2 md:gap-4 px-4 md:px-8 py-3 md:py-5 border-b border-border/50 text-[10px] md:text-sm font-bold text-muted-foreground bg-secondary/20">
             <span>Severity</span>
             <span>Description</span>
-            <span>Response Time</span>
-            <span>Resolution Time</span>
+            <span className="text-center">Response</span>
+            <span className="text-center">Resolution</span>
           </div>
 
           {/* Rows */}
-          {slaData.map((row, i) => (
-            <motion.div
-              key={row.severity}
-              initial={{ opacity: 0, x: -20 }}
-              animate={isInView ? { opacity: 1, x: 0 } : {}}
-              transition={{ duration: 0.4, delay: 0.3 + i * 0.1 }}
-              className="grid grid-cols-1 md:grid-cols-4 gap-2 md:gap-4 px-6 py-5 border-b border-border/30 last:border-0 hover:bg-secondary/30 transition-colors"
-            >
-              <div>
-                <span className={`inline-flex px-3 py-1 rounded-full text-xs font-semibold border ${row.color}`}>
-                  {row.severity}
-                </span>
-              </div>
-              <span className="text-sm text-muted-foreground">{row.description}</span>
-              <span className="text-sm font-medium">{row.response}</span>
-              <span className="text-sm font-medium">{row.resolution}</span>
-            </motion.div>
-          ))}
+          <div className="divide-y divide-border/30">
+            {slaData.map((row, i) => (
+              <motion.div
+                key={row.severity}
+                initial={{ opacity: 0, x: -20 }}
+                animate={isInView ? { opacity: 1, x: 0 } : {}}
+                transition={{ duration: 0.4, delay: 0.3 + i * 0.1 }}
+                className="grid grid-cols-4 gap-2 md:gap-4 px-4 md:px-8 py-4 md:py-6 hover:bg-secondary/30 transition-colors items-center"
+              >
+                <div>
+                  <span className={`inline-flex px-2 md:px-3 py-0.5 md:py-1 rounded-full text-[10px] md:text-xs font-bold border ${row.color}`}>
+                    {row.severity}
+                  </span>
+                </div>
+                <span className="text-[10px] md:text-sm font-medium text-foreground">{row.description}</span>
+                <span className="text-[10px] md:text-sm font-bold text-center">{row.response}</span>
+                <span className="text-[10px] md:text-sm font-bold text-center">{row.resolution}</span>
+              </motion.div>
+            ))}
+          </div>
         </motion.div>
       </div>
     </section>

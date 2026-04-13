@@ -1,37 +1,46 @@
 import { motion, useInView } from "framer-motion";
 import { useRef } from "react";
-import { ArrowRight } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Phone, Calendar } from "lucide-react";
 
 const CTA = () => {
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true, margin: "-100px" });
 
   return (
-    <section className="py-12 md:py-24 px-4 md:px-6" ref={ref}>
+    <section id="contact" className="py-12 md:py-24 px-4 md:px-6" ref={ref}>
       <motion.div
-        initial={{ opacity: 0, y: 40 }}
-        animate={isInView ? { opacity: 1, y: 0 } : {}}
-        transition={{ duration: 0.6 }}
-        className="max-w-4xl mx-auto text-center glass rounded-3xl p-12 md:p-16 glow-primary relative overflow-hidden"
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={isInView ? { opacity: 1, scale: 1 } : {}}
+        className="max-w-6xl mx-auto glass rounded-[3rem] p-10 md:p-20 text-center relative overflow-hidden border-primary/20 bg-primary/5 shadow-2xl"
       >
         <div className="absolute inset-0 bg-grid opacity-10" />
         <div className="relative z-10">
           <h2 className="text-3xl md:text-5xl font-bold mb-6">
-            Secure Your Business with <span className="text-gradient">Trinetra Systems</span>
+            We value your <span className="text-gradient">safety and time</span>.
           </h2>
-          <p className="text-muted-foreground text-lg mb-10 max-w-2xl mx-auto">
-            Join leading enterprises who trust Trinetra Systems' AI-powered surveillance to protect what matters most.
+          <p className="text-muted-foreground text-xl md:text-2xl font-semibold mb-10 max-w-2xl mx-auto">
+            Call the founder now for a quick demo and consultation.
           </p>
-          <motion.a
-            href="#contact"
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            className="inline-flex items-center gap-2 px-10 py-4 rounded-lg bg-primary text-primary-foreground font-semibold text-lg glow-primary transition-all"
-          >
-            Request Demo
-            <ArrowRight className="w-5 h-5" />
-          </motion.a>
+          <div className="flex flex-wrap gap-6 justify-center">
+            <motion.a
+              href="tel:+919924315066"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              className="inline-flex items-center gap-2 px-10 py-4 rounded-xl bg-primary text-primary-foreground font-bold text-lg glow-primary transition-all"
+            >
+              <Phone className="w-5 h-5" />
+              Call Now
+            </motion.a>
+            <motion.a
+              href="#contact-form"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              className="inline-flex items-center gap-2 px-10 py-4 rounded-xl glass-strong border-white/20 font-bold text-lg hover:bg-white/10 transition-all text-foreground dark:text-white drop-shadow-md"
+            >
+              <Calendar className="w-5 h-5" />
+              Book Free Demo
+            </motion.a>
+          </div>
         </div>
       </motion.div>
     </section>
