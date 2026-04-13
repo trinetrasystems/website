@@ -13,6 +13,7 @@ import CTA from "@/components/CTA";
 import Contact from "@/components/Contact";
 import Footer from "@/components/Footer";
 import Pricing from "@/components/Pricing";
+import SeeItInAction from "@/components/SeeItInAction";
 
 const Index = () => {
   const navigate = useNavigate();
@@ -39,6 +40,7 @@ const Index = () => {
         <Hero />
         <About />
         <Solutions />
+        <SeeItInAction />
         <Features />
         <UseCases />
         <ResponseTime />

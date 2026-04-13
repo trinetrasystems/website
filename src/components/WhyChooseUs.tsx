@@ -28,19 +28,19 @@ const WhyChooseUs = () => {
           </h2>
         </motion.div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-2 md:grid-cols-2 gap-4 md:gap-6">
           {reasons.map((r, i) => (
             <motion.div
               key={i}
               initial={{ opacity: 0, x: -20 }}
               animate={isInView ? { opacity: 1, x: 0 } : {}}
               transition={{ duration: 0.4, delay: i * 0.1 }}
-              className="flex items-start gap-4 glass p-6 rounded-2xl hover:bg-secondary/30 transition-colors border-white/5"
+              className={`flex items-start gap-3 md:gap-4 glass p-4 md:p-6 rounded-2xl hover:bg-secondary/30 transition-colors border-white/5 ${i === 4 ? 'col-span-2 md:col-span-1 mx-auto max-w-[60%] md:max-w-none' : ''}`}
             >
-              <CheckCircle className="w-6 h-6 text-primary shrink-0 mt-1" />
+              <CheckCircle className="w-5 h-5 md:w-6 md:h-6 text-primary shrink-0 mt-0.5" />
               <div>
-                <h3 className="text-xl font-bold mb-1">{r.title}</h3>
-                <p className="text-muted-foreground">{r.desc}</p>
+                <h3 className="text-sm md:text-xl font-bold mb-1">{r.title}</h3>
+                <p className="text-[10px] md:text-base text-muted-foreground leading-relaxed">{r.desc}</p>
               </div>
             </motion.div>
           ))}

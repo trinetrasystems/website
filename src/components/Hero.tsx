@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { ArrowRight, Play } from "lucide-react";
+import { ArrowRight, Play, Zap, Shield, Target, Plug, Rocket } from "lucide-react";
 import { Link } from "react-router-dom";
 import lightBg from "../../videosandphotoes/light.PNG";
 import darkBg from "../../videosandphotoes/dark.PNG";
@@ -39,20 +39,22 @@ const Hero = () => {
           </h1>
 
           <p className="max-w-3xl mb-10 text-2xl md:text-3xl font-bold text-white drop-shadow-lg leading-tight">
-            Monitor everything. Miss nothing. <span className="text-primary italic">Instant alerts</span> powered by Edge AI.
+            Monitor everything. Miss nothing. <span className="bg-gradient-to-r from-amber-500 to-orange-600 dark:from-[#ffb300] dark:to-[#ff6f00] bg-clip-text text-transparent drop-shadow-[0_2px_8px_rgba(0,0,0,0.8)] italic">Instant alerts</span> powered by Edge AI.
           </p>
 
           <ul className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-12 text-white font-bold">
             {[
-              "⚡ Near real-time alerts (minimal delay)",
-              "🔒 100% data privacy (no cloud)",
-              "🎯 Custom AI detections",
-              "🔌 Works with existing CCTV",
-              "🚀 Setup in 3–5 days"
-            ].map((highlight, i) => (
-              <li key={i} className="flex items-center gap-2 text-base md:text-lg drop-shadow-md">
-                <span className="shrink-0">{highlight.split(" ")[0]}</span>
-                {highlight.split(" ").slice(1).join(" ")}
+              { icon: Zap, text: "Near real-time alerts (minimal delay)" },
+              { icon: Shield, text: "100% data privacy (no cloud)" },
+              { icon: Target, text: "Custom AI detections" },
+              { icon: Plug, text: "Works with existing CCTV" },
+              { icon: Rocket, text: "Setup in 3–5 days" }
+            ].map((item, i) => (
+              <li key={i} className="flex items-center gap-3 text-base md:text-lg drop-shadow-md group">
+                <div className="w-8 h-8 rounded-full bg-black/40 border border-white/20 flex items-center justify-center shrink-0 group-hover:bg-primary/20 group-hover:border-primary/40 transition-all">
+                  <item.icon className="w-4 h-4 text-amber-500" />
+                </div>
+                <span>{item.text}</span>
               </li>
             ))}
           </ul>

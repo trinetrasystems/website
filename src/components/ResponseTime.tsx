@@ -1,11 +1,11 @@
 import { motion, useInView } from "framer-motion";
 import { useRef } from "react";
-import { Zap, Target, Timer, ShieldCheck } from "lucide-react";
+import { Zap, Target, Clock, ShieldCheck } from "lucide-react";
 
 const stats = [
   { icon: Zap, value: "<1 second", label: "Alert Time", desc: "Immediate notification for critical events" },
   { icon: Target, value: "95%+", label: "Detection Accuracy", desc: "Reliable AI models trained for accuracy" },
-  { icon: Timer, value: "3-5 days", label: "Deployment", desc: "Fast and seamless setup on existing systems" },
+  { icon: Clock, value: "3-5 days", label: "Deployment", desc: "Fast and seamless setup on existing systems" },
   { icon: ShieldCheck, value: "100%", label: "On-Premise", desc: "Complete data privacy and security" },
 ];
 
@@ -27,21 +27,21 @@ const ResponseTime = () => {
           </h2>
         </motion.div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-8">
           {stats.map((s, i) => (
             <motion.div
               key={s.label}
               initial={{ opacity: 0, scale: 0.9 }}
               animate={isInView ? { opacity: 1, scale: 1 } : {}}
               transition={{ duration: 0.5, delay: i * 0.1 }}
-              className="glass rounded-2xl p-8 text-center glow-hover transition-all duration-300"
+              className="glass rounded-2xl p-6 md:p-8 text-center glow-hover transition-all duration-300"
             >
-              <div className="w-14 h-14 rounded-xl bg-primary/10 flex items-center justify-center mx-auto mb-4">
-                <s.icon className="w-7 h-7 text-primary" />
+              <div className="w-12 h-12 md:w-16 md:h-16 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto mb-4 md:mb-6">
+                <s.icon className="w-6 h-6 md:w-8 md:h-8 text-primary" />
               </div>
-              <div className="text-3xl font-bold text-gradient mb-1">{s.value}</div>
-              <div className="text-sm font-semibold mb-2">{s.label}</div>
-              <p className="text-xs text-muted-foreground">{s.desc}</p>
+              <div className="text-xl md:text-3xl font-bold text-gradient mb-1 md:mb-2">{s.value}</div>
+              <div className="text-xs md:text-base font-bold mb-2 uppercase tracking-wide opacity-80">{s.label}</div>
+              <p className="text-[10px] md:text-sm text-muted-foreground leading-relaxed">{s.desc}</p>
             </motion.div>
           ))}
         </div>

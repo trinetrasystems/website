@@ -1,6 +1,6 @@
 import { MouseEvent, useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Eye, Home, Layers, Grid3X3, Shield, Mail, Lock, Menu, X } from "lucide-react";
+import { Home, Sparkles, Grid3X3, Star, CircleDollarSign, Mail, Lock, Menu, X, Eye } from "lucide-react";
 import { Link } from "react-router-dom";
 import { ThemeToggle } from "./ThemeToggle";
 import { auth, db } from "@/lib/firebase";
@@ -9,9 +9,10 @@ import { doc, getDoc } from "firebase/firestore";
 
 const navItems = [
   { title: "Home", href: "#home", icon: Home },
-  { title: "Solutions", href: "#solutions", icon: Layers },
+  { title: "Features", href: "#features", icon: Sparkles },
   { title: "Use Cases", href: "#usecases", icon: Grid3X3 },
-  { title: "SLA", href: "#sla", icon: Shield },
+  { title: "Why Us", href: "#sla", icon: Star },
+  { title: "Pricing", href: "#pricing", icon: CircleDollarSign },
   { title: "Contact", href: "#contact-form", icon: Mail },
 ];
 
@@ -55,9 +56,7 @@ const AppSidebar = () => {
     if (targetElement) {
       const headerElement = document.querySelector("header");
       const headerHeight = headerElement instanceof HTMLElement ? headerElement.offsetHeight : 64;
-      const topGradientHeight = 24;
-      const extraGap = 12;
-      const offset = headerHeight + topGradientHeight + extraGap;
+      const offset = headerHeight + 20;
       const targetTop = targetElement.getBoundingClientRect().top + window.scrollY - offset;
 
       window.scrollTo({
@@ -73,91 +72,69 @@ const AppSidebar = () => {
 
   return (
     <>
-      <header className="fixed top-0 left-0 right-0 z-[60] header-surface bg-background/95">
-        <div className="flex h-16 lg:h-20 w-full items-center justify-between px-3 md:px-5 lg:px-8">
+      <header className="fixed top-0 left-0 right-0 z-[60] bg-background/80 backdrop-blur-xl border-b border-border/40 shadow-sm">
+        <div className="flex h-16 lg:h-20 w-full items-center justify-between px-6 md:px-10 lg:px-16 mx-auto">
+          {/* Logo Area */}
           <a
             href="#home"
             onClick={handleHashNavigation("#home")}
-            className="flex items-center gap-2"
+            className="flex items-center gap-3 group"
           >
-            <Eye className="w-6 h-6 lg:w-8 lg:h-8 text-primary" />
-            <span className="text-base sm:text-lg lg:text-xl font-bold text-primary dark:text-gradient">Trinetra Systems</span>
+            <div className="relative">
+              <div className="absolute inset-0 bg-primary/20 blur-lg rounded-full group-hover:bg-primary/40 transition-all" />
+              <Eye className="w-8 h-8 lg:w-10 lg:h-10 text-primary relative z-10 drop-shadow-glow" />
+            </div>
+            <span className="text-xl sm:text-2xl lg:text-3xl font-black tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-primary via-blue-500 to-primary/80">
+              Trinetra Systems
+            </span>
           </a>
 
-          <nav className="hidden lg:flex items-center gap-1">
+          {/* Nav Items */}
+          <nav className="hidden lg:flex items-center gap-2">
             {navItems.map((item) => (
-              item.href.startsWith("#") ? (
-                <a
-                  key={item.title}
-                  href={item.href}
-                  onClick={handleHashNavigation(item.href)}
-                  className="flex items-center gap-2 px-3 py-2 lg:px-4 lg:py-2.5 rounded-lg text-sm lg:text-base text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-all duration-200"
-                >
-                  <item.icon className="w-4 h-4 lg:w-5 lg:h-5" />
-                  <span>{item.title}</span>
-                </a>
-              ) : (
-                <Link
-                  key={item.title}
-                  to={item.href}
-                  className="flex items-center gap-2 px-3 py-2 lg:px-4 lg:py-2.5 rounded-lg text-sm lg:text-base text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-all duration-200"
-                >
-                  <item.icon className="w-4 h-4 lg:w-5 lg:h-5" />
-                  <span>{item.title}</span>
-                </Link>
-              )
+              <a
+                key={item.title}
+                href={item.href}
+                onClick={handleHashNavigation(item.href)}
+                className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-all duration-300 group"
+              >
+                <item.icon className="w-4 h-4 group-hover:scale-110 transition-transform text-primary/70 group-hover:text-primary" />
+                <span>{item.title}</span>
+              </a>
             ))}
           </nav>
 
-          <div className="flex items-center gap-1.5 sm:gap-2">
+          {/* Action Area */}
+          <div className="flex items-center gap-2 sm:gap-4">
             {userRole === "user" && ipLink && (
               <a
                 href={ipLink.startsWith("http") ? ipLink : `http://${ipLink}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex lg:hidden items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-bold bg-primary text-primary-foreground animate-pulse-subtle"
-                title="Live Dashboard"
+                className="flex items-center gap-1.5 px-3 py-1.5 sm:px-5 sm:py-2.5 rounded-xl text-xs sm:text-sm font-black bg-primary text-primary-foreground hover:shadow-glow-primary transition-all animate-pulse-subtle"
               >
-                <Eye className="w-3.5 h-3.5" />
+                <Eye className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                 <span>Live</span>
               </a>
             )}
-
             <ThemeToggle />
-
-            <div className="hidden lg:flex items-center gap-2">
-              {userRole === "user" && ipLink && (
-                <a
-                  href={ipLink.startsWith("http") ? ipLink : `http://${ipLink}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-2 px-3 py-2 lg:px-4 lg:py-2.5 rounded-lg text-sm lg:text-base font-semibold bg-primary text-primary-foreground hover:opacity-90 transition-all duration-200 animate-pulse-subtle"
-                >
-                  <Eye className="w-4 h-4 lg:w-5 lg:h-5" />
-                  <span>Live</span>
-                </a>
-              )}
-              <Link
-                to="/admin"
-                className="flex items-center gap-2 px-3 py-2 lg:px-4 lg:py-2.5 rounded-lg text-sm lg:text-base text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-all duration-200"
-              >
-                <Lock className="w-4 h-4 lg:w-5 lg:h-5" />
-                <span>{userRole ? "Access Portal" : "Login"}</span>
-              </Link>
-            </div>
+            <Link
+              to="/admin"
+              className="hidden sm:flex p-2.5 rounded-xl border border-border/40 hover:bg-secondary/50 transition-all"
+              title="Login"
+            >
+              <Lock className="w-5 h-5 text-muted-foreground" />
+            </Link>
 
             <button
               onClick={() => setMobileOpen(!mobileOpen)}
-              className="lg:hidden p-2 rounded-lg hover:bg-secondary/50 transition-colors"
-              aria-label="Toggle navigation"
+              className="lg:hidden p-2 rounded-xl bg-secondary/30 hover:bg-secondary/50 transition-colors"
             >
               {mobileOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
             </button>
           </div>
         </div>
       </header>
-
-      <div className="fixed top-16 lg:top-20 left-0 right-0 z-50 h-6 pointer-events-none bg-gradient-to-b from-background/65 to-transparent dark:from-background/75" />
 
       <AnimatePresence>
         {mobileOpen && (
@@ -166,68 +143,50 @@ const AppSidebar = () => {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 lg:hidden"
+              className="fixed inset-0 bg-black/60 backdrop-blur-md z-50 lg:hidden"
               onClick={() => setMobileOpen(false)}
             />
             <motion.nav
-              initial={{ y: -16, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              exit={{ y: -16, opacity: 0 }}
-              transition={{ duration: 0.2 }}
-              className="fixed top-16 left-0 right-0 z-[70] lg:hidden header-surface"
+              initial={{ x: "100%" }}
+              animate={{ x: 0 }}
+              exit={{ x: "100%" }}
+              transition={{ type: "spring", damping: 25, stiffness: 200 }}
+              className="fixed top-0 right-0 bottom-0 w-[80%] max-w-xs z-[70] bg-background border-l border-border/40 p-8 flex flex-col gap-6 lg:hidden"
             >
-              <div className="px-4 py-3 space-y-1">
-                {username && (
-                  <div className="px-3 py-4 mb-2 border-b border-border/50">
-                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Welcome back,</p>
-                    <p className="text-lg font-bold text-primary truncate">
-                      {username.replace(/\d+$/, '') || username}
-                    </p>
-                  </div>
-                )}
+              <div className="flex items-center justify-between mb-4">
+                <span className="text-xl font-black">Menu</span>
+                <button onClick={() => setMobileOpen(false)} className="p-2 rounded-lg bg-secondary/30">
+                  <X className="w-6 h-6" />
+                </button>
+              </div>
+
+              <div className="flex flex-col gap-2">
                 {navItems.map((item) => (
-                  item.href.startsWith("#") ? (
-                    <a
-                      key={item.title}
-                      href={item.href}
-                      onClick={handleHashNavigation(item.href)}
-                      className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-all duration-200"
-                    >
-                      <item.icon className="w-4 h-4" />
-                      <span>{item.title}</span>
-                    </a>
-                  ) : (
-                    <Link
-                      key={item.title}
-                      to={item.href}
-                      onClick={() => setMobileOpen(false)}
-                      className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-all duration-200"
-                    >
-                      <item.icon className="w-4 h-4" />
-                      <span>{item.title}</span>
-                    </Link>
-                  )
-                ))}
-                {userRole === "user" && ipLink && (
                   <a
-                    href={ipLink.startsWith("http") ? ipLink : `http://${ipLink}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    onClick={() => setMobileOpen(false)}
-                    className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-semibold bg-primary text-primary-foreground transition-all duration-200"
+                    key={item.title}
+                    href={item.href}
+                    onClick={handleHashNavigation(item.href)}
+                    className="flex items-center gap-4 px-4 py-4 rounded-2xl text-lg font-bold text-muted-foreground hover:text-primary hover:bg-primary/5 transition-all"
                   >
-                    <Eye className="w-4 h-4" />
-                    <span>Live Dashboard</span>
+                    <item.icon className="w-6 h-6" />
+                    <span>{item.title}</span>
                   </a>
-                )}
+                ))}
+              </div>
+
+              <div className="mt-auto flex flex-col gap-4">
                 <Link
                   to="/admin"
                   onClick={() => setMobileOpen(false)}
-                  className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-all duration-200"
+                  className="flex items-center justify-center gap-3 px-6 py-4 rounded-2xl bg-secondary font-bold"
                 >
-                  <Lock className="w-4 h-4" />
-                  <span>{userRole ? "Access Portal" : "Login"}</span>
+                  <Lock className="w-5 h-5" />
+                  <span>Login</span>
                 </Link>
+                <div className="flex items-center justify-center gap-3 px-4 py-3 rounded-2xl bg-secondary/40">
+                  <span className="text-sm font-bold text-muted-foreground">Theme</span>
+                  <ThemeToggle />
+                </div>
               </div>
             </motion.nav>
           </>

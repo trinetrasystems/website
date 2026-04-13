@@ -1,14 +1,14 @@
 import { motion, useInView } from "framer-motion";
 import { useRef } from "react";
-import { Bell, Shield, Target, Layout, MessageSquare, Plug } from "lucide-react";
+import { Zap, Shield, Target, LayoutDashboard, MessageCircle, Plug } from "lucide-react";
 
 const features = [
-  { icon: Bell, title: "Near Real-Time Alerts", desc: "Get instant alerts with minimal delay for immediate action" },
-  { icon: Shield, title: "On-Premise Processing", desc: "Your data stays inside your facility — no cloud dependency" },
-  { icon: Target, title: "Custom AI Detection", desc: "Helmet, fire, intrusion, or any custom use-case" },
-  { icon: Layout, title: "Live Dashboard", desc: "Monitor all cameras with real-time insights and event tracking" },
-  { icon: MessageSquare, title: "WhatsApp Alerts", desc: "Get instant alerts directly on your phone" },
-  { icon: Plug, title: "No Hardware Change", desc: "Works with your existing CCTV setup" },
+  { icon: Zap, title: "Near Real-Time Alerts", desc: "Get instant alerts with minimal delay for immediate action", color: "text-amber-500", bg: "bg-amber-500/10" },
+  { icon: Shield, title: "On-Premise Processing", desc: "Your data stays inside your facility — no cloud dependency", color: "text-emerald-500", bg: "bg-emerald-500/10" },
+  { icon: Target, title: "Custom AI Detection", desc: "Helmet, fire, intrusion, or any custom use-case", color: "text-purple-500", bg: "bg-purple-500/10" },
+  { icon: LayoutDashboard, title: "Live Dashboard", desc: "Monitor all cameras with real-time insights and event tracking", color: "text-blue-500", bg: "bg-blue-500/10" },
+  { icon: MessageCircle, title: "WhatsApp Alerts", desc: "Get instant alerts directly on your phone", color: "text-green-500", bg: "bg-green-500/10" },
+  { icon: Plug, title: "No Hardware Change", desc: "Works with your existing CCTV setup", color: "text-indigo-500", bg: "bg-indigo-500/10" },
 ];
 
 const Features = () => {
@@ -29,20 +29,20 @@ const Features = () => {
           </h2>
         </motion.div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-8">
           {features.map((f, i) => (
             <motion.div
               key={f.title}
               initial={{ opacity: 0, y: 30 }}
               animate={isInView ? { opacity: 1, y: 0 } : {}}
               transition={{ duration: 0.5, delay: i * 0.1 }}
-              className="glass rounded-xl p-6 glow-hover transition-all duration-300 group"
+              className="glass rounded-xl p-4 md:p-8 glow-hover transition-all duration-300 group"
             >
-              <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mb-4 group-hover:bg-primary/20 transition-colors">
-                <f.icon className="w-6 h-6 text-primary" />
+              <div className={`w-10 h-10 md:w-14 md:h-14 rounded-2xl ${f.bg} flex items-center justify-center mb-4 md:mb-6 group-hover:scale-110 transition-transform`}>
+                <f.icon className={`w-5 h-5 md:w-7 md:h-7 ${f.color}`} />
               </div>
-              <h3 className="text-lg font-bold mb-2">{f.title}</h3>
-              <p className="text-sm text-muted-foreground leading-relaxed">{f.desc}</p>
+              <h3 className="text-sm md:text-xl font-bold mb-2 md:mb-3 line-clamp-1 md:line-clamp-none">{f.title}</h3>
+              <p className="text-[10px] md:text-sm text-muted-foreground leading-relaxed line-clamp-2 md:line-clamp-none">{f.desc}</p>
             </motion.div>
           ))}
         </div>

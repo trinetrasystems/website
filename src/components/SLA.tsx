@@ -36,11 +36,11 @@ const SLA = () => {
           className="glass rounded-2xl overflow-hidden shadow-2xl border-white/5"
         >
           {/* Header */}
-          <div className="hidden md:grid grid-cols-4 gap-4 px-8 py-5 border-b border-border/50 text-sm font-bold text-muted-foreground bg-secondary/20">
+          <div className="grid grid-cols-4 gap-2 md:gap-4 px-4 md:px-8 py-3 md:py-5 border-b border-border/50 text-[10px] md:text-sm font-bold text-muted-foreground bg-secondary/20">
             <span>Severity</span>
             <span>Description</span>
-            <span>Response Time</span>
-            <span>Resolution Time</span>
+            <span className="text-center">Response</span>
+            <span className="text-center">Resolution</span>
           </div>
 
           {/* Rows */}
@@ -51,22 +51,16 @@ const SLA = () => {
                 initial={{ opacity: 0, x: -20 }}
                 animate={isInView ? { opacity: 1, x: 0 } : {}}
                 transition={{ duration: 0.4, delay: 0.3 + i * 0.1 }}
-                className="grid grid-cols-1 md:grid-cols-4 gap-3 md:gap-4 px-8 py-6 hover:bg-secondary/30 transition-colors"
+                className="grid grid-cols-4 gap-2 md:gap-4 px-4 md:px-8 py-4 md:py-6 hover:bg-secondary/30 transition-colors items-center"
               >
                 <div>
-                  <span className={`inline-flex px-3 py-1 rounded-full text-xs font-bold border ${row.color}`}>
+                  <span className={`inline-flex px-2 md:px-3 py-0.5 md:py-1 rounded-full text-[10px] md:text-xs font-bold border ${row.color}`}>
                     {row.severity}
                   </span>
                 </div>
-                <span className="text-sm font-medium text-foreground/80">{row.description}</span>
-                <div className="flex flex-col md:block">
-                  <span className="text-xs text-muted-foreground md:hidden mb-1 uppercase tracking-wider">Response</span>
-                  <span className="text-sm font-bold">{row.response}</span>
-                </div>
-                <div className="flex flex-col md:block">
-                  <span className="text-xs text-muted-foreground md:hidden mb-1 uppercase tracking-wider">Resolution</span>
-                  <span className="text-sm font-bold">{row.resolution}</span>
-                </div>
+                <span className="text-[10px] md:text-sm font-medium text-foreground">{row.description}</span>
+                <span className="text-[10px] md:text-sm font-bold text-center">{row.response}</span>
+                <span className="text-[10px] md:text-sm font-bold text-center">{row.resolution}</span>
               </motion.div>
             ))}
           </div>
