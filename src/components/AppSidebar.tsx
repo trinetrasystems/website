@@ -1,6 +1,6 @@
 import { MouseEvent, useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Eye, Home, Layers, Grid3X3, Shield, Mail, Lock, Menu, X } from "lucide-react";
+import { Eye, Home, Layers, Grid3X3, Shield, Mail, Lock, Menu, X, Sparkles, Factory, BadgeDollarSign, Star } from "lucide-react";
 import { Link } from "react-router-dom";
 import { ThemeToggle } from "./ThemeToggle";
 import { auth, db } from "@/lib/firebase";
@@ -9,10 +9,12 @@ import { doc, getDoc } from "firebase/firestore";
 
 const navItems = [
   { title: "Home", href: "#home", icon: Home },
-  { title: "Solutions", href: "#solutions", icon: Layers },
+  { title: "Features", href: "#features", icon: Sparkles },
   { title: "Use Cases", href: "#usecases", icon: Grid3X3 },
-  { title: "SLA", href: "#sla", icon: Shield },
-  { title: "Contact", href: "#contact-form", icon: Mail },
+  { title: "Industries", href: "#factory-usecases", icon: Factory },
+  { title: "Why Us", href: "#why-trinetra", icon: Star },
+  { title: "Pricing", href: "#pricing", icon: BadgeDollarSign },
+  { title: "Contact", href: "#contact", icon: Mail },
 ];
 
 const AppSidebar = () => {
