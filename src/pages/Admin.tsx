@@ -24,7 +24,7 @@ import {
   updateDoc,
 } from "firebase/firestore";
 import { adminAuth, auth, db } from "@/lib/firebase";
-import { Shield, LogIn, LogOut, RefreshCw, ArrowLeft, CheckCircle, Trash2, Eye, EyeOff, Key, Copy } from "lucide-react";
+import { Shield, LogIn, LogOut, RefreshCw, ArrowLeft, CheckCircle, Trash2, Eye, EyeOff, Key, Copy, Users, Phone, Mail, Search } from "lucide-react";
 import AppSidebar from "@/components/AppSidebar";
 import UserDashboard from "@/components/UserDashboard";
 import AdminTickets from "@/components/AdminTickets";
@@ -57,6 +57,8 @@ type UserProfile = {
   username: string;
   usernameKey: string;
   authEmail: string;
+  contactEmail?: string;
+  contactMobile?: string;
   role: "admin" | "user";
   ipLink: string;
   createdAtLabel: string;
@@ -104,19 +106,24 @@ const Admin = () => {
 
   const [newUserUsername, setNewUserUsername] = useState("");
   const [newUserPassword, setNewUserPassword] = useState("");
+  const [newUserContactEmail, setNewUserContactEmail] = useState("");
+  const [newUserContactMobile, setNewUserContactMobile] = useState("");
   const [newUserRole, setNewUserRole] = useState<"admin" | "user">("user");
   const [newUserIpLink, setNewUserIpLink] = useState("");
   const [creatingUser, setCreatingUser] = useState(false);
 
   const [users, setUsers] = useState<UserProfile[]>([]);
   const [userSearch, setUserSearch] = useState("");
+  const [contactSearch, setContactSearch] = useState("");
   const [selectedUserId, setSelectedUserId] = useState("");
   const [selectedUserUsername, setSelectedUserUsername] = useState("");
+  const [selectedUserContactEmail, setSelectedUserContactEmail] = useState("");
+  const [selectedUserContactMobile, setSelectedUserContactMobile] = useState("");
   const [selectedUserRole, setSelectedUserRole] = useState<"admin" | "user">("user");
   const [selectedUserIpLink, setSelectedUserIpLink] = useState("");
   const [updatingUser, setUpdatingUser] = useState(false);
   const [deletingUser, setDeletingUser] = useState(false);
-  const [activeSection, setActiveSection] = useState<"create" | "edit" | "forms" | "passwords" | "tickets">("create");
+  const [activeSection, setActiveSection] = useState<"create" | "edit" | "forms" | "passwords" | "tickets" | "contacts">("create");
 
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -225,6 +232,17 @@ const Admin = () => {
     });
   }, [passwordRecords, passwordSearch]);
 
+  const filteredContacts = useMemo(() => {
+    if (!contactSearch.trim()) return users;
+    const q = contactSearch.toLowerCase();
+    return users.filter(user => 
+      user.id.toLowerCase().includes(q) ||
+      user.username.toLowerCase().includes(q) ||
+      (user.contactEmail && user.contactEmail.toLowerCase().includes(q)) ||
+      (user.contactMobile && user.contactMobile.toLowerCase().includes(q))
+    );
+  }, [users, contactSearch]);
+
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
       setUser(currentUser);
@@ -240,6 +258,8 @@ const Admin = () => {
       setUserSearch("");
       setSelectedUserId("");
       setSelectedUserUsername("");
+      setSelectedUserContactEmail("");
+      setSelectedUserContactMobile("");
       setSelectedUserRole("user");
       setSelectedUserIpLink("");
       setActiveSection("create");
@@ -295,6 +315,8 @@ const Admin = () => {
             username: data.username || data.email || "No username",
             usernameKey: data.usernameKey || normalizeUsername(data.username || data.email || ""),
             authEmail: data.authEmail || data.email || "",
+            contactEmail: data.contactEmail || "",
+            contactMobile: data.contactMobile || "",
             role: (data.role || "user") as "admin" | "user",
             ipLink: data.ip_link || "",
             createdAtLabel: formatTimestamp(data.createdAt),
@@ -308,6 +330,8 @@ const Admin = () => {
           const selected = nextUsers.find((profile) => profile.id === selectedUserId);
           if (selected) {
             setSelectedUserUsername(selected.username);
+            setSelectedUserContactEmail(selected.contactEmail || "");
+            setSelectedUserContactMobile(selected.contactMobile || "");
             setSelectedUserRole(selected.role);
             setSelectedUserIpLink(selected.ipLink);
           }
@@ -415,8 +439,9 @@ const Admin = () => {
     }
     const normalizedUsername = normalizeUsername(newUserUsername);
 
-    if (!normalizedUsername || !newUserPassword) {
-      setStatus("Username and password are required.");
+    if (!normalizedUsername || !newUserPassword || !newUserContactEmail || !newUserContactMobile) {
+      setStatus("Username, password, contact email, and mobile are strictly required.");
+      toast.error("Please fill all mandatory fields.");
       return;
     }
 
@@ -441,6 +466,8 @@ const Admin = () => {
           usernameKey: normalizedUsername,
           authEmail,
           email: authEmail,
+          contactEmail: newUserContactEmail.trim(),
+          contactMobile: newUserContactMobile.trim(),
           role: newUserRole,
           ip_link: newUserRole === "user" ? newUserIpLink : "",
           createdAt: serverTimestamp(),
@@ -469,6 +496,8 @@ const Admin = () => {
 
       setNewUserUsername("");
       setNewUserPassword("");
+      setNewUserContactEmail("");
+      setNewUserContactMobile("");
       setNewUserRole("user");
       setNewUserIpLink("");
       setStatus("User created successfully.");
@@ -485,6 +514,8 @@ const Admin = () => {
   const handleSelectUser = (profile: UserProfile) => {
     setSelectedUserId(profile.id);
     setSelectedUserUsername(profile.username);
+    setSelectedUserContactEmail(profile.contactEmail || "");
+    setSelectedUserContactMobile(profile.contactMobile || "");
     setSelectedUserRole(profile.role);
     setSelectedUserIpLink(profile.ipLink);
     setStatus(`Selected ${profile.username}.`);
@@ -493,6 +524,8 @@ const Admin = () => {
   const handleCancelSelectedUser = () => {
     setSelectedUserId("");
     setSelectedUserUsername("");
+    setSelectedUserContactEmail("");
+    setSelectedUserContactMobile("");
     setSelectedUserRole("user");
     setSelectedUserIpLink("");
     setStatus("Edit cancelled.");
@@ -510,10 +543,11 @@ const Admin = () => {
     try {
       const normalizedUsername = normalizeUsername(selectedUserUsername);
 
-      if (!normalizedUsername) {
-        setStatus("Username is required.");
-        return;
-      }
+    if (!normalizedUsername || !selectedUserContactEmail || !selectedUserContactMobile) {
+      setStatus("Username, contact email, and mobile are required.");
+      toast.error("Please fill all mandatory fields.");
+      return;
+    }
 
       const existingLoginIndex = await getDoc(doc(db, "loginIndex", normalizedUsername));
       if (existingLoginIndex.exists() && existingLoginIndex.data()?.userId !== selectedUserId) {
@@ -531,6 +565,8 @@ const Admin = () => {
           usernameKey: normalizedUsername,
           authEmail: selectedUserAuthEmail,
           email: selectedUserAuthEmail,
+          contactEmail: selectedUserContactEmail.trim(),
+          contactMobile: selectedUserContactMobile.trim(),
           role: selectedUserRole,
           ip_link: selectedUserRole === "user" ? selectedUserIpLink : "",
           updatedAt: serverTimestamp(),
@@ -600,8 +636,12 @@ const Admin = () => {
       setUserSearch("");
       setUsername("");
       setNewUserUsername("");
+      setNewUserContactEmail("");
+      setNewUserContactMobile("");
       setSelectedUserId("");
       setSelectedUserUsername("");
+      setSelectedUserContactEmail("");
+      setSelectedUserContactMobile("");
       setSelectedUserRole("user");
       setSelectedUserIpLink("");
       setPasswordRecords([]);
@@ -893,6 +933,17 @@ const Admin = () => {
                   </button>
                   <button
                     type="button"
+                    onClick={() => setActiveSection("contacts")}
+                    className={`inline-flex items-center gap-1.5 rounded-lg px-4 py-2 text-sm font-medium transition ${activeSection === "contacts"
+                      ? "bg-purple-500 text-white"
+                      : "border border-purple-500/40 bg-purple-500/10 text-purple-600 dark:text-purple-400 hover:bg-purple-500/20"
+                      }`}
+                  >
+                    <Users className="h-3.5 w-3.5" />
+                    Contacts
+                  </button>
+                  <button
+                    type="button"
                     onClick={() => setActiveSection("tickets")}
                     className={`rounded-lg px-4 py-2 text-sm font-medium transition ${activeSection === "tickets"
                       ? "bg-primary text-primary-foreground"
@@ -932,6 +983,30 @@ const Admin = () => {
                         className="w-full rounded-lg border border-border bg-background px-4 py-3 outline-none transition-all focus:ring-2 focus:ring-primary/40"
                         placeholder="New user password"
                       />
+                    </div>
+                    <div className="grid gap-4 md:grid-cols-2">
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium">Contact Email *</label>
+                        <input
+                          type="email"
+                          value={newUserContactEmail}
+                          onChange={(event) => setNewUserContactEmail(event.target.value)}
+                          className="w-full rounded-lg border border-border bg-background px-4 py-3 outline-none transition-all focus:ring-2 focus:ring-primary/40"
+                          placeholder="User's real email"
+                          required
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium">Contact Mobile *</label>
+                        <input
+                          type="tel"
+                          value={newUserContactMobile}
+                          onChange={(event) => setNewUserContactMobile(event.target.value)}
+                          className="w-full rounded-lg border border-border bg-background px-4 py-3 outline-none transition-all focus:ring-2 focus:ring-primary/40"
+                          placeholder="User's mobile number"
+                          required
+                        />
+                      </div>
                     </div>
                     <div className="grid gap-4 md:grid-cols-2">
                       <div className="space-y-2">
@@ -1007,7 +1082,12 @@ const Admin = () => {
                                 {profile.role}
                               </span>
                             </div>
-                            <p className="mt-1 truncate text-xs text-muted-foreground">{profile.id}</p>
+                            <div className="mt-1 flex items-center justify-between">
+                              <p className="truncate text-xs text-muted-foreground">{profile.id}</p>
+                              {profile.contactEmail && (
+                                <p className="truncate text-xs text-muted-foreground break-keep">{profile.contactEmail}</p>
+                              )}
+                            </div>
                           </button>
                         ))
                       )}
@@ -1028,6 +1108,28 @@ const Admin = () => {
                             className="w-full rounded-lg border border-border bg-background px-4 py-3 outline-none transition-all focus:ring-2 focus:ring-primary/40"
                             placeholder="User username"
                           />
+                        </div>
+                        <div className="grid gap-4 md:grid-cols-2">
+                          <div className="space-y-2">
+                            <label className="text-sm font-medium">Contact Email *</label>
+                            <input
+                              type="email"
+                              value={selectedUserContactEmail}
+                              onChange={(event) => setSelectedUserContactEmail(event.target.value)}
+                              className="w-full rounded-lg border border-border bg-background px-4 py-3 outline-none transition-all focus:ring-2 focus:ring-primary/40"
+                              placeholder="User's email"
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <label className="text-sm font-medium">Contact Mobile *</label>
+                            <input
+                              type="tel"
+                              value={selectedUserContactMobile}
+                              onChange={(event) => setSelectedUserContactMobile(event.target.value)}
+                              className="w-full rounded-lg border border-border bg-background px-4 py-3 outline-none transition-all focus:ring-2 focus:ring-primary/40"
+                              placeholder="User's mobile"
+                            />
+                          </div>
                         </div>
                         <div className="grid gap-4 md:grid-cols-2">
                           <div className="space-y-2">
@@ -1339,6 +1441,61 @@ const Admin = () => {
               {activeSection === "tickets" && (
                 <section className="rounded-2xl border border-border bg-card p-6 shadow-lg">
                   <AdminTickets />
+                </section>
+              )}
+
+              {activeSection === "contacts" && (
+                <section className="rounded-2xl border border-border bg-card p-6 shadow-lg">
+                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <div>
+                      <h2 className="text-2xl font-bold">User Contacts</h2>
+                      <p className="mt-1 text-sm text-muted-foreground">
+                        View communication details for all your administrative records.
+                      </p>
+                    </div>
+                    <div className="flex items-center w-full md:w-auto relative">
+                      <Search className="h-4 w-4 absolute left-3 text-muted-foreground" />
+                      <input 
+                        type="text" 
+                        placeholder="Search by ID, email, or username..." 
+                        value={contactSearch}
+                        onChange={(e) => setContactSearch(e.target.value)}
+                        className="w-full md:w-64 rounded-xl border border-border bg-background py-2 pl-9 pr-4 text-sm outline-none focus:ring-2 focus:ring-primary/40"
+                      />
+                    </div>
+                  </div>
+                  <div className="mt-6 overflow-x-auto rounded-xl border border-border bg-background shadow-sm">
+                    <table className="w-full text-left text-sm text-foreground">
+                      <thead className="bg-secondary/40 text-muted-foreground border-b border-border">
+                        <tr>
+                          <th className="px-4 py-3 font-medium uppercase tracking-wider text-[11px]">Username</th>
+                          <th className="px-4 py-3 font-medium uppercase tracking-wider text-[11px]">Email Address</th>
+                          <th className="px-4 py-3 font-medium uppercase tracking-wider text-[11px]">Mobile Number</th>
+                          <th className="px-4 py-3 font-medium uppercase tracking-wider text-[11px]">Role</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-border">
+                        {filteredContacts.length === 0 ? (
+                          <tr>
+                            <td colSpan={4} className="px-4 py-8 text-center text-muted-foreground border-dashed">No matching users found.</td>
+                          </tr>
+                        ) : (
+                          filteredContacts.map((profile) => (
+                            <tr key={profile.id} className="hover:bg-secondary/20 transition-colors">
+                              <td className="px-4 py-3 font-medium">{profile.username}</td>
+                              <td className="px-4 py-3 select-all">{profile.contactEmail || <span className="italic text-muted-foreground">None</span>}</td>
+                              <td className="px-4 py-3 select-all">{profile.contactMobile || <span className="italic text-muted-foreground">None</span>}</td>
+                              <td className="px-4 py-3">
+                                <span className="rounded-full bg-secondary border border-border/50 px-2 py-0.5 text-[10px] uppercase font-bold tracking-wider text-muted-foreground whitespace-nowrap">
+                                  {profile.role}
+                                </span>
+                              </td>
+                            </tr>
+                          ))
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
                 </section>
               )}
             </div>
