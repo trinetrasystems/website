@@ -4,7 +4,7 @@ import { CheckCircle } from "lucide-react";
 
 const reasons = [
   { title: "Fully customizable AI", desc: "Not fixed features, we build what you need" },
-  { title: "Near real-time alerts", desc: "No delayed cloud alerts, instant notifications" },
+  { title: "Real-time alerts", desc: "No delayed cloud alerts, instant notifications" },
   { title: "On-device processing", desc: "Complete privacy, data never leaves your premises" },
   { title: "Faster deployment than enterprise solutions", desc: "Ready in days, not months" },
   { title: "Cost-effective and scalable", desc: "Affordable solutions that grow with your business" },

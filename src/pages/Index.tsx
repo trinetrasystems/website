@@ -44,10 +44,10 @@ const Index = () => {
         <Features />
         <UseCases />
         <ResponseTime />
-        <WhyChooseUs />
         <SLA />
         <Pricing />
         <CTA />
+        <WhyChooseUs />
         <Contact />
         <Footer />
       </main>

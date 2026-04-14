@@ -20,6 +20,7 @@ import { updatePassword, type User as FirebaseUser } from "firebase/auth";
 import { doc, serverTimestamp, setDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { toast } from "sonner";
+import UserTickets from "./UserTickets";
 
 interface UserDashboardProps {
   user: FirebaseUser;
@@ -51,6 +52,7 @@ const UserDashboard = ({ user, username, ipLink, onSignOut }: UserDashboardProps
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [updatingPassword, setUpdatingPassword] = useState(false);
+  const [activeTab, setActiveTab] = useState<"dashboard" | "tickets">("dashboard");
 
   const displayName = (username || "User").replace(/\d+$/, "") || username || "User";
   const dashboardUrl = ipLink
@@ -147,8 +149,43 @@ const UserDashboard = ({ user, username, ipLink, onSignOut }: UserDashboardProps
             </div>
           </motion.div>
 
-          {/* Welcome Hero */}
+          {/* Navigation Tabs */}
           <motion.div
+            variants={fadeUp}
+            initial="hidden"
+            animate="visible"
+            custom={1}
+            className="flex items-center gap-2 overflow-x-auto pb-2 -mb-2 scrollbar-none"
+          >
+            <button
+              onClick={() => setActiveTab("dashboard")}
+              className={`flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-bold transition-all whitespace-nowrap ${
+                activeTab === "dashboard"
+                  ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20"
+                  : "bg-secondary/50 text-muted-foreground hover:bg-secondary hover:text-foreground"
+              }`}
+            >
+              <Activity className="h-4 w-4" />
+              Live Dashboard
+            </button>
+            <button
+              onClick={() => setActiveTab("tickets")}
+              className={`flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-bold transition-all whitespace-nowrap ${
+                activeTab === "tickets"
+                  ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20"
+                  : "bg-secondary/50 text-muted-foreground hover:bg-secondary hover:text-foreground"
+              }`}
+            >
+              <Activity className="h-4 w-4" />
+              Support Tickets
+            </button>
+          </motion.div>
+
+          {/* Tab Content */}
+          {activeTab === "dashboard" ? (
+            <>
+              {/* Welcome Hero */}
+              <motion.div
             variants={fadeUp}
             initial="hidden"
             animate="visible"
@@ -398,8 +435,18 @@ const UserDashboard = ({ user, username, ipLink, onSignOut }: UserDashboardProps
               </div>
             </motion.div>
 
-
           </div>
+            </>
+          ) : (
+            <motion.div
+              variants={fadeUp}
+              initial="hidden"
+              animate="visible"
+              custom={2}
+            >
+              <UserTickets user={user} username={username} />
+            </motion.div>
+          )}
 
           {/* Footer Info */}
           <motion.div

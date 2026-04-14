@@ -24,9 +24,10 @@ import {
   updateDoc,
 } from "firebase/firestore";
 import { adminAuth, auth, db } from "@/lib/firebase";
-import { Shield, LogIn, LogOut, RefreshCw, ArrowLeft, CheckCircle, Trash2, Eye, EyeOff, Key, Copy } from "lucide-react";
+import { Shield, LogIn, LogOut, RefreshCw, ArrowLeft, CheckCircle, Trash2, Eye, EyeOff, Key, Copy, Users, Phone, Mail, Search } from "lucide-react";
 import AppSidebar from "@/components/AppSidebar";
 import UserDashboard from "@/components/UserDashboard";
+import AdminTickets from "@/components/AdminTickets";
 import { toast } from "sonner";
 import {
   AlertDialog,
@@ -56,6 +57,8 @@ type UserProfile = {
   username: string;
   usernameKey: string;
   authEmail: string;
+  contactEmail?: string;
+  contactMobile?: string;
   role: "admin" | "user";
   ipLink: string;
   createdAtLabel: string;
@@ -103,19 +106,24 @@ const Admin = () => {
 
   const [newUserUsername, setNewUserUsername] = useState("");
   const [newUserPassword, setNewUserPassword] = useState("");
+  const [newUserContactEmail, setNewUserContactEmail] = useState("");
+  const [newUserContactMobile, setNewUserContactMobile] = useState("");
   const [newUserRole, setNewUserRole] = useState<"admin" | "user">("user");
   const [newUserIpLink, setNewUserIpLink] = useState("");
   const [creatingUser, setCreatingUser] = useState(false);
 
   const [users, setUsers] = useState<UserProfile[]>([]);
   const [userSearch, setUserSearch] = useState("");
+  const [contactSearch, setContactSearch] = useState("");
   const [selectedUserId, setSelectedUserId] = useState("");
   const [selectedUserUsername, setSelectedUserUsername] = useState("");
+  const [selectedUserContactEmail, setSelectedUserContactEmail] = useState("");
+  const [selectedUserContactMobile, setSelectedUserContactMobile] = useState("");
   const [selectedUserRole, setSelectedUserRole] = useState<"admin" | "user">("user");
   const [selectedUserIpLink, setSelectedUserIpLink] = useState("");
   const [updatingUser, setUpdatingUser] = useState(false);
   const [deletingUser, setDeletingUser] = useState(false);
-  const [activeSection, setActiveSection] = useState<"create" | "edit" | "forms" | "passwords">("create");
+  const [activeSection, setActiveSection] = useState<"create" | "edit" | "forms" | "tickets" | "contacts">("create");
 
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -224,6 +232,17 @@ const Admin = () => {
     });
   }, [passwordRecords, passwordSearch]);
 
+  const filteredContacts = useMemo(() => {
+    if (!contactSearch.trim()) return users;
+    const q = contactSearch.toLowerCase();
+    return users.filter(user => 
+      user.id.toLowerCase().includes(q) ||
+      user.username.toLowerCase().includes(q) ||
+      (user.contactEmail && user.contactEmail.toLowerCase().includes(q)) ||
+      (user.contactMobile && user.contactMobile.toLowerCase().includes(q))
+    );
+  }, [users, contactSearch]);
+
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
       setUser(currentUser);
@@ -239,6 +258,8 @@ const Admin = () => {
       setUserSearch("");
       setSelectedUserId("");
       setSelectedUserUsername("");
+      setSelectedUserContactEmail("");
+      setSelectedUserContactMobile("");
       setSelectedUserRole("user");
       setSelectedUserIpLink("");
       setActiveSection("create");
@@ -294,6 +315,8 @@ const Admin = () => {
             username: data.username || data.email || "No username",
             usernameKey: data.usernameKey || normalizeUsername(data.username || data.email || ""),
             authEmail: data.authEmail || data.email || "",
+            contactEmail: data.contactEmail || "",
+            contactMobile: data.contactMobile || "",
             role: (data.role || "user") as "admin" | "user",
             ipLink: data.ip_link || "",
             createdAtLabel: formatTimestamp(data.createdAt),
@@ -307,6 +330,8 @@ const Admin = () => {
           const selected = nextUsers.find((profile) => profile.id === selectedUserId);
           if (selected) {
             setSelectedUserUsername(selected.username);
+            setSelectedUserContactEmail(selected.contactEmail || "");
+            setSelectedUserContactMobile(selected.contactMobile || "");
             setSelectedUserRole(selected.role);
             setSelectedUserIpLink(selected.ipLink);
           }
@@ -381,6 +406,11 @@ const Admin = () => {
       return;
     }
 
+    if (!password) {
+      setStatus("Password is required.");
+      return;
+    }
+
     try {
       if (loginInput.includes("@")) {
         await signInWithEmailAndPassword(auth, loginInput, password);
@@ -396,13 +426,44 @@ const Admin = () => {
       }
 
       if (!authEmailToUse) {
-        setStatus("User not found. Ask admin to create login index for this username.");
+        setStatus("User not found. Please check your username or contact admin.");
         return;
       }
 
       await signInWithEmailAndPassword(auth, authEmailToUse, password);
-    } catch (error) {
-      setStatus(error instanceof Error ? error.message : "Could not sign in.");
+    } catch (error: unknown) {
+      const firebaseError = error as { code?: string; message?: string };
+      const code = firebaseError.code || "";
+
+      let friendlyMessage = "Could not sign in. Please try again.";
+
+      switch (code) {
+        case "auth/invalid-credential":
+        case "auth/wrong-password":
+        case "auth/user-not-found":
+          friendlyMessage = "Incorrect username or password. Please try again.";
+          break;
+        case "auth/invalid-email":
+          friendlyMessage = "Invalid email format. Please check your input.";
+          break;
+        case "auth/user-disabled":
+          friendlyMessage = "This account has been disabled. Please contact admin.";
+          break;
+        case "auth/too-many-requests":
+          friendlyMessage = "Too many failed attempts. Please wait a few minutes and try again.";
+          break;
+        case "auth/network-request-failed":
+          friendlyMessage = "Network error. Please check your internet connection.";
+          break;
+        case "auth/internal-error":
+          friendlyMessage = "An internal error occurred. Please try again later.";
+          break;
+        default:
+          friendlyMessage = firebaseError.message || "Could not sign in. Please try again.";
+          break;
+      }
+
+      setStatus(friendlyMessage);
     }
   };
 
@@ -414,8 +475,9 @@ const Admin = () => {
     }
     const normalizedUsername = normalizeUsername(newUserUsername);
 
-    if (!normalizedUsername || !newUserPassword) {
-      setStatus("Username and password are required.");
+    if (!normalizedUsername || !newUserPassword || !newUserContactEmail || !newUserContactMobile) {
+      setStatus("Username, password, contact email, and mobile are strictly required.");
+      toast.error("Please fill all mandatory fields.");
       return;
     }
 
@@ -440,6 +502,8 @@ const Admin = () => {
           usernameKey: normalizedUsername,
           authEmail,
           email: authEmail,
+          contactEmail: newUserContactEmail.trim(),
+          contactMobile: newUserContactMobile.trim(),
           role: newUserRole,
           ip_link: newUserRole === "user" ? newUserIpLink : "",
           createdAt: serverTimestamp(),
@@ -468,6 +532,8 @@ const Admin = () => {
 
       setNewUserUsername("");
       setNewUserPassword("");
+      setNewUserContactEmail("");
+      setNewUserContactMobile("");
       setNewUserRole("user");
       setNewUserIpLink("");
       setStatus("User created successfully.");
@@ -484,6 +550,8 @@ const Admin = () => {
   const handleSelectUser = (profile: UserProfile) => {
     setSelectedUserId(profile.id);
     setSelectedUserUsername(profile.username);
+    setSelectedUserContactEmail(profile.contactEmail || "");
+    setSelectedUserContactMobile(profile.contactMobile || "");
     setSelectedUserRole(profile.role);
     setSelectedUserIpLink(profile.ipLink);
     setStatus(`Selected ${profile.username}.`);
@@ -492,6 +560,8 @@ const Admin = () => {
   const handleCancelSelectedUser = () => {
     setSelectedUserId("");
     setSelectedUserUsername("");
+    setSelectedUserContactEmail("");
+    setSelectedUserContactMobile("");
     setSelectedUserRole("user");
     setSelectedUserIpLink("");
     setStatus("Edit cancelled.");
@@ -509,10 +579,11 @@ const Admin = () => {
     try {
       const normalizedUsername = normalizeUsername(selectedUserUsername);
 
-      if (!normalizedUsername) {
-        setStatus("Username is required.");
-        return;
-      }
+    if (!normalizedUsername || !selectedUserContactEmail || !selectedUserContactMobile) {
+      setStatus("Username, contact email, and mobile are required.");
+      toast.error("Please fill all mandatory fields.");
+      return;
+    }
 
       const existingLoginIndex = await getDoc(doc(db, "loginIndex", normalizedUsername));
       if (existingLoginIndex.exists() && existingLoginIndex.data()?.userId !== selectedUserId) {
@@ -530,6 +601,8 @@ const Admin = () => {
           usernameKey: normalizedUsername,
           authEmail: selectedUserAuthEmail,
           email: selectedUserAuthEmail,
+          contactEmail: selectedUserContactEmail.trim(),
+          contactMobile: selectedUserContactMobile.trim(),
           role: selectedUserRole,
           ip_link: selectedUserRole === "user" ? selectedUserIpLink : "",
           updatedAt: serverTimestamp(),
@@ -599,8 +672,12 @@ const Admin = () => {
       setUserSearch("");
       setUsername("");
       setNewUserUsername("");
+      setNewUserContactEmail("");
+      setNewUserContactMobile("");
       setSelectedUserId("");
       setSelectedUserUsername("");
+      setSelectedUserContactEmail("");
+      setSelectedUserContactMobile("");
       setSelectedUserRole("user");
       setSelectedUserIpLink("");
       setPasswordRecords([]);
@@ -727,6 +804,11 @@ const Admin = () => {
                   <LogIn className="h-4 w-4" />
                   Sign In
                 </button>
+                {status && (
+                  <div className="rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm font-medium text-red-600 dark:text-red-400">
+                    {status}
+                  </div>
+                )}
               </form>
             ) : isAdmin ? (
               <div className="mt-6 space-y-4">
@@ -837,7 +919,7 @@ const Admin = () => {
               </div>
             )}
 
-            {(checkingAdmin || (status && !canShowDashboard)) && (
+            {(checkingAdmin || (user && status && !canShowDashboard)) && (
               <div className="mt-5 rounded-lg border border-border bg-secondary/20 p-4 text-xs text-muted-foreground animate-pulse">
                 {checkingAdmin ? "Verifying permissions..." : status}
               </div>
@@ -881,14 +963,25 @@ const Admin = () => {
                   </button>
                   <button
                     type="button"
-                    onClick={() => setActiveSection("passwords")}
-                    className={`inline-flex items-center gap-1.5 rounded-lg px-4 py-2 text-sm font-medium transition ${activeSection === "passwords"
-                      ? "bg-amber-500 text-white"
-                      : "border border-amber-500/40 bg-amber-500/10 text-amber-600 dark:text-amber-400 hover:bg-amber-500/20"
+                    onClick={() => setActiveSection("contacts")}
+                    className={`inline-flex items-center gap-1.5 rounded-lg px-4 py-2 text-sm font-medium transition ${activeSection === "contacts"
+                      ? "bg-purple-500 text-white"
+                      : "border border-purple-500/40 bg-purple-500/10 text-purple-600 dark:text-purple-400 hover:bg-purple-500/20"
                       }`}
                   >
-                    <Key className="h-3.5 w-3.5" />
-                    Passwords
+                    <Users className="h-3.5 w-3.5" />
+                    Users & Passwords
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setActiveSection("tickets")}
+                    className={`rounded-lg px-4 py-2 text-sm font-medium transition ${activeSection === "tickets"
+                      ? "bg-primary text-primary-foreground"
+                      : "border border-border bg-background hover:bg-secondary/40"
+                      }`}
+                  >
+                    Support Tickets
                   </button>
                 </div>
               </section>
@@ -921,6 +1014,30 @@ const Admin = () => {
                         className="w-full rounded-lg border border-border bg-background px-4 py-3 outline-none transition-all focus:ring-2 focus:ring-primary/40"
                         placeholder="New user password"
                       />
+                    </div>
+                    <div className="grid gap-4 md:grid-cols-2">
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium">Contact Email *</label>
+                        <input
+                          type="email"
+                          value={newUserContactEmail}
+                          onChange={(event) => setNewUserContactEmail(event.target.value)}
+                          className="w-full rounded-lg border border-border bg-background px-4 py-3 outline-none transition-all focus:ring-2 focus:ring-primary/40"
+                          placeholder="User's real email"
+                          required
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium">Contact Mobile *</label>
+                        <input
+                          type="tel"
+                          value={newUserContactMobile}
+                          onChange={(event) => setNewUserContactMobile(event.target.value)}
+                          className="w-full rounded-lg border border-border bg-background px-4 py-3 outline-none transition-all focus:ring-2 focus:ring-primary/40"
+                          placeholder="User's mobile number"
+                          required
+                        />
+                      </div>
                     </div>
                     <div className="grid gap-4 md:grid-cols-2">
                       <div className="space-y-2">
@@ -996,7 +1113,12 @@ const Admin = () => {
                                 {profile.role}
                               </span>
                             </div>
-                            <p className="mt-1 truncate text-xs text-muted-foreground">{profile.id}</p>
+                            <div className="mt-1 flex items-center justify-between">
+                              <p className="truncate text-xs text-muted-foreground">{profile.id}</p>
+                              {profile.contactEmail && (
+                                <p className="truncate text-xs text-muted-foreground break-keep">{profile.contactEmail}</p>
+                              )}
+                            </div>
                           </button>
                         ))
                       )}
@@ -1017,6 +1139,28 @@ const Admin = () => {
                             className="w-full rounded-lg border border-border bg-background px-4 py-3 outline-none transition-all focus:ring-2 focus:ring-primary/40"
                             placeholder="User username"
                           />
+                        </div>
+                        <div className="grid gap-4 md:grid-cols-2">
+                          <div className="space-y-2">
+                            <label className="text-sm font-medium">Contact Email *</label>
+                            <input
+                              type="email"
+                              value={selectedUserContactEmail}
+                              onChange={(event) => setSelectedUserContactEmail(event.target.value)}
+                              className="w-full rounded-lg border border-border bg-background px-4 py-3 outline-none transition-all focus:ring-2 focus:ring-primary/40"
+                              placeholder="User's email"
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <label className="text-sm font-medium">Contact Mobile *</label>
+                            <input
+                              type="tel"
+                              value={selectedUserContactMobile}
+                              onChange={(event) => setSelectedUserContactMobile(event.target.value)}
+                              className="w-full rounded-lg border border-border bg-background px-4 py-3 outline-none transition-all focus:ring-2 focus:ring-primary/40"
+                              placeholder="User's mobile"
+                            />
+                          </div>
                         </div>
                         <div className="grid gap-4 md:grid-cols-2">
                           <div className="space-y-2">
@@ -1120,118 +1264,6 @@ const Admin = () => {
                 </section>
               )}
 
-              {activeSection === "passwords" && (
-                <section className="rounded-2xl border border-amber-500/30 bg-card p-6 shadow-lg">
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <Key className="h-5 w-5 text-amber-500" />
-                        <h2 className="text-2xl font-bold">User Passwords</h2>
-                      </div>
-                      <p className="mt-1 text-sm text-muted-foreground">
-                        Password registry — updated automatically on creation or reset.
-                      </p>
-                    </div>
-                    <div className="flex flex-col sm:flex-row items-end sm:items-center gap-3">
-                      <input
-                        type="text"
-                        placeholder="Search passwords..."
-                        value={passwordSearch}
-                        onChange={(e) => setPasswordSearch(e.target.value)}
-                        className="w-full sm:w-64 rounded-lg border border-border bg-background px-4 py-2 text-sm outline-none transition-all focus:ring-2 focus:border-amber-500/50 focus:ring-amber-500/20"
-                      />
-                      <div className="flex items-center gap-2 rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-xs font-medium text-amber-600 dark:text-amber-400 hidden sm:flex">
-                        <Shield className="h-3.5 w-3.5" />
-                        Admin Only
-                      </div>
-                    </div>
-                  </div>
-
-                  {filteredPasswords.length === 0 ? (
-                    <div className="rounded-xl border border-dashed border-border p-12 text-center text-muted-foreground">
-                      <Key className="mx-auto mb-3 h-8 w-8 opacity-30" />
-                      <p className="text-lg font-medium">{passwordRecords.length === 0 ? "No passwords recorded yet." : "No passwords found matching your search."}</p>
-                      <p className="text-sm opacity-70">{passwordRecords.length === 0 ? "Passwords appear here when users are created or reset their password." : "Try adjusting your search criteria."}</p>
-                    </div>
-                  ) : (
-                    <div className="overflow-hidden rounded-xl border border-border">
-                      <table className="w-full text-sm">
-                        <thead>
-                          <tr className="border-b border-border bg-secondary/30">
-                            <th className="px-4 py-3 text-left font-semibold text-foreground">#</th>
-                            <th className="px-4 py-3 text-left font-semibold text-foreground">Username</th>
-                            <th className="px-4 py-3 text-left font-semibold text-foreground">Password</th>
-                            <th className="px-4 py-3 text-left font-semibold text-foreground">Last Updated</th>
-                            <th className="px-4 py-3 text-left font-semibold text-foreground">Actions</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {filteredPasswords.map((record, index) => {
-                            const isRevealed = revealedPasswords.has(record.uid);
-                            const linkedUser = users.find(u => u.id === record.uid || u.username === record.username);
-                            const isRecordAdmin = linkedUser?.role === "admin";
-                            return (
-                              <tr
-                                key={record.uid}
-                                className="border-b border-border/50 transition-colors hover:bg-secondary/20 last:border-0"
-                              >
-                                <td className="px-4 py-3 text-muted-foreground">{index + 1}</td>
-                                <td className="px-4 py-3">
-                                  <div className="font-medium flex items-center gap-2">
-                                    {record.username}
-                                    {isRecordAdmin && (
-                                      <span className="flex items-center gap-1 rounded bg-amber-500/10 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-amber-600 dark:text-amber-500">
-                                        <Shield className="h-3 w-3" /> Admin
-                                      </span>
-                                    )}
-                                  </div>
-                                  <div className="text-[10px] text-muted-foreground truncate max-w-[140px] mt-0.5">{record.uid}</div>
-                                </td>
-                                <td className="px-4 py-3">
-                                  <code
-                                    className={`rounded px-2 py-1 font-mono text-sm ${isRevealed
-                                      ? "bg-amber-500/10 text-amber-700 dark:text-amber-300"
-                                      : "bg-secondary/50 tracking-widest text-muted-foreground select-none"
-                                      }`}
-                                  >
-                                    {isRevealed ? record.password : "••••••••"}
-                                  </code>
-                                </td>
-                                <td className="px-4 py-3 text-xs text-muted-foreground whitespace-nowrap">
-                                  {record.updatedAtLabel}
-                                </td>
-                                <td className="px-4 py-3">
-                                  <div className="flex items-center gap-1">
-                                    <button
-                                      type="button"
-                                      onClick={() => toggleRevealPassword(record.uid)}
-                                      title={isRevealed ? "Hide password" : "Show password"}
-                                      className="rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-secondary/50 hover:text-foreground"
-                                    >
-                                      {isRevealed ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                                    </button>
-                                    {isRevealed && (
-                                      <button
-                                        type="button"
-                                        onClick={() => handleCopyPassword(record.password)}
-                                        title="Copy password"
-                                        className="rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-secondary/50 hover:text-amber-500"
-                                      >
-                                        <Copy className="h-4 w-4" />
-                                      </button>
-                                    )}
-                                  </div>
-                                </td>
-                              </tr>
-                            );
-                          })}
-                        </tbody>
-                      </table>
-                    </div>
-                  )}
-                </section>
-              )}
-
               {activeSection === "forms" && (
                 <section className="rounded-2xl border border-border bg-card p-6 shadow-lg">
                   <div className="flex items-center justify-between gap-4">
@@ -1321,6 +1353,107 @@ const Admin = () => {
                         </article>
                       ))
                     )}
+                  </div>
+                </section>
+              )}
+
+              {activeSection === "tickets" && (
+                <section className="rounded-2xl border border-border bg-card p-6 shadow-lg">
+                  <AdminTickets />
+                </section>
+              )}
+
+              {activeSection === "contacts" && (
+                <section className="rounded-2xl border border-border bg-card p-6 shadow-lg">
+                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <div>
+                      <h2 className="text-2xl font-bold">User Contacts</h2>
+                      <p className="mt-1 text-sm text-muted-foreground">
+                        View communication details for all your administrative records.
+                      </p>
+                    </div>
+                    <div className="flex items-center w-full md:w-auto relative">
+                      <Search className="h-4 w-4 absolute left-3 text-muted-foreground" />
+                      <input 
+                        type="text" 
+                        placeholder="Search by ID, email, or username..." 
+                        value={contactSearch}
+                        onChange={(e) => setContactSearch(e.target.value)}
+                        className="w-full md:w-64 rounded-xl border border-border bg-background py-2 pl-9 pr-4 text-sm outline-none focus:ring-2 focus:ring-primary/40"
+                      />
+                    </div>
+                  </div>
+                  <div className="mt-6 overflow-x-auto rounded-xl border border-border bg-background shadow-sm">
+                    <table className="w-full text-left text-sm text-foreground">
+                      <thead className="bg-secondary/40 text-muted-foreground border-b border-border">
+                        <tr>
+                          <th className="px-4 py-3 font-medium uppercase tracking-wider text-[11px]">Username</th>
+                          <th className="px-4 py-3 font-medium uppercase tracking-wider text-[11px]">Email Address</th>
+                          <th className="px-4 py-3 font-medium uppercase tracking-wider text-[11px]">Mobile Number</th>
+                          <th className="px-4 py-3 font-medium uppercase tracking-wider text-[11px]">Password</th>
+                          <th className="px-4 py-3 font-medium uppercase tracking-wider text-[11px]">Role</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-border">
+                        {filteredContacts.length === 0 ? (
+                          <tr>
+                            <td colSpan={5} className="px-4 py-8 text-center text-muted-foreground border-dashed">No matching users found.</td>
+                          </tr>
+                        ) : (
+                          filteredContacts.map((profile) => {
+                            const pwdRecord = passwordRecords.find((r) => r.uid === profile.id || r.username === profile.username);
+                            const isRevealed = revealedPasswords.has(profile.id);
+                            
+                            return (
+                            <tr key={profile.id} className="hover:bg-secondary/20 transition-colors">
+                              <td className="px-4 py-3 font-medium">{profile.username}</td>
+                              <td className="px-4 py-3 select-all">{profile.contactEmail || <span className="italic text-muted-foreground">None</span>}</td>
+                              <td className="px-4 py-3 select-all">{profile.contactMobile || <span className="italic text-muted-foreground">None</span>}</td>
+                              <td className="px-4 py-3">
+                                {pwdRecord ? (
+                                  <div className="flex items-center gap-1">
+                                    <code
+                                      className={`rounded px-2 py-1 font-mono text-sm ${isRevealed
+                                        ? "bg-amber-500/10 text-amber-700 dark:text-amber-300"
+                                        : "bg-secondary/50 tracking-widest text-muted-foreground select-none"
+                                        }`}
+                                    >
+                                      {isRevealed ? pwdRecord.password : "••••••••"}
+                                    </code>
+                                    <button
+                                      type="button"
+                                      onClick={() => toggleRevealPassword(profile.id)}
+                                      title={isRevealed ? "Hide password" : "Show password"}
+                                      className="rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-secondary/50 hover:text-foreground"
+                                    >
+                                      {isRevealed ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                                    </button>
+                                    {isRevealed && (
+                                      <button
+                                        type="button"
+                                        onClick={() => handleCopyPassword(pwdRecord.password)}
+                                        title="Copy password"
+                                        className="rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-secondary/50 hover:text-foreground"
+                                      >
+                                        <Copy className="h-4 w-4" />
+                                      </button>
+                                    )}
+                                  </div>
+                                ) : (
+                                  <span className="text-xs italic text-muted-foreground">None</span>
+                                )}
+                              </td>
+                              <td className="px-4 py-3">
+                                <span className={`rounded-full border px-2 py-0.5 text-[10px] uppercase font-bold tracking-wider whitespace-nowrap ${profile.role === 'admin' ? 'bg-amber-500/10 border-amber-500/30 text-amber-600 dark:text-amber-500' : 'bg-secondary border-border/50 text-muted-foreground'}`}>
+                                  {profile.role}
+                                </span>
+                              </td>
+                            </tr>
+                            );
+                          })
+                        )}
+                      </tbody>
+                    </table>
                   </div>
                 </section>
               )}

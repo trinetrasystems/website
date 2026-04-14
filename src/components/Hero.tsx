@@ -44,7 +44,7 @@ const Hero = () => {
 
           <ul className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-12 text-white font-bold">
             {[
-              { icon: Zap, text: "Near real-time alerts (minimal delay)" },
+              { icon: Zap, text: "Real-time alerts" },
               { icon: Shield, text: "100% data privacy (no cloud)" },
               { icon: Target, text: "Custom AI detections" },
               { icon: Plug, text: "Works with existing CCTV" },
