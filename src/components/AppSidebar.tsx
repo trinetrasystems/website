@@ -11,7 +11,7 @@ const navItems = [
   { title: "Home", href: "#home", icon: Home },
   { title: "Features", href: "#features", icon: Sparkles },
   { title: "Use Cases", href: "#usecases", icon: Grid3X3 },
-  { title: "Why Us", href: "#sla", icon: Star },
+  { title: "SLA Report", href: "#sla", icon: Star },
   { title: "Pricing", href: "#pricing", icon: CircleDollarSign },
   { title: "Contact", href: "#contact-form", icon: Mail },
 ];

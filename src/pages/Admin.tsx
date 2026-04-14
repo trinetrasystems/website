@@ -406,6 +406,11 @@ const Admin = () => {
       return;
     }
 
+    if (!password) {
+      setStatus("Password is required.");
+      return;
+    }
+
     try {
       if (loginInput.includes("@")) {
         await signInWithEmailAndPassword(auth, loginInput, password);
@@ -421,13 +426,44 @@ const Admin = () => {
       }
 
       if (!authEmailToUse) {
-        setStatus("User not found. Ask admin to create login index for this username.");
+        setStatus("User not found. Please check your username or contact admin.");
         return;
       }
 
       await signInWithEmailAndPassword(auth, authEmailToUse, password);
-    } catch (error) {
-      setStatus(error instanceof Error ? error.message : "Could not sign in.");
+    } catch (error: unknown) {
+      const firebaseError = error as { code?: string; message?: string };
+      const code = firebaseError.code || "";
+
+      let friendlyMessage = "Could not sign in. Please try again.";
+
+      switch (code) {
+        case "auth/invalid-credential":
+        case "auth/wrong-password":
+        case "auth/user-not-found":
+          friendlyMessage = "Incorrect username or password. Please try again.";
+          break;
+        case "auth/invalid-email":
+          friendlyMessage = "Invalid email format. Please check your input.";
+          break;
+        case "auth/user-disabled":
+          friendlyMessage = "This account has been disabled. Please contact admin.";
+          break;
+        case "auth/too-many-requests":
+          friendlyMessage = "Too many failed attempts. Please wait a few minutes and try again.";
+          break;
+        case "auth/network-request-failed":
+          friendlyMessage = "Network error. Please check your internet connection.";
+          break;
+        case "auth/internal-error":
+          friendlyMessage = "An internal error occurred. Please try again later.";
+          break;
+        default:
+          friendlyMessage = firebaseError.message || "Could not sign in. Please try again.";
+          break;
+      }
+
+      setStatus(friendlyMessage);
     }
   };
 
@@ -768,6 +804,11 @@ const Admin = () => {
                   <LogIn className="h-4 w-4" />
                   Sign In
                 </button>
+                {status && (
+                  <div className="rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm font-medium text-red-600 dark:text-red-400">
+                    {status}
+                  </div>
+                )}
               </form>
             ) : isAdmin ? (
               <div className="mt-6 space-y-4">
