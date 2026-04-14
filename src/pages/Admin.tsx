@@ -123,7 +123,7 @@ const Admin = () => {
   const [selectedUserIpLink, setSelectedUserIpLink] = useState("");
   const [updatingUser, setUpdatingUser] = useState(false);
   const [deletingUser, setDeletingUser] = useState(false);
-  const [activeSection, setActiveSection] = useState<"create" | "edit" | "forms" | "passwords" | "tickets" | "contacts">("create");
+  const [activeSection, setActiveSection] = useState<"create" | "edit" | "forms" | "tickets" | "contacts">("create");
 
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -922,17 +922,6 @@ const Admin = () => {
                   </button>
                   <button
                     type="button"
-                    onClick={() => setActiveSection("passwords")}
-                    className={`inline-flex items-center gap-1.5 rounded-lg px-4 py-2 text-sm font-medium transition ${activeSection === "passwords"
-                      ? "bg-amber-500 text-white"
-                      : "border border-amber-500/40 bg-amber-500/10 text-amber-600 dark:text-amber-400 hover:bg-amber-500/20"
-                      }`}
-                  >
-                    <Key className="h-3.5 w-3.5" />
-                    Passwords
-                  </button>
-                  <button
-                    type="button"
                     onClick={() => setActiveSection("contacts")}
                     className={`inline-flex items-center gap-1.5 rounded-lg px-4 py-2 text-sm font-medium transition ${activeSection === "contacts"
                       ? "bg-purple-500 text-white"
@@ -940,8 +929,9 @@ const Admin = () => {
                       }`}
                   >
                     <Users className="h-3.5 w-3.5" />
-                    Contacts
+                    Users & Passwords
                   </button>
+
                   <button
                     type="button"
                     onClick={() => setActiveSection("tickets")}
@@ -1233,118 +1223,6 @@ const Admin = () => {
                 </section>
               )}
 
-              {activeSection === "passwords" && (
-                <section className="rounded-2xl border border-amber-500/30 bg-card p-6 shadow-lg">
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <Key className="h-5 w-5 text-amber-500" />
-                        <h2 className="text-2xl font-bold">User Passwords</h2>
-                      </div>
-                      <p className="mt-1 text-sm text-muted-foreground">
-                        Password registry — updated automatically on creation or reset.
-                      </p>
-                    </div>
-                    <div className="flex flex-col sm:flex-row items-end sm:items-center gap-3">
-                      <input
-                        type="text"
-                        placeholder="Search passwords..."
-                        value={passwordSearch}
-                        onChange={(e) => setPasswordSearch(e.target.value)}
-                        className="w-full sm:w-64 rounded-lg border border-border bg-background px-4 py-2 text-sm outline-none transition-all focus:ring-2 focus:border-amber-500/50 focus:ring-amber-500/20"
-                      />
-                      <div className="flex items-center gap-2 rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-xs font-medium text-amber-600 dark:text-amber-400 hidden sm:flex">
-                        <Shield className="h-3.5 w-3.5" />
-                        Admin Only
-                      </div>
-                    </div>
-                  </div>
-
-                  {filteredPasswords.length === 0 ? (
-                    <div className="rounded-xl border border-dashed border-border p-12 text-center text-muted-foreground">
-                      <Key className="mx-auto mb-3 h-8 w-8 opacity-30" />
-                      <p className="text-lg font-medium">{passwordRecords.length === 0 ? "No passwords recorded yet." : "No passwords found matching your search."}</p>
-                      <p className="text-sm opacity-70">{passwordRecords.length === 0 ? "Passwords appear here when users are created or reset their password." : "Try adjusting your search criteria."}</p>
-                    </div>
-                  ) : (
-                    <div className="overflow-hidden rounded-xl border border-border">
-                      <table className="w-full text-sm">
-                        <thead>
-                          <tr className="border-b border-border bg-secondary/30">
-                            <th className="px-4 py-3 text-left font-semibold text-foreground">#</th>
-                            <th className="px-4 py-3 text-left font-semibold text-foreground">Username</th>
-                            <th className="px-4 py-3 text-left font-semibold text-foreground">Password</th>
-                            <th className="px-4 py-3 text-left font-semibold text-foreground">Last Updated</th>
-                            <th className="px-4 py-3 text-left font-semibold text-foreground">Actions</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {filteredPasswords.map((record, index) => {
-                            const isRevealed = revealedPasswords.has(record.uid);
-                            const linkedUser = users.find(u => u.id === record.uid || u.username === record.username);
-                            const isRecordAdmin = linkedUser?.role === "admin";
-                            return (
-                              <tr
-                                key={record.uid}
-                                className="border-b border-border/50 transition-colors hover:bg-secondary/20 last:border-0"
-                              >
-                                <td className="px-4 py-3 text-muted-foreground">{index + 1}</td>
-                                <td className="px-4 py-3">
-                                  <div className="font-medium flex items-center gap-2">
-                                    {record.username}
-                                    {isRecordAdmin && (
-                                      <span className="flex items-center gap-1 rounded bg-amber-500/10 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-amber-600 dark:text-amber-500">
-                                        <Shield className="h-3 w-3" /> Admin
-                                      </span>
-                                    )}
-                                  </div>
-                                  <div className="text-[10px] text-muted-foreground truncate max-w-[140px] mt-0.5">{record.uid}</div>
-                                </td>
-                                <td className="px-4 py-3">
-                                  <code
-                                    className={`rounded px-2 py-1 font-mono text-sm ${isRevealed
-                                      ? "bg-amber-500/10 text-amber-700 dark:text-amber-300"
-                                      : "bg-secondary/50 tracking-widest text-muted-foreground select-none"
-                                      }`}
-                                  >
-                                    {isRevealed ? record.password : "••••••••"}
-                                  </code>
-                                </td>
-                                <td className="px-4 py-3 text-xs text-muted-foreground whitespace-nowrap">
-                                  {record.updatedAtLabel}
-                                </td>
-                                <td className="px-4 py-3">
-                                  <div className="flex items-center gap-1">
-                                    <button
-                                      type="button"
-                                      onClick={() => toggleRevealPassword(record.uid)}
-                                      title={isRevealed ? "Hide password" : "Show password"}
-                                      className="rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-secondary/50 hover:text-foreground"
-                                    >
-                                      {isRevealed ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                                    </button>
-                                    {isRevealed && (
-                                      <button
-                                        type="button"
-                                        onClick={() => handleCopyPassword(record.password)}
-                                        title="Copy password"
-                                        className="rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-secondary/50 hover:text-amber-500"
-                                      >
-                                        <Copy className="h-4 w-4" />
-                                      </button>
-                                    )}
-                                  </div>
-                                </td>
-                              </tr>
-                            );
-                          })}
-                        </tbody>
-                      </table>
-                    </div>
-                  )}
-                </section>
-              )}
-
               {activeSection === "forms" && (
                 <section className="rounded-2xl border border-border bg-card p-6 shadow-lg">
                   <div className="flex items-center justify-between gap-4">
@@ -1471,27 +1349,67 @@ const Admin = () => {
                           <th className="px-4 py-3 font-medium uppercase tracking-wider text-[11px]">Username</th>
                           <th className="px-4 py-3 font-medium uppercase tracking-wider text-[11px]">Email Address</th>
                           <th className="px-4 py-3 font-medium uppercase tracking-wider text-[11px]">Mobile Number</th>
+                          <th className="px-4 py-3 font-medium uppercase tracking-wider text-[11px]">Password</th>
                           <th className="px-4 py-3 font-medium uppercase tracking-wider text-[11px]">Role</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-border">
                         {filteredContacts.length === 0 ? (
                           <tr>
-                            <td colSpan={4} className="px-4 py-8 text-center text-muted-foreground border-dashed">No matching users found.</td>
+                            <td colSpan={5} className="px-4 py-8 text-center text-muted-foreground border-dashed">No matching users found.</td>
                           </tr>
                         ) : (
-                          filteredContacts.map((profile) => (
+                          filteredContacts.map((profile) => {
+                            const pwdRecord = passwordRecords.find((r) => r.uid === profile.id || r.username === profile.username);
+                            const isRevealed = revealedPasswords.has(profile.id);
+                            
+                            return (
                             <tr key={profile.id} className="hover:bg-secondary/20 transition-colors">
                               <td className="px-4 py-3 font-medium">{profile.username}</td>
                               <td className="px-4 py-3 select-all">{profile.contactEmail || <span className="italic text-muted-foreground">None</span>}</td>
                               <td className="px-4 py-3 select-all">{profile.contactMobile || <span className="italic text-muted-foreground">None</span>}</td>
                               <td className="px-4 py-3">
-                                <span className="rounded-full bg-secondary border border-border/50 px-2 py-0.5 text-[10px] uppercase font-bold tracking-wider text-muted-foreground whitespace-nowrap">
+                                {pwdRecord ? (
+                                  <div className="flex items-center gap-1">
+                                    <code
+                                      className={`rounded px-2 py-1 font-mono text-sm ${isRevealed
+                                        ? "bg-amber-500/10 text-amber-700 dark:text-amber-300"
+                                        : "bg-secondary/50 tracking-widest text-muted-foreground select-none"
+                                        }`}
+                                    >
+                                      {isRevealed ? pwdRecord.password : "••••••••"}
+                                    </code>
+                                    <button
+                                      type="button"
+                                      onClick={() => toggleRevealPassword(profile.id)}
+                                      title={isRevealed ? "Hide password" : "Show password"}
+                                      className="rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-secondary/50 hover:text-foreground"
+                                    >
+                                      {isRevealed ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                                    </button>
+                                    {isRevealed && (
+                                      <button
+                                        type="button"
+                                        onClick={() => handleCopyPassword(pwdRecord.password)}
+                                        title="Copy password"
+                                        className="rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-secondary/50 hover:text-foreground"
+                                      >
+                                        <Copy className="h-4 w-4" />
+                                      </button>
+                                    )}
+                                  </div>
+                                ) : (
+                                  <span className="text-xs italic text-muted-foreground">None</span>
+                                )}
+                              </td>
+                              <td className="px-4 py-3">
+                                <span className={`rounded-full border px-2 py-0.5 text-[10px] uppercase font-bold tracking-wider whitespace-nowrap ${profile.role === 'admin' ? 'bg-amber-500/10 border-amber-500/30 text-amber-600 dark:text-amber-500' : 'bg-secondary border-border/50 text-muted-foreground'}`}>
                                   {profile.role}
                                 </span>
                               </td>
                             </tr>
-                          ))
+                            );
+                          })
                         )}
                       </tbody>
                     </table>
