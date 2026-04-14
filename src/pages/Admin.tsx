@@ -919,7 +919,7 @@ const Admin = () => {
               </div>
             )}
 
-            {(checkingAdmin || (status && !canShowDashboard)) && (
+            {(checkingAdmin || (user && status && !canShowDashboard)) && (
               <div className="mt-5 rounded-lg border border-border bg-secondary/20 p-4 text-xs text-muted-foreground animate-pulse">
                 {checkingAdmin ? "Verifying permissions..." : status}
               </div>
