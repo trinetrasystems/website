@@ -27,6 +27,7 @@ import { adminAuth, auth, db } from "@/lib/firebase";
 import { Shield, LogIn, LogOut, RefreshCw, ArrowLeft, CheckCircle, Trash2, Eye, EyeOff, Key, Copy } from "lucide-react";
 import AppSidebar from "@/components/AppSidebar";
 import UserDashboard from "@/components/UserDashboard";
+import AdminTickets from "@/components/AdminTickets";
 import { toast } from "sonner";
 import {
   AlertDialog,
@@ -115,7 +116,7 @@ const Admin = () => {
   const [selectedUserIpLink, setSelectedUserIpLink] = useState("");
   const [updatingUser, setUpdatingUser] = useState(false);
   const [deletingUser, setDeletingUser] = useState(false);
-  const [activeSection, setActiveSection] = useState<"create" | "edit" | "forms" | "passwords">("create");
+  const [activeSection, setActiveSection] = useState<"create" | "edit" | "forms" | "passwords" | "tickets">("create");
 
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -890,6 +891,16 @@ const Admin = () => {
                     <Key className="h-3.5 w-3.5" />
                     Passwords
                   </button>
+                  <button
+                    type="button"
+                    onClick={() => setActiveSection("tickets")}
+                    className={`rounded-lg px-4 py-2 text-sm font-medium transition ${activeSection === "tickets"
+                      ? "bg-primary text-primary-foreground"
+                      : "border border-border bg-background hover:bg-secondary/40"
+                      }`}
+                  >
+                    Support Tickets
+                  </button>
                 </div>
               </section>
 
@@ -1322,6 +1333,12 @@ const Admin = () => {
                       ))
                     )}
                   </div>
+                </section>
+              )}
+
+              {activeSection === "tickets" && (
+                <section className="rounded-2xl border border-border bg-card p-6 shadow-lg">
+                  <AdminTickets />
                 </section>
               )}
             </div>
