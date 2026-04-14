@@ -1,5 +1,5 @@
 import { useState, useEffect, FormEvent } from "react";
-import { collection, addDoc, query, where, onSnapshot, serverTimestamp } from "firebase/firestore";
+import { collection, addDoc, query, where, onSnapshot, serverTimestamp, getDoc, doc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { type User } from "firebase/auth";
 import { motion } from "framer-motion";
@@ -46,12 +46,29 @@ export default function UserTickets({ user, username }: UserTicketsProps) {
   const [category, setCategory] = useState(CATEGORIES[0]);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
-  const [phone, setPhone] = useState("");
-  const [contactEmail, setContactEmail] = useState(user.email || "");
+  const [userProfile, setUserProfile] = useState<{ contactEmail?: string, contactMobile?: string } | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
     if (!user) return;
+    
+    // Fetch user profile data
+    const fetchProfile = async () => {
+      try {
+        const userDoc = await getDoc(doc(db, "users", user.uid));
+        if (userDoc.exists()) {
+          const data = userDoc.data();
+          setUserProfile({
+            contactEmail: data.contactEmail || user.email || "",
+            contactMobile: data.contactMobile || ""
+          });
+        }
+      } catch (err) {
+        console.error("Failed to load user profile:", err);
+      }
+    };
+    fetchProfile();
+
     const q = query(
       collection(db, "tickets"),
       where("userId", "==", user.uid)
@@ -78,7 +95,7 @@ export default function UserTickets({ user, username }: UserTicketsProps) {
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    if (!title || !description || !category || !phone) {
+    if (!title || !description || !category) {
       toast.error("Please fill all required fields.");
       return;
     }
@@ -92,12 +109,12 @@ export default function UserTickets({ user, username }: UserTicketsProps) {
       const docRef = await addDoc(collection(db, "tickets"), {
         ticketNumber: generatedTicketNumber,
         userId: user.uid,
-        userEmail: contactEmail,
+        userEmail: userProfile?.contactEmail || user.email || "",
         userName: username || user.email || "User",
         category,
         title,
         description,
-        phone,
+        phone: userProfile?.contactMobile || "",
         status: "Active",
         severity: "Medium", // Default severity
         replies: [],
@@ -110,8 +127,6 @@ export default function UserTickets({ user, username }: UserTicketsProps) {
       
       setTitle("");
       setDescription("");
-      setPhone("");
-      setContactEmail(user.email || "");
       setCategory(CATEGORIES[0]);
       setShowForm(false);
     } catch (error: any) {
@@ -178,7 +193,7 @@ export default function UserTickets({ user, username }: UserTicketsProps) {
 
           <form onSubmit={handleSubmit} className="space-y-4 relative z-10">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
+              <div className="space-y-2 md:col-span-2">
                 <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Category *</label>
                 <select
                   value={category}
@@ -190,29 +205,6 @@ export default function UserTickets({ user, username }: UserTicketsProps) {
                     <option key={cat} value={cat}>{cat}</option>
                   ))}
                 </select>
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Mobile Number *</label>
-                <input
-                  type="tel"
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  placeholder="+1 (555) 000-0000"
-                  className="w-full rounded-xl border border-border bg-background px-4 py-3 outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary/40 transition-all text-sm"
-                  required
-                />
-              </div>
-              
-              <div className="space-y-2 md:col-span-2">
-                <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Email Address (Optional)</label>
-                <input
-                  type="email"
-                  value={contactEmail}
-                  onChange={(e) => setContactEmail(e.target.value)}
-                  placeholder="name@example.com"
-                  className="w-full rounded-xl border border-border bg-background px-4 py-3 outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary/40 transition-all text-sm"
-                />
               </div>
             </div>
 
