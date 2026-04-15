@@ -19,7 +19,7 @@ const CTA = () => {
             We value your <span className="text-gradient">safety and time</span>.
           </h2>
           <p className="text-muted-foreground text-xl md:text-2xl font-semibold mb-10 max-w-2xl mx-auto">
-            Call the founder now for a quick demo and consultation.
+            Call us now for a quick demo and consultation.
           </p>
           <div className="flex flex-wrap gap-6 justify-center">
             <motion.a
