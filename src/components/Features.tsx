@@ -3,7 +3,7 @@ import { useRef } from "react";
 import { Zap, Shield, Target, LayoutDashboard, MessageCircle, Plug } from "lucide-react";
 
 const features = [
-  { icon: Zap, title: "Real-Time Alerts", desc: "Get instant alerts for immediate action", color: "text-amber-500", bg: "bg-amber-500/10" },
+  { icon: Zap, title: "Real-Time Streaming", desc: "Real-time streaming of detections shown on connected monitors", color: "text-amber-500", bg: "bg-amber-500/10" },
   { icon: Shield, title: "On-Premise Processing", desc: "Your data stays inside your facility — no cloud dependency", color: "text-emerald-500", bg: "bg-emerald-500/10" },
   { icon: Target, title: "Custom AI Detection", desc: "Helmet, fire, intrusion, or any custom use-case", color: "text-purple-500", bg: "bg-purple-500/10" },
   { icon: LayoutDashboard, title: "Live Dashboard", desc: "Monitor all cameras with real-time insights and event tracking", color: "text-blue-500", bg: "bg-blue-500/10" },
