@@ -39,6 +39,10 @@ const Pricing = () => {
             <div className="text-center">
               <motion.a
                 href="#contact"
+                onClick={(e) => {
+                  e.preventDefault();
+                  document.getElementById("contact")?.scrollIntoView({ behavior: "smooth" });
+                }}
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 className="inline-block px-10 py-4 rounded-xl bg-primary text-primary-foreground font-bold text-xl shadow-lg hover:shadow-primary/30 transition-all font-outfit"

@@ -173,9 +173,9 @@ export default function AdminTickets() {
           <select 
             value={filterCategory} 
             onChange={e => setFilterCategory(e.target.value)}
-            className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-primary/40"
+            className="w-full rounded-md border border-border bg-background text-foreground px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-primary/40"
           >
-            {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
+            {CATEGORIES.map(c => <option key={c} value={c} className="bg-background text-foreground">{c}</option>)}
           </select>
         </div>
         <div className="space-y-1.5">
@@ -183,9 +183,9 @@ export default function AdminTickets() {
           <select 
             value={filterStatus} 
             onChange={e => setFilterStatus(e.target.value)}
-            className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-primary/40"
+            className="w-full rounded-md border border-border bg-background text-foreground px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-primary/40"
           >
-            {STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
+            {STATUSES.map(s => <option key={s} value={s} className="bg-background text-foreground">{s}</option>)}
           </select>
         </div>
         <div className="space-y-1.5">
@@ -193,9 +193,9 @@ export default function AdminTickets() {
           <select 
             value={filterSeverity} 
             onChange={e => setFilterSeverity(e.target.value)}
-            className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-primary/40"
+            className="w-full rounded-md border border-border bg-background text-foreground px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-primary/40"
           >
-            {SEVERITIES.map(s => <option key={s} value={s}>{s}</option>)}
+            {SEVERITIES.map(s => <option key={s} value={s} className="bg-background text-foreground">{s}</option>)}
           </select>
         </div>
         <div className="space-y-1.5">
@@ -365,12 +365,12 @@ export default function AdminTickets() {
                             <select
                               value={ticket.severity || "Medium"}
                               onChange={(e) => updateTicket(ticket.id, { severity: e.target.value })}
-                              className="w-full rounded-lg border border-border bg-secondary/30 px-3 py-2 text-xs outline-none focus:ring-1 focus:ring-primary/40"
+                              className="w-full rounded-lg border border-border bg-background text-foreground px-3 py-2 text-xs outline-none focus:ring-1 focus:ring-primary/40"
                             >
-                              <option value="Low">Low</option>
-                              <option value="Medium">Medium</option>
-                              <option value="High">High</option>
-                              <option value="Critical">Critical</option>
+                              <option value="Low" className="bg-background text-foreground">Low</option>
+                              <option value="Medium" className="bg-background text-foreground">Medium</option>
+                              <option value="High" className="bg-background text-foreground">High</option>
+                              <option value="Critical" className="bg-background text-foreground">Critical</option>
                             </select>
                           </div>
                         </div>

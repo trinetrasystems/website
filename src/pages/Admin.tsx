@@ -24,7 +24,7 @@ import {
   updateDoc,
 } from "firebase/firestore";
 import { adminAuth, auth, db } from "@/lib/firebase";
-import { Shield, LogIn, LogOut, RefreshCw, ArrowLeft, CheckCircle, Trash2, Eye, EyeOff, Key, Copy, Users, Phone, Mail, Search } from "lucide-react";
+import { Shield, LogIn, LogOut, RefreshCw, ArrowLeft, CheckCircle, Trash2, Eye, EyeOff, Key, Copy, Users, Phone, Mail, Search, FileText, Download } from "lucide-react";
 import AppSidebar from "@/components/AppSidebar";
 import UserDashboard from "@/components/UserDashboard";
 import AdminTickets from "@/components/AdminTickets";
@@ -92,6 +92,29 @@ const createAuthEmail = (value: string) => {
   const safeUsername = normalizedUsername.replace(/[^a-z0-9._-]/g, "-");
   return `${safeUsername || "user"}@trinetra.local`;
 };
+// Auto-detect documents from public/docs folder using Vite's glob feature
+const docModules = import.meta.glob('/public/docs/*.{html,pdf,txt,md}');
+
+const ADMIN_DOCS = Object.keys(docModules).map((filePath) => {
+  const filename = filePath.split('/').pop() || '';
+  
+  // Process the filename into a clean, readable title
+  const title = filename
+    .replace(/\.(html|pdf|txt|md)$/i, '')
+    .split(/[-_]+/)
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ');
+
+  // Assets in the public folder are served at the root level ("/") 
+  const servePath = filePath.replace('/public', '');
+
+  return {
+    id: filename,
+    title: title,
+    description: `Auto-detected file: ${filename}`,
+    path: servePath,
+  };
+});
 
 const Admin = () => {
   const [user, setUser] = useState<User | null>(null);
@@ -115,6 +138,7 @@ const Admin = () => {
   const [users, setUsers] = useState<UserProfile[]>([]);
   const [userSearch, setUserSearch] = useState("");
   const [contactSearch, setContactSearch] = useState("");
+  const [activeTicketCount, setActiveTicketCount] = useState(0);
   const [selectedUserId, setSelectedUserId] = useState("");
   const [selectedUserUsername, setSelectedUserUsername] = useState("");
   const [selectedUserContactEmail, setSelectedUserContactEmail] = useState("");
@@ -123,7 +147,8 @@ const Admin = () => {
   const [selectedUserIpLink, setSelectedUserIpLink] = useState("");
   const [updatingUser, setUpdatingUser] = useState(false);
   const [deletingUser, setDeletingUser] = useState(false);
-  const [activeSection, setActiveSection] = useState<"create" | "edit" | "forms" | "tickets" | "contacts">("create");
+  const [activeSection, setActiveSection] = useState<"create" | "edit" | "forms" | "tickets" | "contacts" | "docs">("tickets");
+  const [selectedDoc, setSelectedDoc] = useState<{ id: string; title: string; description: string; path: string } | null>(null);
 
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -256,13 +281,14 @@ const Admin = () => {
       setSubmissions([]);
       setUsers([]);
       setUserSearch("");
+      setActiveTicketCount(0);
       setSelectedUserId("");
       setSelectedUserUsername("");
       setSelectedUserContactEmail("");
       setSelectedUserContactMobile("");
       setSelectedUserRole("user");
       setSelectedUserIpLink("");
-      setActiveSection("create");
+      setActiveSection("tickets");
       setPasswordRecords([]);
       setPasswordSearch("");
       setRevealedPasswords(new Set());
@@ -346,6 +372,15 @@ const Admin = () => {
       limit(100)
     );
 
+    const unsubscribeTickets = onSnapshot(
+      collection(db, "tickets"),
+      (snapshot) => {
+        const activeCount = snapshot.docs.filter(d => d.data().status === "Active").length;
+        setActiveTicketCount(activeCount);
+      },
+      (error) => console.error("Could not load tickets count", error)
+    );
+
     const unsubscribeSubmissions = onSnapshot(
       submissionsQuery,
       (snapshot) => {
@@ -391,6 +426,7 @@ const Admin = () => {
       unsubscribeUsers();
       unsubscribeSubmissions();
       unsubscribePasswords();
+      unsubscribeTickets();
     };
   }, [canShowDashboard, selectedUserId]);
 
@@ -682,7 +718,7 @@ const Admin = () => {
       setSelectedUserIpLink("");
       setPasswordRecords([]);
       setRevealedPasswords(new Set());
-      setActiveSection("create");
+      setActiveSection("tickets");
     } catch (error) {
       setStatus(error instanceof Error ? error.message : "Could not sign out.");
     }
@@ -954,12 +990,17 @@ const Admin = () => {
                   <button
                     type="button"
                     onClick={() => setActiveSection("forms")}
-                    className={`rounded-lg px-4 py-2 text-sm font-medium transition ${activeSection === "forms"
+                    className={`rounded-lg px-4 py-2 text-sm font-medium transition flex items-center gap-2 ${activeSection === "forms"
                       ? "bg-primary text-primary-foreground"
                       : "border border-border bg-background hover:bg-secondary/40"
                       }`}
                   >
                     Submitted Forms
+                    {submissions.filter(s => s.status === "pending").length > 0 && (
+                      <span className={`inline-flex items-center justify-center rounded-full text-[10px] font-bold h-5 w-5 ${activeSection === "forms" ? "bg-primary-foreground text-primary" : "bg-primary text-primary-foreground"}`}>
+                        {submissions.filter(s => s.status === "pending").length}
+                      </span>
+                    )}
                   </button>
                   <button
                     type="button"
@@ -976,12 +1017,27 @@ const Admin = () => {
                   <button
                     type="button"
                     onClick={() => setActiveSection("tickets")}
-                    className={`rounded-lg px-4 py-2 text-sm font-medium transition ${activeSection === "tickets"
+                    className={`rounded-lg px-4 py-2 text-sm font-medium transition flex items-center gap-2 ${activeSection === "tickets"
                       ? "bg-primary text-primary-foreground"
                       : "border border-border bg-background hover:bg-secondary/40"
                       }`}
                   >
                     Support Tickets
+                    {activeTicketCount > 0 && (
+                      <span className={`inline-flex items-center justify-center rounded-full text-[10px] font-bold h-5 w-5 ${activeSection === "tickets" ? "bg-primary-foreground text-primary" : "bg-primary text-primary-foreground"}`}>
+                        {activeTicketCount}
+                      </span>
+                    )}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setActiveSection("docs")}
+                    className={`rounded-lg px-4 py-2 text-sm font-medium transition ${activeSection === "docs"
+                      ? "bg-primary text-primary-foreground"
+                      : "border border-border bg-background hover:bg-secondary/40"
+                      }`}
+                  >
+                    Documentation
                   </button>
                 </div>
               </section>
@@ -1360,6 +1416,83 @@ const Admin = () => {
               {activeSection === "tickets" && (
                 <section className="rounded-2xl border border-border bg-card p-6 shadow-lg">
                   <AdminTickets />
+                </section>
+              )}
+
+              {activeSection === "docs" && (
+                <section className="rounded-2xl border border-border bg-card p-6 shadow-lg relative overflow-hidden">
+                  <div>
+                    <h2 className="text-2xl font-bold">Admin Documentation</h2>
+                    <p className="mt-1 text-sm text-muted-foreground">
+                      Internal reference guides and configuration documentation.
+                    </p>
+                  </div>
+                  
+                  <div className="mt-6 grid gap-4 md:grid-cols-2">
+                    {ADMIN_DOCS.map((doc) => (
+                      <div
+                        key={doc.id}
+                        onClick={() => setSelectedDoc(doc)}
+                        className="group relative flex flex-col items-start gap-2 rounded-xl border border-border bg-secondary/10 p-5 text-left transition-all hover:bg-secondary/30 hover:border-primary/30 hover:shadow-md cursor-pointer"
+                      >
+                        <div className="flex w-full items-center justify-between gap-3">
+                          <div className="flex items-center gap-3">
+                            <div className="rounded-lg bg-primary/10 p-2 text-primary transition-all group-hover:bg-primary/20">
+                              <FileText className="h-5 w-5" />
+                            </div>
+                            <h3 className="font-semibold">{doc.title}</h3>
+                          </div>
+                          <a
+                            href={doc.path}
+                            download={doc.id}
+                            onClick={(e) => e.stopPropagation()}
+                            className="rounded-lg p-2 text-muted-foreground transition-all hover:bg-primary/10 hover:text-primary"
+                            title="Download document"
+                          >
+                            <Download className="h-4 w-4" />
+                          </a>
+                        </div>
+                        {doc.description && (
+                          <p className="text-sm text-muted-foreground mt-2">{doc.description}</p>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+
+                  {selectedDoc && (
+                    <div className="fixed inset-0 z-[100] flex flex-col bg-background animate-in fade-in zoom-in-95 duration-200">
+                      <div className="flex items-center justify-between border-b border-border p-4 bg-card shadow-sm">
+                        <h2 className="text-xl font-bold flex items-center gap-2">
+                          <FileText className="h-5 w-5 text-primary" /> 
+                          {selectedDoc.title}
+                        </h2>
+                        <div className="flex items-center gap-3">
+                          <a
+                            href={selectedDoc.path}
+                            download={selectedDoc.id}
+                            className="rounded-lg border border-border bg-background px-4 py-2 text-sm font-medium transition hover:bg-secondary/80 flex items-center gap-2"
+                          >
+                            <Download className="h-4 w-4" />
+                            Download
+                          </a>
+                          <button
+                            type="button"
+                            onClick={() => setSelectedDoc(null)}
+                            className="rounded-lg border border-border bg-background px-4 py-2 text-sm font-medium transition hover:bg-secondary/80 focus:outline-none"
+                          >
+                            Close Fullscreen
+                          </button>
+                        </div>
+                      </div>
+                      <div className="flex-1 overflow-hidden relative bg-background">
+                        <iframe
+                          src={selectedDoc.path}
+                          className="absolute inset-0 w-full h-full border-none"
+                          title={selectedDoc.title}
+                        />
+                      </div>
+                    </div>
+                  )}
                 </section>
               )}
 
