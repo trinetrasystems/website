@@ -64,11 +64,11 @@
     .master-hero p { margin: 0 auto; max-width: 760px; color: #cbd5e1; font-size: 1rem; }
     .master-toc {
       max-width: 1000px; margin: 2rem auto; padding: 1.5rem 2rem;
-      background: #fff; border: 1px solid var(--card-border); border-radius: 14px;
+      background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 14px;
     }
-    .master-toc h2 { font-size: 1.1rem; margin: 0 0 1rem; color: #0f172a; }
+    .master-toc h2 { font-size: 1.1rem; margin: 0 0 1rem; color: var(--text-heading); }
     .master-toc ol { padding-left: 1.2rem; margin: 0; }
-    .master-toc li { margin: 0.4rem 0; color: #334155; font-size: 14px; }
+    .master-toc li { margin: 0.4rem 0; color: var(--text-muted); font-size: 14px; }
     .master-toc a { text-decoration: none; }
     .master-toc a:hover { text-decoration: underline; }
     .part-divider {
@@ -80,7 +80,7 @@
       font-family: 'JetBrains Mono', 'Space Mono', monospace;
     }
     .part-divider .part-title {
-      font-size: 1.6rem; color: #0f172a; font-weight: 800; margin: 0 0 .3rem;
+      font-size: 1.6rem; color: var(--text-heading); font-weight: 800; margin: 0 0 .3rem;
     }
     .part-divider .part-sub { color: var(--muted); font-size: 0.95rem; }
     .part-divider hr { border: 0; border-top: 2px solid var(--accent); margin: 0.8rem 0 0; }
@@ -88,13 +88,13 @@
     /* ═══════════ FILE 1 SECTION STYLING (light) ═══════════ */
     .scope-f1 { max-width: 1000px; margin: 1.5rem auto; padding: 0 1.5rem; }
     .scope-f1 .step {
-      background: #fff; border: 1px solid var(--card-border);
+      background: var(--card-bg); border: 1px solid var(--card-border);
       border-radius: 14px; margin-bottom: 2rem; overflow: hidden;
     }
     .scope-f1 .step-header {
       display: flex; align-items: center; gap: 1rem;
       padding: 1.2rem 1.6rem; border-bottom: 1px solid var(--card-border);
-      background: #f1f4f9;
+      background: var(--header-bg);
     }
     .scope-f1 .step-num {
       width: 42px; height: 42px; border-radius: 10px;
@@ -103,22 +103,22 @@
       display: flex; align-items: center; justify-content: center;
       flex-shrink: 0;
     }
-    .scope-f1 .step-header h2 { font-size: 1.1rem; color: #0f172a; margin: 0; }
+    .scope-f1 .step-header h2 { font-size: 1.1rem; color: var(--text-heading); margin: 0; }
     .scope-f1 .step-header p { font-size: 13px; color: var(--muted); margin: 2px 0 0; }
     .scope-f1 .step-body { padding: 1.5rem 1.6rem; }
-    .scope-f1 .step-body p { margin: 0.4rem 0 1rem; color: #334155; }
-    .scope-f1 .step-body strong { color: #0f172a; }
+    .scope-f1 .step-body p { margin: 0.4rem 0 1rem; color: var(--text-muted); }
+    .scope-f1 .step-body strong { color: var(--text-heading); }
     .scope-f1 .param-table {
       width: 100%; border-collapse: collapse;
       margin: 0.8rem 0; font-size: 14px;
     }
     .scope-f1 .param-table th, .scope-f1 .param-table td {
-      padding: 10px 14px; border-bottom: 1px solid #e2e8f0;
+      padding: 10px 14px; border-bottom: 1px solid var(--card-border);
       text-align: left; vertical-align: top;
     }
     .scope-f1 .param-table th {
-      background: #f8fafc; color: #0f172a; font-weight: 700;
-      border-bottom: 2px solid #cbd5e1;
+      background: var(--header-bg); color: var(--text-heading); font-weight: 700;
+      border-bottom: 2px solid var(--card-border);
     }
     .scope-f1 .param-table tr:last-child td { border-bottom: none; }
     .scope-f1 .info-box {
@@ -127,11 +127,11 @@
     }
     .scope-f1 .info-box .icon { font-size: 18px; flex-shrink: 0; }
     .scope-f1 .info-box.note {
-      background: #eef5ff; border: 1px solid #b6d4fe; color: #1e3a8a;
+      background: rgba(59,130,246,.06); border: 1px solid rgba(59,130,246,.2); color: var(--link);
     }
     .scope-f1 code {
       font-family: 'JetBrains Mono','Space Mono',monospace; font-size: 12.5px;
-      background: #eef2f7; color: #1b5fbf; padding: 1px 6px; border-radius: 4px;
+      background: var(--header-bg); color: var(--link); padding: 1px 6px; border-radius: 4px;
     }
     
 </style>
@@ -555,6 +555,8 @@
     .scope-f2 .danger div, .scope-f3 .danger div, .scope-f4 .danger div {
       color: inherit !important;
     }
+    /* --- ONLY APPLY HARDCODED DARK TEXT COLORS IN LIGHT MODE --- */
+    @media (prefers-color-scheme: light) {
     /* Inline <code> inside info callouts — readable pill, not faint */
     .scope-f2 .box code, .scope-f3 .box code, .scope-f4 .box code,
     .scope-f2 .info code, .scope-f3 .info code, .scope-f4 .info code,
@@ -737,6 +739,7 @@
     .scope-f2 .cmd-label, .scope-f3 .cmd-label, .scope-f4 .cmd-label {
       background: #2a3650 !important; color: #94a3b8 !important;
     }
+    } /* End of light mode specific hardcoded colors wrapper */
     
   /* Force all info box texts to be visible and responsive to the theme */
   .scope-f1 .info-box, 
