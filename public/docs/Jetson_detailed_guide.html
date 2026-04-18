@@ -17,6 +17,27 @@
       --hero-to: #0f1e38;
       --link: #1b5fbf;
       --accent: #f97316;
+      --header-bg: #f1f4f9;
+      --text-main: #1a1a1a;
+      --text-heading: #0f172a;
+      --text-muted: #334155;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --page-bg: #0a0c10;
+        --page-fg: #e2e8f0;
+        --muted: #94a3b8;
+        --card-bg: #111525;
+        --card-border: #1d2438;
+        --hero-from: #060810;
+        --hero-to: #0c1628;
+        --link: #3b82f6;
+        --header-bg: #0e1220;
+        --text-main: #e2e8f0;
+        --text-heading: #f1f5f9;
+        --text-muted: #94a3b8;
+      }
     }
     * { box-sizing: border-box; }
     html { scroll-behavior: smooth; }
@@ -506,136 +527,31 @@
 </style>
 <style>
 
-    /* ═══════════ LIGHT THEME OVERRIDES for dark-source sections ═══════════ */
-    .scope-f2, .scope-f3, .scope-f4 {
+    /* ═══════════ UNIFIED THEME ADAPTATION ═══════════ */
+    :root {
+      --page-bg: #ffffff;
+      --page-fg: #1a1a1a;
+      --card-bg: #ffffff;
+      --card-border: #e0e4ea;
+      --header-bg: #f1f4f9;
+      --text-heading: #0f172a;
+      --text-muted: #334155;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --page-bg: #060810;
+        --page-fg: #f1f5f9;
+        --card-bg: #111525;
+        --card-border: #1d2438;
+        --header-bg: #0e1220;
+        --text-heading: #f1f5f9;
+        --text-muted: #94a3b8;
+      }
+    }
+    .scope-f1, .scope-f2, .scope-f3, .scope-f4 {
       background: var(--page-bg) !important;
       color: var(--page-fg) !important;
     }
-    .scope-f2 *, .scope-f3 *, .scope-f4 * {
-      color: inherit;
-    }
-    /* Cards / sections to light backgrounds */
-    .scope-f2 .section, .scope-f3 .section, .scope-f4 .section,
-    .scope-f2 .nav-strip, .scope-f3 .nav-strip, .scope-f4 .nav-strip,
-    .scope-f2 .footer, .scope-f3 .footer, .scope-f4 .footer,
-    .scope-f2 .scenario-box, .scope-f3 .scenario-box, .scope-f4 .scenario-box,
-    .scope-f2 .mini-card, .scope-f3 .mini-card, .scope-f4 .mini-card,
-    .scope-f2 .param-card, .scope-f3 .param-card, .scope-f4 .param-card,
-    .scope-f2 .verdict, .scope-f3 .verdict, .scope-f4 .verdict,
-    .scope-f2 .card, .scope-f3 .card, .scope-f4 .card {
-      background: #ffffff !important;
-      border-color: #e0e4ea !important;
-      color: #1a1a1a !important;
-    }
-    .scope-f2 .section-head, .scope-f3 .section-head, .scope-f4 .section-head,
-    .scope-f2 .scenario-head, .scope-f3 .scenario-head, .scope-f4 .scenario-head {
-      background: #f1f4f9 !important;
-      border-color: #e0e4ea !important;
-    }
-    .scope-f2 .section-head h2, .scope-f3 .section-head h2, .scope-f4 .section-head h2,
-    .scope-f2 h1, .scope-f2 h2, .scope-f2 h3, .scope-f2 h4,
-    .scope-f3 h1, .scope-f3 h2, .scope-f3 h3, .scope-f3 h4,
-    .scope-f4 h1, .scope-f4 h2, .scope-f4 h3, .scope-f4 h4 {
-      color: #0f172a !important;
-    }
-    .scope-f2 p, .scope-f3 p, .scope-f4 p,
-    .scope-f2 li, .scope-f3 li, .scope-f4 li,
-    .scope-f2 .section-body p, .scope-f3 .section-body p, .scope-f4 .section-body p,
-    .scope-f2 .section-head-text p, .scope-f3 .section-head-text p, .scope-f4 .section-head-text p,
-    .scope-f2 .mini-card p, .scope-f3 .mini-card p, .scope-f4 .mini-card p,
-    .scope-f2 td, .scope-f3 td, .scope-f4 td {
-      color: #334155 !important;
-    }
-    .scope-f2 strong, .scope-f3 strong, .scope-f4 strong { color: #0f172a !important; }
-    /* Table headers / cells */
-    .scope-f2 .tbl th, .scope-f3 .tbl th, .scope-f4 .tbl th,
-    .scope-f2 .param-table th, .scope-f3 .param-table th, .scope-f4 .param-table th {
-      background: #f8fafc !important; color: #0f172a !important;
-      border-color: #cbd5e1 !important;
-    }
-    .scope-f2 .tbl td, .scope-f3 .tbl td, .scope-f4 .tbl td,
-    .scope-f2 .param-table td, .scope-f3 .param-table td, .scope-f4 .param-table td {
-      border-color: #e2e8f0 !important;
-    }
-    /* Inline code (NOT pre.code blocks) becomes light pill */
-    .scope-f2 :not(pre) > code, .scope-f3 :not(pre) > code, .scope-f4 :not(pre) > code {
-      background: #eef2f7 !important; color: #1b5fbf !important;
-      border: 1px solid #d8e0eb !important;
-    }
-    /* Nav strip links readable on light */
-    .scope-f2 .nav-grid a, .scope-f3 .nav-grid a, .scope-f4 .nav-grid a {
-      color: #334155 !important;
-    }
-    .scope-f2 .nav-grid a .nav-num, .scope-f3 .nav-grid a .nav-num, .scope-f4 .nav-grid a .nav-num {
-      background: #eef2f7 !important; color: #475569 !important;
-    }
-    .scope-f2 .nav-grid a:hover, .scope-f3 .nav-grid a:hover, .scope-f4 .nav-grid a:hover {
-      background: #eef5ff !important; color: #1b5fbf !important;
-    }
-    /* Glossary light */
-    .scope-f2 .gloss-item, .scope-f3 .gloss-item, .scope-f4 .gloss-item {
-      border-color: #e0e4ea !important;
-    }
-    .scope-f2 .gloss-def, .scope-f3 .gloss-def, .scope-f4 .gloss-def {
-      color: #334155 !important;
-    }
-    /* Info boxes: keep tinted but darker text */
-    .scope-f2 .box.tip, .scope-f3 .box.tip, .scope-f4 .box.tip {
-      background: #ecfdf5 !important; border-color: #bbf7d0 !important; color: #065f46 !important;
-    }
-    .scope-f2 .box.warn, .scope-f3 .box.warn, .scope-f4 .box.warn {
-      background: #fffbeb !important; border-color: #fde68a !important; color: #854d0e !important;
-    }
-    .scope-f2 .box.note, .scope-f3 .box.note, .scope-f4 .box.note {
-      background: #eff6ff !important; border-color: #bfdbfe !important; color: #1e3a8a !important;
-    }
-    .scope-f2 .box.danger, .scope-f3 .box.danger, .scope-f4 .box.danger {
-      background: #fef2f2 !important; border-color: #fecaca !important; color: #991b1b !important;
-    }
-    .scope-f2 .box.beginner, .scope-f3 .box.beginner, .scope-f4 .box.beginner {
-      background: #f5f3ff !important; border-color: #ddd6fe !important; color: #5b21b6 !important;
-    }
-    /* Info box variants used in F3/F4 (class="box info", and standalone .info/.tip/.note/.warn/.danger) */
-    .scope-f2 .box.info, .scope-f3 .box.info, .scope-f4 .box.info,
-    .scope-f2 .info, .scope-f3 .info, .scope-f4 .info {
-      background: #f5f3ff !important; border: 1px solid #ddd6fe !important; color: #4c1d95 !important;
-    }
-    .scope-f2 .tip, .scope-f3 .tip, .scope-f4 .tip {
-      background: #ecfdf5 !important; border: 1px solid #bbf7d0 !important; color: #065f46 !important;
-    }
-    .scope-f2 .warn, .scope-f3 .warn, .scope-f4 .warn {
-      background: #fffbeb !important; border: 1px solid #fde68a !important; color: #854d0e !important;
-    }
-    .scope-f2 .note, .scope-f3 .note, .scope-f4 .note {
-      background: #eff6ff !important; border: 1px solid #bfdbfe !important; color: #1e3a8a !important;
-    }
-    .scope-f2 .danger, .scope-f3 .danger, .scope-f4 .danger {
-      background: #fef2f2 !important; border: 1px solid #fecaca !important; color: #991b1b !important;
-    }
-    /* Force dark, readable text inside ALL info callouts (strong, code, p, div, span) */
-    .scope-f2 .box strong, .scope-f3 .box strong, .scope-f4 .box strong,
-    .scope-f2 .info strong, .scope-f3 .info strong, .scope-f4 .info strong,
-    .scope-f2 .tip strong, .scope-f3 .tip strong, .scope-f4 .tip strong,
-    .scope-f2 .note strong, .scope-f3 .note strong, .scope-f4 .note strong,
-    .scope-f2 .warn strong, .scope-f3 .warn strong, .scope-f4 .warn strong,
-    .scope-f2 .danger strong, .scope-f3 .danger strong, .scope-f4 .danger strong {
-      color: inherit !important; font-weight: 800;
-    }
-    .scope-f2 .box p, .scope-f3 .box p, .scope-f4 .box p,
-    .scope-f2 .box div, .scope-f3 .box div, .scope-f4 .box div,
-    .scope-f2 .box span:not(.box-icon):not(.box-i):not(.bi),
-    .scope-f3 .box span:not(.box-icon):not(.box-i):not(.bi),
-    .scope-f4 .box span:not(.box-icon):not(.box-i):not(.bi),
-    .scope-f2 .info p, .scope-f3 .info p, .scope-f4 .info p,
-    .scope-f2 .info div, .scope-f3 .info div, .scope-f4 .info div,
-    .scope-f2 .info span, .scope-f3 .info span, .scope-f4 .info span,
-    .scope-f2 .tip p, .scope-f3 .tip p, .scope-f4 .tip p,
-    .scope-f2 .tip div, .scope-f3 .tip div, .scope-f4 .tip div,
-    .scope-f2 .note p, .scope-f3 .note p, .scope-f4 .note p,
-    .scope-f2 .note div, .scope-f3 .note div, .scope-f4 .note div,
-    .scope-f2 .warn p, .scope-f3 .warn p, .scope-f4 .warn p,
-    .scope-f2 .warn div, .scope-f3 .warn div, .scope-f4 .warn div,
-    .scope-f2 .danger p, .scope-f3 .danger p, .scope-f4 .danger p,
     .scope-f2 .danger div, .scope-f3 .danger div, .scope-f4 .danger div {
       color: inherit !important;
     }

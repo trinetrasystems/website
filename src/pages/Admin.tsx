@@ -1462,10 +1462,10 @@ const Admin = () => {
                           </button>
                         </div>
                       </div>
-                      <div className="flex-1 overflow-hidden relative bg-white">
+                      <div className="flex-1 overflow-hidden relative bg-background">
                         <iframe
                           src={selectedDoc.path}
-                          className="absolute inset-0 w-full h-full border-none bg-white"
+                          className="absolute inset-0 w-full h-full border-none"
                           title={selectedDoc.title}
                         />
                       </div>
