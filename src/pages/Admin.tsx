@@ -59,7 +59,9 @@ type UserProfile = {
   authEmail: string;
   contactEmail?: string;
   contactMobile?: string;
-  role: "admin" | "user";
+  role: "admin" | "member" | "user";
+  isMember?: boolean;
+  permissions?: string[];
   ipLink: string;
   createdAtLabel: string;
   updatedAtLabel: string;
@@ -116,12 +118,22 @@ const ADMIN_DOCS = Object.keys(docModules).map((filePath) => {
   };
 });
 
+
+const AVAILABLE_TABS = [
+  { id: "create", label: "Create User" },
+  { id: "edit", label: "Edit User" },
+  { id: "forms", label: "Submitted Forms" },
+  { id: "contacts", label: "Users & Passwords" },
+  { id: "tickets", label: "Support Tickets" },
+  { id: "docs", label: "Documentation" }
+];
 const Admin = () => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [checkingAdmin, setCheckingAdmin] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
-  const [userRole, setUserRole] = useState<"admin" | "user" | null>(null);
+  const [userRole, setUserRole] = useState<"admin" | "member" | "user" | null>(null);
+  const [loggedInUserPermissions, setLoggedInUserPermissions] = useState<string[]>([]);
   const [ipLink, setIpLink] = useState("");
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -131,7 +143,8 @@ const Admin = () => {
   const [newUserPassword, setNewUserPassword] = useState("");
   const [newUserContactEmail, setNewUserContactEmail] = useState("");
   const [newUserContactMobile, setNewUserContactMobile] = useState("");
-  const [newUserRole, setNewUserRole] = useState<"admin" | "user">("user");
+  const [newUserRole, setNewUserRole] = useState<"admin" | "member" | "user">("user");
+  const [newUserPermissions, setNewUserPermissions] = useState<string[]>([]);
   const [newUserIpLink, setNewUserIpLink] = useState("");
   const [creatingUser, setCreatingUser] = useState(false);
 
@@ -143,7 +156,8 @@ const Admin = () => {
   const [selectedUserUsername, setSelectedUserUsername] = useState("");
   const [selectedUserContactEmail, setSelectedUserContactEmail] = useState("");
   const [selectedUserContactMobile, setSelectedUserContactMobile] = useState("");
-  const [selectedUserRole, setSelectedUserRole] = useState<"admin" | "user">("user");
+  const [selectedUserRole, setSelectedUserRole] = useState<"admin" | "member" | "user">("user");
+  const [selectedUserPermissions, setSelectedUserPermissions] = useState<string[]>([]);
   const [selectedUserIpLink, setSelectedUserIpLink] = useState("");
   const [updatingUser, setUpdatingUser] = useState(false);
   const [deletingUser, setDeletingUser] = useState(false);
@@ -159,6 +173,12 @@ const Admin = () => {
   const [passwordRecords, setPasswordRecords] = useState<PasswordRecord[]>([]);
   const [passwordSearch, setPasswordSearch] = useState("");
   const [revealedPasswords, setRevealedPasswords] = useState<Set<string>>(new Set());
+
+  const hasPermission = (tabId: string) => {
+    if (userRole === "admin") return true;
+    if (userRole === "member") return loggedInUserPermissions.includes(tabId);
+    return false;
+  };
 
   const handlePasswordChange = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -221,22 +241,22 @@ const Admin = () => {
 
   const [submissions, setSubmissions] = useState<Submission[]>([]);
 
-  const canShowDashboard = useMemo(() => Boolean(user && isAdmin), [user, isAdmin]);
+  const canShowDashboard = useMemo(() => Boolean(user && (isAdmin || userRole === "member")), [user, isAdmin, userRole]);
   const selectedUser = users.find((profile) => profile.id === selectedUserId) || null;
-  const pageTitle = isAdmin ? "Admin Console" : userRole === "user" ? "User Dashboard" : "Access Portal";
-  const pageSubtitle = isAdmin
+  const pageTitle = (isAdmin || userRole === "member") ? "Admin Console" : userRole === "user" ? "User Dashboard" : "Access Portal";
+  const pageSubtitle = (isAdmin || userRole === "member")
     ? "User Management"
     : userRole === "user"
       ? "Your account details"
       : "Sign in to continue";
   const filteredUsers = useMemo(() => {
     const searchValue = userSearch.trim().toLowerCase();
+    const visibleUsers = userRole === "member" ? users.filter(u => u.role === "user" && !u.isMember && !u.username.toLowerCase().includes("admin")) : users;
 
     if (!searchValue) {
-      return users;
+      return visibleUsers;
     }
-
-    return users.filter((profile) => {
+    return visibleUsers.filter((profile) => {
       return (
         profile.username.toLowerCase().includes(searchValue) ||
         profile.authEmail.toLowerCase().includes(searchValue) ||
@@ -245,7 +265,7 @@ const Admin = () => {
         profile.ipLink.toLowerCase().includes(searchValue)
       );
     });
-  }, [users, userSearch]);
+  }, [users, userSearch, userRole]);
 
   const filteredPasswords = useMemo(() => {
     const searchValue = passwordSearch.trim().toLowerCase();
@@ -258,15 +278,16 @@ const Admin = () => {
   }, [passwordRecords, passwordSearch]);
 
   const filteredContacts = useMemo(() => {
-    if (!contactSearch.trim()) return users;
+    const baseUsers = userRole === "member" ? users.filter(u => u.role === "user" && !u.isMember && !u.username.toLowerCase().includes("admin")) : users;
+    if (!contactSearch.trim()) return baseUsers;
     const q = contactSearch.toLowerCase();
-    return users.filter(user => 
+    return baseUsers.filter(user => 
       user.id.toLowerCase().includes(q) ||
       user.username.toLowerCase().includes(q) ||
       (user.contactEmail && user.contactEmail.toLowerCase().includes(q)) ||
       (user.contactMobile && user.contactMobile.toLowerCase().includes(q))
     );
-  }, [users, contactSearch]);
+  }, [users, contactSearch, userRole]);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
@@ -287,6 +308,7 @@ const Admin = () => {
       setSelectedUserContactEmail("");
       setSelectedUserContactMobile("");
       setSelectedUserRole("user");
+      setSelectedUserPermissions([]);
       setSelectedUserIpLink("");
       setActiveSection("tickets");
       setPasswordRecords([]);
@@ -303,12 +325,14 @@ const Admin = () => {
         const profileDoc = await getDoc(doc(db, "users", currentUser.uid));
         if (profileDoc.exists()) {
           const data = profileDoc.data();
-          const role = (data.role || "user") as "admin" | "user";
+          const role = (data.isMember || data.role === "member") ? "member" : 
+                       (data.role === "admin" || (data.username && data.username.toLowerCase().includes("admin"))) ? "admin" : "user";
           setUserRole(role);
+          setLoggedInUserPermissions(data.permissions || []);
           setLoggedInUsername(data.username || "");
-          if (role === "admin") {
-            setIsAdmin(true);
-            setStatus("Admin access confirmed.");
+          if (role === "admin" || role === "member") {
+            setIsAdmin(role === "admin");
+            setStatus(`${role === "admin" ? "Admin" : "Member"} access confirmed.`);
           } else {
             setIpLink(data.ip_link || "");
             setStatus("User logged in successfully.");
@@ -343,7 +367,10 @@ const Admin = () => {
             authEmail: data.authEmail || data.email || "",
             contactEmail: data.contactEmail || "",
             contactMobile: data.contactMobile || "",
-            role: (data.role || "user") as "admin" | "user",
+            role: (data.isMember || data.role === "member") ? "member" : 
+                  (data.role === "admin" || (data.username && data.username.toLowerCase().includes("admin"))) ? "admin" : "user",
+            isMember: data.isMember || data.role === "member",
+            permissions: data.permissions || [],
             ipLink: data.ip_link || "",
             createdAtLabel: formatTimestamp(data.createdAt),
             updatedAtLabel: formatTimestamp(data.updatedAt),
@@ -359,6 +386,7 @@ const Admin = () => {
             setSelectedUserContactEmail(selected.contactEmail || "");
             setSelectedUserContactMobile(selected.contactMobile || "");
             setSelectedUserRole(selected.role);
+            setSelectedUserPermissions(selected.permissions || []);
             setSelectedUserIpLink(selected.ipLink);
           }
         }
@@ -505,8 +533,8 @@ const Admin = () => {
 
   const handleCreateUser = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (!isAdmin) {
-      setStatus("Only admins can create users.");
+    if (!hasPermission("create")) {
+      setStatus("Only admins or authorized members can create users.");
       return;
     }
     const normalizedUsername = normalizeUsername(newUserUsername);
@@ -540,7 +568,9 @@ const Admin = () => {
           email: authEmail,
           contactEmail: newUserContactEmail.trim(),
           contactMobile: newUserContactMobile.trim(),
-          role: newUserRole,
+          role: newUserRole === "member" ? "admin" : newUserRole,
+          isMember: newUserRole === "member",
+          permissions: newUserRole === "member" ? newUserPermissions : [],
           ip_link: newUserRole === "user" ? newUserIpLink : "",
           createdAt: serverTimestamp(),
           updatedAt: serverTimestamp(),
@@ -599,13 +629,20 @@ const Admin = () => {
     setSelectedUserContactEmail("");
     setSelectedUserContactMobile("");
     setSelectedUserRole("user");
+    setSelectedUserPermissions([]);
     setSelectedUserIpLink("");
     setStatus("Edit cancelled.");
   };
 
   const handleUpdateUser = async () => {
-    if (!isAdmin || !selectedUserId) {
-      setStatus("Select a user first.");
+    if (!hasPermission("edit") || !selectedUserId) {
+      setStatus("You lack permission or need to select a user first.");
+      return;
+    }
+
+    if (userRole === "member" && selectedUserRole !== "user") {
+      setStatus("Unauthorized: Members can only edit normal users.");
+      toast.error("You cannot modify Admin or Member accounts.");
       return;
     }
 
@@ -639,7 +676,9 @@ const Admin = () => {
           email: selectedUserAuthEmail,
           contactEmail: selectedUserContactEmail.trim(),
           contactMobile: selectedUserContactMobile.trim(),
-          role: selectedUserRole,
+          role: selectedUserRole === "member" ? "admin" : selectedUserRole,
+          isMember: selectedUserRole === "member",
+          permissions: selectedUserRole === "member" ? selectedUserPermissions : [],
           ip_link: selectedUserRole === "user" ? selectedUserIpLink : "",
           updatedAt: serverTimestamp(),
         },
@@ -664,8 +703,14 @@ const Admin = () => {
   };
 
   const handleDeleteSelectedUser = async () => {
-    if (!isAdmin || !selectedUserId) {
-      setStatus("Select a user first.");
+    if (!hasPermission("edit") || !selectedUserId) {
+      setStatus("You lack permission or need to select a user first.");
+      return;
+    }
+
+    if (userRole === "member" && selectedUserRole !== "user") {
+      setStatus("Unauthorized: Members can only delete normal users.");
+      toast.error("You cannot delete Admin or Member accounts.");
       return;
     }
 
@@ -683,6 +728,7 @@ const Admin = () => {
       setSelectedUserId("");
       setSelectedUserUsername("");
       setSelectedUserRole("user");
+      setSelectedUserPermissions([]);
       setSelectedUserIpLink("");
       setActiveSection("edit");
       setStatus("User deleted successfully.");
@@ -715,6 +761,7 @@ const Admin = () => {
       setSelectedUserContactEmail("");
       setSelectedUserContactMobile("");
       setSelectedUserRole("user");
+      setSelectedUserPermissions([]);
       setSelectedUserIpLink("");
       setPasswordRecords([]);
       setRevealedPasswords(new Set());
@@ -846,10 +893,10 @@ const Admin = () => {
                   </div>
                 )}
               </form>
-            ) : isAdmin ? (
+            ) : (isAdmin || userRole === "member") ? (
               <div className="mt-6 space-y-4">
                 <div className="rounded-lg border border-border bg-secondary/30 p-4 text-sm">
-                  <p className="font-medium text-primary">System Admin</p>
+                  <p className="font-medium text-primary">{isAdmin ? "System Admin" : "Team Member"}</p>
                   <p className="mt-1 truncate text-muted-foreground">
                     {loggedInUsername || (user?.email)}
                   </p>
@@ -967,7 +1014,7 @@ const Admin = () => {
             <div className="space-y-6">
               <section className="rounded-2xl border border-border bg-card p-6 shadow-lg">
                 <div className="flex flex-wrap items-center gap-3">
-                  <button
+                  {hasPermission("create") && (<button
                     type="button"
                     onClick={() => setActiveSection("create")}
                     className={`rounded-lg px-4 py-2 text-sm font-medium transition ${activeSection === "create"
@@ -976,8 +1023,8 @@ const Admin = () => {
                       }`}
                   >
                     Create User
-                  </button>
-                  <button
+                  </button>)}
+                  {hasPermission("edit") && (<button
                     type="button"
                     onClick={() => setActiveSection("edit")}
                     className={`rounded-lg px-4 py-2 text-sm font-medium transition ${activeSection === "edit"
@@ -986,8 +1033,8 @@ const Admin = () => {
                       }`}
                   >
                     Edit User
-                  </button>
-                  <button
+                  </button>)}
+                  {hasPermission("forms") && (<button
                     type="button"
                     onClick={() => setActiveSection("forms")}
                     className={`rounded-lg px-4 py-2 text-sm font-medium transition flex items-center gap-2 ${activeSection === "forms"
@@ -1001,8 +1048,8 @@ const Admin = () => {
                         {submissions.filter(s => s.status === "pending").length}
                       </span>
                     )}
-                  </button>
-                  <button
+                  </button>)}
+                  {hasPermission("contacts") && (<button
                     type="button"
                     onClick={() => setActiveSection("contacts")}
                     className={`inline-flex items-center gap-1.5 rounded-lg px-4 py-2 text-sm font-medium transition ${activeSection === "contacts"
@@ -1012,9 +1059,9 @@ const Admin = () => {
                   >
                     <Users className="h-3.5 w-3.5" />
                     Users & Passwords
-                  </button>
+                  </button>)}
 
-                  <button
+                  {hasPermission("tickets") && (<button
                     type="button"
                     onClick={() => setActiveSection("tickets")}
                     className={`rounded-lg px-4 py-2 text-sm font-medium transition flex items-center gap-2 ${activeSection === "tickets"
@@ -1028,8 +1075,8 @@ const Admin = () => {
                         {activeTicketCount}
                       </span>
                     )}
-                  </button>
-                  <button
+                  </button>)}
+                  {hasPermission("docs") && (<button
                     type="button"
                     onClick={() => setActiveSection("docs")}
                     className={`rounded-lg px-4 py-2 text-sm font-medium transition ${activeSection === "docs"
@@ -1038,11 +1085,11 @@ const Admin = () => {
                       }`}
                   >
                     Documentation
-                  </button>
+                  </button>)}
                 </div>
               </section>
 
-              {activeSection === "create" && (
+              {activeSection === "create" && hasPermission("create") && (
                 <section className="rounded-2xl border border-border bg-card p-6 shadow-lg">
                   <div>
                     <h2 className="text-2xl font-bold">Create User</h2>
@@ -1100,10 +1147,11 @@ const Admin = () => {
                         <label className="text-sm font-medium">Role</label>
                         <select
                           value={newUserRole}
-                          onChange={(event) => setNewUserRole(event.target.value as "admin" | "user")}
+                          onChange={(event) => setNewUserRole(event.target.value as "admin" | "member" | "user")}
                           className="w-full rounded-lg border border-border bg-background px-4 py-3 outline-none transition-all focus:ring-2 focus:ring-primary/40"
                         >
                           <option value="user">Normal User</option>
+                          <option value="member">Member</option>
                           <option value="admin">Admin</option>
                         </select>
                       </div>
@@ -1118,6 +1166,31 @@ const Admin = () => {
                         />
                       </div>
                     </div>
+
+                    {newUserRole === "member" && (
+                      <div className="space-y-3">
+                        <label className="text-sm font-medium">Member Permissions</label>
+                        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+                          {AVAILABLE_TABS.map((tab) => (
+                            <label key={tab.id} className="flex items-center gap-2 text-sm">
+                              <input
+                                type="checkbox"
+                                checked={newUserPermissions.includes(tab.id)}
+                                onChange={(e) => {
+                                  if (e.target.checked) {
+                                    setNewUserPermissions((prev) => [...prev, tab.id]);
+                                  } else {
+                                    setNewUserPermissions((prev) => prev.filter((id) => id !== tab.id));
+                                  }
+                                }}
+                                className="h-4 w-4 rounded border-border text-primary focus:ring-primary"
+                              />
+                              {tab.label}
+                            </label>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                     <button
                       type="submit"
                       disabled={creatingUser}
@@ -1130,7 +1203,7 @@ const Admin = () => {
                 </section>
               )}
 
-              {activeSection === "edit" && (
+              {activeSection === "edit" && hasPermission("edit") && (
                 <section className="rounded-2xl border border-border bg-card p-6 shadow-lg">
                   <div>
                     <h2 className="text-2xl font-bold">Edit User</h2>
@@ -1223,10 +1296,11 @@ const Admin = () => {
                             <label className="text-sm font-medium">Role</label>
                             <select
                               value={selectedUserRole}
-                              onChange={(event) => setSelectedUserRole(event.target.value as "admin" | "user")}
+                              onChange={(event) => setSelectedUserRole(event.target.value as "admin" | "member" | "user")}
                               className="w-full rounded-lg border border-border bg-background px-4 py-3 outline-none transition-all focus:ring-2 focus:ring-primary/40"
                             >
                               <option value="user">Normal User</option>
+                              <option value="member">Member</option>
                               <option value="admin">Admin</option>
                             </select>
                           </div>
@@ -1242,6 +1316,31 @@ const Admin = () => {
                             />
                           </div>
                         </div>
+
+                        {selectedUserRole === "member" && (
+                          <div className="space-y-3">
+                            <label className="text-sm font-medium">Member Permissions</label>
+                            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+                              {AVAILABLE_TABS.map((tab) => (
+                                <label key={tab.id} className="flex items-center gap-2 text-sm">
+                                  <input
+                                    type="checkbox"
+                                    checked={selectedUserPermissions.includes(tab.id)}
+                                    onChange={(e) => {
+                                      if (e.target.checked) {
+                                        setSelectedUserPermissions((prev) => [...prev, tab.id]);
+                                      } else {
+                                        setSelectedUserPermissions((prev) => prev.filter((id) => id !== tab.id));
+                                      }
+                                    }}
+                                    className="h-4 w-4 rounded border-border text-primary focus:ring-primary"
+                                  />
+                                  {tab.label}
+                                </label>
+                              ))}
+                            </div>
+                          </div>
+                        )}
                         <div className="grid grid-cols-2 gap-3">
                           <button
                             type="button"
@@ -1255,7 +1354,7 @@ const Admin = () => {
                             <AlertDialogTrigger asChild>
                               <button
                                 type="button"
-                                disabled={updatingUser}
+                                disabled={updatingUser || (userRole === "member" && selectedUserRole !== "user")}
                                 className="inline-flex items-center justify-center gap-2 rounded-lg bg-primary px-4 py-3 font-semibold text-primary-foreground transition-all hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
                               >
                                 <Shield className="h-4 w-4" />
@@ -1279,7 +1378,7 @@ const Admin = () => {
                             <AlertDialogTrigger asChild>
                               <button
                                 type="button"
-                                disabled={deletingUser}
+                                disabled={deletingUser || (userRole === "member" && selectedUserRole !== "user")}
                                 className="inline-flex items-center justify-center gap-2 rounded-lg border border-destructive px-4 py-3 font-semibold text-destructive transition-all hover:bg-destructive/10 disabled:cursor-not-allowed disabled:opacity-60"
                               >
                                 <Trash2 className="h-4 w-4" />
@@ -1320,7 +1419,7 @@ const Admin = () => {
                 </section>
               )}
 
-              {activeSection === "forms" && (
+              {activeSection === "forms" && hasPermission("forms") && (
                 <section className="rounded-2xl border border-border bg-card p-6 shadow-lg">
                   <div className="flex items-center justify-between gap-4">
                     <div>
@@ -1413,13 +1512,13 @@ const Admin = () => {
                 </section>
               )}
 
-              {activeSection === "tickets" && (
+              {activeSection === "tickets" && hasPermission("tickets") && (
                 <section className="rounded-2xl border border-border bg-card p-6 shadow-lg">
                   <AdminTickets />
                 </section>
               )}
 
-              {activeSection === "docs" && (
+              {activeSection === "docs" && hasPermission("docs") && (
                 <section className="rounded-2xl border border-border bg-card p-6 shadow-lg relative overflow-hidden">
                   <div>
                     <h2 className="text-2xl font-bold">Admin Documentation</h2>
@@ -1496,7 +1595,7 @@ const Admin = () => {
                 </section>
               )}
 
-              {activeSection === "contacts" && (
+              {activeSection === "contacts" && hasPermission("contacts") && (
                 <section className="rounded-2xl border border-border bg-card p-6 shadow-lg">
                   <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                     <div>
@@ -1577,7 +1676,7 @@ const Admin = () => {
                                 )}
                               </td>
                               <td className="px-4 py-3">
-                                <span className={`rounded-full border px-2 py-0.5 text-[10px] uppercase font-bold tracking-wider whitespace-nowrap ${profile.role === 'admin' ? 'bg-amber-500/10 border-amber-500/30 text-amber-600 dark:text-amber-500' : 'bg-secondary border-border/50 text-muted-foreground'}`}>
+                                <span className={`rounded-full border px-2 py-0.5 text-[10px] uppercase font-bold tracking-wider whitespace-nowrap ${profile.role === 'admin' ? 'bg-amber-500/10 border-amber-500/30 text-amber-600 dark:text-amber-500' : profile.role === 'member' ? 'bg-teal-500/10 border-teal-500/30 text-teal-600 dark:text-teal-500' : 'bg-secondary border-border/50 text-muted-foreground'}`}>
                                   {profile.role}
                                 </span>
                               </td>
