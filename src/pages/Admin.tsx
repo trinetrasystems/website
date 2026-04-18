@@ -24,7 +24,7 @@ import {
   updateDoc,
 } from "firebase/firestore";
 import { adminAuth, auth, db } from "@/lib/firebase";
-import { Shield, LogIn, LogOut, RefreshCw, ArrowLeft, CheckCircle, Trash2, Eye, EyeOff, Key, Copy, Users, Phone, Mail, Search } from "lucide-react";
+import { Shield, LogIn, LogOut, RefreshCw, ArrowLeft, CheckCircle, Trash2, Eye, EyeOff, Key, Copy, Users, Phone, Mail, Search, FileText } from "lucide-react";
 import AppSidebar from "@/components/AppSidebar";
 import UserDashboard from "@/components/UserDashboard";
 import AdminTickets from "@/components/AdminTickets";
@@ -92,6 +92,15 @@ const createAuthEmail = (value: string) => {
   const safeUsername = normalizedUsername.replace(/[^a-z0-9._-]/g, "-");
   return `${safeUsername || "user"}@trinetra.local`;
 };
+const ADMIN_DOCS = [
+  {
+    id: "jetson-guide",
+    title: "Jetson Installation Guide",
+    description: "Complete guide for installing and configuring Jetson devices.",
+    path: "/docs/combined_jetson_guide.html",
+  },
+  // Add more documents here as needed by dropping HTML/PDF files in public/docs/
+];
 
 const Admin = () => {
   const [user, setUser] = useState<User | null>(null);
@@ -123,7 +132,8 @@ const Admin = () => {
   const [selectedUserIpLink, setSelectedUserIpLink] = useState("");
   const [updatingUser, setUpdatingUser] = useState(false);
   const [deletingUser, setDeletingUser] = useState(false);
-  const [activeSection, setActiveSection] = useState<"create" | "edit" | "forms" | "tickets" | "contacts">("create");
+  const [activeSection, setActiveSection] = useState<"create" | "edit" | "forms" | "tickets" | "contacts" | "docs">("create");
+  const [selectedDoc, setSelectedDoc] = useState<{ id: string; title: string; description: string; path: string } | null>(null);
 
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -983,6 +993,16 @@ const Admin = () => {
                   >
                     Support Tickets
                   </button>
+                  <button
+                    type="button"
+                    onClick={() => setActiveSection("docs")}
+                    className={`rounded-lg px-4 py-2 text-sm font-medium transition ${activeSection === "docs"
+                      ? "bg-primary text-primary-foreground"
+                      : "border border-border bg-background hover:bg-secondary/40"
+                      }`}
+                  >
+                    Documentation
+                  </button>
                 </div>
               </section>
 
@@ -1360,6 +1380,63 @@ const Admin = () => {
               {activeSection === "tickets" && (
                 <section className="rounded-2xl border border-border bg-card p-6 shadow-lg">
                   <AdminTickets />
+                </section>
+              )}
+
+              {activeSection === "docs" && (
+                <section className="rounded-2xl border border-border bg-card p-6 shadow-lg relative overflow-hidden">
+                  <div>
+                    <h2 className="text-2xl font-bold">Admin Documentation</h2>
+                    <p className="mt-1 text-sm text-muted-foreground">
+                      Internal reference guides and configuration documentation.
+                    </p>
+                  </div>
+                  
+                  <div className="mt-6 grid gap-4 md:grid-cols-2">
+                    {ADMIN_DOCS.map((doc) => (
+                      <button
+                        key={doc.id}
+                        type="button"
+                        onClick={() => setSelectedDoc(doc)}
+                        className="group flex flex-col items-start gap-2 rounded-xl border border-border bg-secondary/10 p-5 text-left transition-all hover:bg-secondary/30 hover:border-primary/30 hover:shadow-md"
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className="rounded-lg bg-primary/10 p-2 text-primary transition-all group-hover:bg-primary/20">
+                            <FileText className="h-5 w-5" />
+                          </div>
+                          <h3 className="font-semibold">{doc.title}</h3>
+                        </div>
+                        {doc.description && (
+                          <p className="text-sm text-muted-foreground mt-2">{doc.description}</p>
+                        )}
+                      </button>
+                    ))}
+                  </div>
+
+                  {selectedDoc && (
+                    <div className="fixed inset-0 z-[100] flex flex-col bg-background animate-in fade-in zoom-in-95 duration-200">
+                      <div className="flex items-center justify-between border-b border-border p-4 bg-card shadow-sm">
+                        <h2 className="text-xl font-bold flex items-center gap-2">
+                          <FileText className="h-5 w-5 text-primary" /> 
+                          {selectedDoc.title}
+                        </h2>
+                        <button
+                          type="button"
+                          onClick={() => setSelectedDoc(null)}
+                          className="rounded-lg border border-border bg-background px-4 py-2 text-sm font-medium transition hover:bg-secondary/80 focus:outline-none"
+                        >
+                          Close Fullscreen
+                        </button>
+                      </div>
+                      <div className="flex-1 overflow-hidden relative bg-white">
+                        <iframe
+                          src={selectedDoc.path}
+                          className="absolute inset-0 w-full h-full border-none bg-white"
+                          title={selectedDoc.title}
+                        />
+                      </div>
+                    </div>
+                  )}
                 </section>
               )}
 
