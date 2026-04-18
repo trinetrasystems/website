@@ -111,7 +111,7 @@ const docModules = import.meta.glob('/public/docs/*.{html,pdf,txt,md}');
 
 const ADMIN_DOCS = Object.keys(docModules).map((filePath) => {
   const filename = filePath.split('/').pop() || '';
-  
+
   // Process the filename into a clean, readable title
   const title = filename
     .replace(/\.(html|pdf|txt|md)$/i, '')
@@ -298,7 +298,7 @@ const Admin = () => {
     const baseUsers = userRole === "member" ? users.filter(u => u.role === "user" && !u.isMember && !u.username.toLowerCase().includes("admin")) : users;
     if (!contactSearch.trim()) return baseUsers;
     const q = contactSearch.toLowerCase();
-    return baseUsers.filter(user => 
+    return baseUsers.filter(user =>
       user.id.toLowerCase().includes(q) ||
       user.username.toLowerCase().includes(q) ||
       (user.contactEmail && user.contactEmail.toLowerCase().includes(q)) ||
@@ -342,8 +342,8 @@ const Admin = () => {
         const profileDoc = await getDoc(doc(db, "users", currentUser.uid));
         if (profileDoc.exists()) {
           const data = profileDoc.data();
-          const role = (data.isMember || data.role === "member") ? "member" : 
-                       (data.role === "admin" || (data.username && data.username.toLowerCase().includes("admin"))) ? "admin" : "user";
+          const role = (data.isMember || data.role === "member") ? "member" :
+            (data.role === "admin" || (data.username && data.username.toLowerCase().includes("admin"))) ? "admin" : "user";
           setUserRole(role);
           setLoggedInUserPermissions(data.permissions || []);
           setLoggedInUsername(data.username || "");
@@ -384,8 +384,8 @@ const Admin = () => {
             authEmail: data.authEmail || data.email || "",
             contactEmail: data.contactEmail || "",
             contactMobile: data.contactMobile || "",
-            role: (data.isMember || data.role === "member") ? "member" : 
-                  (data.role === "admin" || (data.username && data.username.toLowerCase().includes("admin"))) ? "admin" : "user",
+            role: (data.isMember || data.role === "member") ? "member" :
+              (data.role === "admin" || (data.username && data.username.toLowerCase().includes("admin"))) ? "admin" : "user",
             isMember: data.isMember || data.role === "member",
             permissions: data.permissions || [],
             ipLink: data.ip_link || "",
@@ -685,11 +685,11 @@ const Admin = () => {
     try {
       const normalizedUsername = normalizeUsername(selectedUserUsername);
 
-    if (!normalizedUsername || !selectedUserContactEmail || !selectedUserContactMobile) {
-      setStatus("Username, contact email, and mobile are required.");
-      toast.error("Please fill all mandatory fields.");
-      return;
-    }
+      if (!normalizedUsername || !selectedUserContactEmail || !selectedUserContactMobile) {
+        setStatus("Username, contact email, and mobile are required.");
+        toast.error("Please fill all mandatory fields.");
+        return;
+      }
 
       const existingLoginIndex = await getDoc(doc(db, "loginIndex", normalizedUsername));
       if (existingLoginIndex.exists() && existingLoginIndex.data()?.userId !== selectedUserId) {
@@ -768,7 +768,7 @@ const Admin = () => {
         await deleteDoc(doc(db, "loginIndex", targetUser.usernameKey));
       }
       await deleteDoc(doc(db, "userPasswords", request.targetUserId)).catch(() => undefined);
-      
+
       // 2. Mark request as approved
       await updateDoc(doc(db, "deleteRequests", request.id), {
         status: "approved"
@@ -1084,15 +1084,19 @@ const Admin = () => {
                   )}
                 </div>
               </div>
+            ) : checkingAdmin ? (
+              <div className="mt-6 rounded-lg border border-border bg-secondary/20 p-4 text-xs text-muted-foreground animate-pulse">
+                Please wait...
+              </div>
             ) : (
               <div className="mt-6 rounded-lg border border-red-500/20 bg-red-500/10 p-4 text-xs text-red-500">
-                Your account does not have proper role assignment.
+                Please wait...
               </div>
             )}
 
-            {(checkingAdmin || (user && status && !canShowDashboard)) && (
-              <div className="mt-5 rounded-lg border border-border bg-secondary/20 p-4 text-xs text-muted-foreground animate-pulse">
-                {checkingAdmin ? "Verifying permissions..." : status}
+            {status && !checkingAdmin && !canShowDashboard && (
+              <div className="mt-5 rounded-lg border border-red-500/20 bg-red-500/10 p-4 text-xs text-red-500 animate-pulse">
+                {status}
               </div>
             )}
 
@@ -1587,18 +1591,17 @@ const Admin = () => {
                           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                             <div className="space-1 flex-1">
                               <div className="flex items-center gap-3 mb-2">
-                                <span className={`rounded-full px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider ${
-                                  req.status === 'pending' ? 'bg-amber-500/10 text-amber-600 border border-amber-500/20' :
+                                <span className={`rounded-full px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider ${req.status === 'pending' ? 'bg-amber-500/10 text-amber-600 border border-amber-500/20' :
                                   req.status === 'approved' ? 'bg-emerald-500/10 text-emerald-600 border border-emerald-500/20' :
-                                  'bg-destructive/10 text-destructive border border-destructive/20'
-                                }`}>
+                                    'bg-destructive/10 text-destructive border border-destructive/20'
+                                  }`}>
                                   {req.status}
                                 </span>
                                 <span className="text-sm font-bold text-foreground">
                                   Request #{req.id.slice(0, 6)}
                                 </span>
                               </div>
-                              
+
                               <div className="grid md:grid-cols-2 gap-6">
                                 <div className="space-y-1">
                                   <p className="text-[10px] uppercase font-bold text-muted-foreground">Target User</p>
@@ -1755,7 +1758,7 @@ const Admin = () => {
                       Internal reference guides and configuration documentation.
                     </p>
                   </div>
-                  
+
                   <div className="mt-6 grid gap-4 md:grid-cols-2">
                     {ADMIN_DOCS.map((doc) => (
                       <div
@@ -1791,7 +1794,7 @@ const Admin = () => {
                     <div className="fixed inset-0 z-[100] flex flex-col bg-background animate-in fade-in zoom-in-95 duration-200">
                       <div className="flex items-center justify-between border-b border-border p-4 bg-card shadow-sm">
                         <h2 className="text-xl font-bold flex items-center gap-2">
-                          <FileText className="h-5 w-5 text-primary" /> 
+                          <FileText className="h-5 w-5 text-primary" />
                           {selectedDoc.title}
                         </h2>
                         <div className="flex items-center gap-3">
@@ -1835,9 +1838,9 @@ const Admin = () => {
                     </div>
                     <div className="flex items-center w-full md:w-auto relative">
                       <Search className="h-4 w-4 absolute left-3 text-muted-foreground" />
-                      <input 
-                        type="text" 
-                        placeholder="Search by ID, email, or username..." 
+                      <input
+                        type="text"
+                        placeholder="Search by ID, email, or username..."
                         value={contactSearch}
                         onChange={(e) => setContactSearch(e.target.value)}
                         className="w-full md:w-64 rounded-xl border border-border bg-background py-2 pl-9 pr-4 text-sm outline-none focus:ring-2 focus:ring-primary/40"
@@ -1864,52 +1867,52 @@ const Admin = () => {
                           filteredContacts.map((profile) => {
                             const pwdRecord = passwordRecords.find((r) => r.uid === profile.id || r.username === profile.username);
                             const isRevealed = revealedPasswords.has(profile.id);
-                            
+
                             return (
-                            <tr key={profile.id} className="hover:bg-secondary/20 transition-colors">
-                              <td className="px-4 py-3 font-medium">{profile.username}</td>
-                              <td className="px-4 py-3 select-all">{profile.contactEmail || <span className="italic text-muted-foreground">None</span>}</td>
-                              <td className="px-4 py-3 select-all">{profile.contactMobile || <span className="italic text-muted-foreground">None</span>}</td>
-                              <td className="px-4 py-3">
-                                {pwdRecord ? (
-                                  <div className="flex items-center gap-1">
-                                    <code
-                                      className={`rounded px-2 py-1 font-mono text-sm ${isRevealed
-                                        ? "bg-amber-500/10 text-amber-700 dark:text-amber-300"
-                                        : "bg-secondary/50 tracking-widest text-muted-foreground select-none"
-                                        }`}
-                                    >
-                                      {isRevealed ? pwdRecord.password : "••••••••"}
-                                    </code>
-                                    <button
-                                      type="button"
-                                      onClick={() => toggleRevealPassword(profile.id)}
-                                      title={isRevealed ? "Hide password" : "Show password"}
-                                      className="rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-secondary/50 hover:text-foreground"
-                                    >
-                                      {isRevealed ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                                    </button>
-                                    {isRevealed && (
+                              <tr key={profile.id} className="hover:bg-secondary/20 transition-colors">
+                                <td className="px-4 py-3 font-medium">{profile.username}</td>
+                                <td className="px-4 py-3 select-all">{profile.contactEmail || <span className="italic text-muted-foreground">None</span>}</td>
+                                <td className="px-4 py-3 select-all">{profile.contactMobile || <span className="italic text-muted-foreground">None</span>}</td>
+                                <td className="px-4 py-3">
+                                  {pwdRecord ? (
+                                    <div className="flex items-center gap-1">
+                                      <code
+                                        className={`rounded px-2 py-1 font-mono text-sm ${isRevealed
+                                          ? "bg-amber-500/10 text-amber-700 dark:text-amber-300"
+                                          : "bg-secondary/50 tracking-widest text-muted-foreground select-none"
+                                          }`}
+                                      >
+                                        {isRevealed ? pwdRecord.password : "••••••••"}
+                                      </code>
                                       <button
                                         type="button"
-                                        onClick={() => handleCopyPassword(pwdRecord.password)}
-                                        title="Copy password"
+                                        onClick={() => toggleRevealPassword(profile.id)}
+                                        title={isRevealed ? "Hide password" : "Show password"}
                                         className="rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-secondary/50 hover:text-foreground"
                                       >
-                                        <Copy className="h-4 w-4" />
+                                        {isRevealed ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                                       </button>
-                                    )}
-                                  </div>
-                                ) : (
-                                  <span className="text-xs italic text-muted-foreground">None</span>
-                                )}
-                              </td>
-                              <td className="px-4 py-3">
-                                <span className={`rounded-full border px-2 py-0.5 text-[10px] uppercase font-bold tracking-wider whitespace-nowrap ${profile.role === 'admin' ? 'bg-amber-500/10 border-amber-500/30 text-amber-600 dark:text-amber-500' : profile.role === 'member' ? 'bg-teal-500/10 border-teal-500/30 text-teal-600 dark:text-teal-500' : 'bg-secondary border-border/50 text-muted-foreground'}`}>
-                                  {profile.role}
-                                </span>
-                              </td>
-                            </tr>
+                                      {isRevealed && (
+                                        <button
+                                          type="button"
+                                          onClick={() => handleCopyPassword(pwdRecord.password)}
+                                          title="Copy password"
+                                          className="rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-secondary/50 hover:text-foreground"
+                                        >
+                                          <Copy className="h-4 w-4" />
+                                        </button>
+                                      )}
+                                    </div>
+                                  ) : (
+                                    <span className="text-xs italic text-muted-foreground">None</span>
+                                  )}
+                                </td>
+                                <td className="px-4 py-3">
+                                  <span className={`rounded-full border px-2 py-0.5 text-[10px] uppercase font-bold tracking-wider whitespace-nowrap ${profile.role === 'admin' ? 'bg-amber-500/10 border-amber-500/30 text-amber-600 dark:text-amber-500' : profile.role === 'member' ? 'bg-teal-500/10 border-teal-500/30 text-teal-600 dark:text-teal-500' : 'bg-secondary border-border/50 text-muted-foreground'}`}>
+                                    {profile.role}
+                                  </span>
+                                </td>
+                              </tr>
                             );
                           })
                         )}
