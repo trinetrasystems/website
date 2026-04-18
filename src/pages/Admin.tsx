@@ -22,9 +22,10 @@ import {
   setDoc,
   type Timestamp,
   updateDoc,
+  addDoc,
 } from "firebase/firestore";
 import { adminAuth, auth, db } from "@/lib/firebase";
-import { Shield, LogIn, LogOut, RefreshCw, ArrowLeft, CheckCircle, Trash2, Eye, EyeOff, Key, Copy, Users, Phone, Mail, Search, FileText, Download } from "lucide-react";
+import { Shield, LogIn, LogOut, RefreshCw, ArrowLeft, CheckCircle, Trash2, Eye, EyeOff, Key, Copy, Users, Phone, Mail, Search, FileText, Download, XCircle, MessageSquare } from "lucide-react";
 import AppSidebar from "@/components/AppSidebar";
 import UserDashboard from "@/components/UserDashboard";
 import AdminTickets from "@/components/AdminTickets";
@@ -72,6 +73,17 @@ type PasswordRecord = {
   username: string;
   password: string;
   updatedAtLabel: string;
+};
+
+type DeleteRequest = {
+  id: string;
+  targetUserId: string;
+  targetUsername: string;
+  requestedByUid: string;
+  requestedByUsername: string;
+  reason: string;
+  status: "pending" | "approved" | "rejected";
+  createdAt: any;
 };
 
 type FirestoreTimestamp = Timestamp & {
@@ -147,6 +159,11 @@ const Admin = () => {
   const [newUserPermissions, setNewUserPermissions] = useState<string[]>([]);
   const [newUserIpLink, setNewUserIpLink] = useState("");
   const [creatingUser, setCreatingUser] = useState(false);
+
+  const [deleteRequests, setDeleteRequests] = useState<DeleteRequest[]>([]);
+  const [deleteReason, setDeleteReason] = useState("");
+  const [isDeleteReasonModalOpen, setIsDeleteReasonModalOpen] = useState(false);
+  const [requestingDelete, setRequestingDelete] = useState(false);
 
   const [users, setUsers] = useState<UserProfile[]>([]);
   const [userSearch, setUserSearch] = useState("");
@@ -458,6 +475,22 @@ const Admin = () => {
     };
   }, [canShowDashboard, selectedUserId]);
 
+  useEffect(() => {
+    if (!canShowDashboard || !isAdmin) return;
+
+    const unsubscribeDeleteRequests = onSnapshot(
+      query(collection(db, "deleteRequests"), orderBy("createdAt", "desc")),
+      (snapshot) => {
+        setDeleteRequests(snapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        } as DeleteRequest)));
+      }
+    );
+
+    return () => unsubscribeDeleteRequests();
+  }, [canShowDashboard, isAdmin]);
+
   const handleLogin = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setStatus("");
@@ -699,6 +732,61 @@ const Admin = () => {
       toast.error(message);
     } finally {
       setUpdatingUser(false);
+    }
+  };
+
+  const submitDeleteRequest = async () => {
+    if (!selectedUserId || !deleteReason.trim() || !user) return;
+    setRequestingDelete(true);
+    try {
+      await addDoc(collection(db, "deleteRequests"), {
+        targetUserId: selectedUserId,
+        targetUsername: selectedUserUsername,
+        requestedByUid: user.uid,
+        requestedByUsername: username || user.email || "Unknown",
+        reason: deleteReason.trim(),
+        status: "pending",
+        createdAt: serverTimestamp(),
+      });
+      setIsDeleteReasonModalOpen(false);
+      setDeleteReason("");
+      toast.success("Delete request submitted for admin approval");
+      setStatus("Delete request pending approval.");
+    } catch (error) {
+      toast.error("Failed to submit delete request");
+    } finally {
+      setRequestingDelete(false);
+    }
+  };
+
+  const handleApproveDelete = async (request: DeleteRequest) => {
+    try {
+      // 1. Delete associated data
+      const targetUser = users.find(u => u.id === request.targetUserId);
+      await deleteDoc(doc(db, "users", request.targetUserId));
+      if (targetUser?.usernameKey) {
+        await deleteDoc(doc(db, "loginIndex", targetUser.usernameKey));
+      }
+      await deleteDoc(doc(db, "userPasswords", request.targetUserId)).catch(() => undefined);
+      
+      // 2. Mark request as approved
+      await updateDoc(doc(db, "deleteRequests", request.id), {
+        status: "approved"
+      });
+      toast.success("User deleted and request approved");
+    } catch (error) {
+      toast.error("Failed to process approval");
+    }
+  };
+
+  const handleRejectDelete = async (requestId: string) => {
+    try {
+      await updateDoc(doc(db, "deleteRequests", requestId), {
+        status: "rejected"
+      });
+      toast.success("Delete request rejected");
+    } catch (error) {
+      toast.error("Failed to reject request");
     }
   };
 
@@ -1061,6 +1149,24 @@ const Admin = () => {
                     Users & Passwords
                   </button>)}
 
+                  {isAdmin && (
+                    <button
+                      type="button"
+                      onClick={() => setActiveSection("requests")}
+                      className={`relative rounded-lg px-4 py-2 text-sm font-medium transition ${activeSection === "requests"
+                        ? "bg-amber-500 text-white"
+                        : "border border-amber-500/40 bg-amber-500/10 text-amber-600 dark:text-amber-500 hover:bg-amber-500/20"
+                        }`}
+                    >
+                      Delete Requests
+                      {deleteRequests.filter(r => r.status === 'pending').length > 0 && (
+                        <span className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-red-500 text-[10px] font-bold text-white flex items-center justify-center">
+                          {deleteRequests.filter(r => r.status === 'pending').length}
+                        </span>
+                      )}
+                    </button>
+                  )}
+
                   {hasPermission("tickets") && (<button
                     type="button"
                     onClick={() => setActiveSection("tickets")}
@@ -1394,21 +1500,55 @@ const Admin = () => {
                               </button>
                             </AlertDialogTrigger>
                             <AlertDialogContent>
-                              <AlertDialogHeader>
-                                <AlertDialogTitle>Delete this user?</AlertDialogTitle>
-                                <AlertDialogDescription>
-                                  This action cannot be undone. The selected user profile will be removed from the database.
-                                </AlertDialogDescription>
-                              </AlertDialogHeader>
-                              <AlertDialogFooter>
-                                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                <AlertDialogAction
-                                  onClick={handleDeleteSelectedUser}
-                                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                                >
-                                  Delete
-                                </AlertDialogAction>
-                              </AlertDialogFooter>
+                              {userRole === "member" ? (
+                                <>
+                                  <AlertDialogHeader>
+                                    <AlertDialogTitle>Request User Deletion</AlertDialogTitle>
+                                    <AlertDialogDescription>
+                                      Please provide a reason for deleting <strong>{selectedUserUsername}</strong>. This request will be sent to an admin for approval.
+                                    </AlertDialogDescription>
+                                  </AlertDialogHeader>
+                                  <div className="py-2">
+                                    <textarea
+                                      value={deleteReason}
+                                      onChange={(e) => setDeleteReason(e.target.value)}
+                                      placeholder="Explain why this user should be deleted..."
+                                      className="w-full min-h-[100px] rounded-lg border border-border bg-background p-3 text-sm outline-none focus:ring-2 focus:ring-primary/40"
+                                    />
+                                  </div>
+                                  <AlertDialogFooter>
+                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                    <AlertDialogAction
+                                      disabled={!deleteReason.trim() || requestingDelete}
+                                      onClick={(e) => {
+                                        e.preventDefault();
+                                        submitDeleteRequest();
+                                      }}
+                                      className="bg-primary text-primary-foreground hover:bg-primary/90"
+                                    >
+                                      {requestingDelete ? "Submitting..." : "Submit Request"}
+                                    </AlertDialogAction>
+                                  </AlertDialogFooter>
+                                </>
+                              ) : (
+                                <>
+                                  <AlertDialogHeader>
+                                    <AlertDialogTitle>Delete this user?</AlertDialogTitle>
+                                    <AlertDialogDescription>
+                                      This action cannot be undone. The selected user profile will be removed from the database.
+                                    </AlertDialogDescription>
+                                  </AlertDialogHeader>
+                                  <AlertDialogFooter>
+                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                    <AlertDialogAction
+                                      onClick={handleDeleteSelectedUser}
+                                      className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                    >
+                                      Delete
+                                    </AlertDialogAction>
+                                  </AlertDialogFooter>
+                                </>
+                              )}
                             </AlertDialogContent>
                           </AlertDialog>
                         </div>
@@ -1422,6 +1562,87 @@ const Admin = () => {
                       <div className="rounded-xl border border-dashed border-border p-8 text-sm text-muted-foreground">
                         Select a user to edit them.
                       </div>
+                    )}
+                  </div>
+                </section>
+              )}
+
+              {activeSection === "requests" && isAdmin && (
+                <section className="space-y-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h2 className="text-2xl font-bold">Delete Requests</h2>
+                      <p className="text-sm text-muted-foreground">Approve or reject user deletion requests from team members.</p>
+                    </div>
+                  </div>
+
+                  <div className="grid gap-4">
+                    {deleteRequests.length === 0 ? (
+                      <div className="rounded-2xl border border-dashed border-border p-12 text-center text-muted-foreground">
+                        No pending delete requests.
+                      </div>
+                    ) : (
+                      deleteRequests.map((req) => (
+                        <div key={req.id} className={`rounded-2xl border border-border bg-card p-6 shadow-sm transition-all ${req.status !== 'pending' ? 'opacity-60 grayscale' : 'hover:border-primary/50'}`}>
+                          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                            <div className="space-1 flex-1">
+                              <div className="flex items-center gap-3 mb-2">
+                                <span className={`rounded-full px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider ${
+                                  req.status === 'pending' ? 'bg-amber-500/10 text-amber-600 border border-amber-500/20' :
+                                  req.status === 'approved' ? 'bg-emerald-500/10 text-emerald-600 border border-emerald-500/20' :
+                                  'bg-destructive/10 text-destructive border border-destructive/20'
+                                }`}>
+                                  {req.status}
+                                </span>
+                                <span className="text-sm font-bold text-foreground">
+                                  Request #{req.id.slice(0, 6)}
+                                </span>
+                              </div>
+                              
+                              <div className="grid md:grid-cols-2 gap-6">
+                                <div className="space-y-1">
+                                  <p className="text-[10px] uppercase font-bold text-muted-foreground">Target User</p>
+                                  <p className="text-base font-bold text-primary">{req.targetUsername}</p>
+                                  <p className="text-xs text-muted-foreground font-mono">{req.targetUserId}</p>
+                                </div>
+                                <div className="space-y-1">
+                                  <p className="text-[10px] uppercase font-bold text-muted-foreground">Requested By</p>
+                                  <p className="text-sm font-medium">{req.requestedByUsername}</p>
+                                  <p className="text-xs text-muted-foreground italic">{formatTimestamp(req.createdAt)}</p>
+                                </div>
+                              </div>
+
+                              <div className="rounded-xl bg-secondary/30 p-4 border border-border/50 mt-4">
+                                <p className="text-[10px] uppercase font-bold text-muted-foreground mb-1.5 flex items-center gap-1.5">
+                                  <MessageSquare className="h-3 w-3" /> Reason for deletion
+                                </p>
+                                <p className="text-sm text-foreground/90 italic leading-relaxed">
+                                  "{req.reason}"
+                                </p>
+                              </div>
+                            </div>
+
+                            {req.status === 'pending' && (
+                              <div className="flex flex-row md:flex-col gap-2 shrink-0 self-start">
+                                <button
+                                  onClick={() => handleApproveDelete(req)}
+                                  className="flex-1 inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-500 px-4 py-2.5 text-sm font-bold text-white transition-all hover:bg-emerald-600"
+                                >
+                                  <CheckCircle className="h-4 w-4" />
+                                  Approve
+                                </button>
+                                <button
+                                  onClick={() => handleRejectDelete(req.id)}
+                                  className="flex-1 inline-flex items-center justify-center gap-2 rounded-xl border border-destructive/30 bg-destructive/10 px-4 py-2.5 text-sm font-bold text-destructive transition-all hover:bg-destructive/20"
+                                >
+                                  <XCircle className="h-4 w-4" />
+                                  Reject
+                                </button>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      ))
                     )}
                   </div>
                 </section>
