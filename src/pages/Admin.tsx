@@ -146,7 +146,7 @@ const Admin = () => {
   const [selectedUserIpLink, setSelectedUserIpLink] = useState("");
   const [updatingUser, setUpdatingUser] = useState(false);
   const [deletingUser, setDeletingUser] = useState(false);
-  const [activeSection, setActiveSection] = useState<"create" | "edit" | "forms" | "tickets" | "contacts" | "docs">("create");
+  const [activeSection, setActiveSection] = useState<"create" | "edit" | "forms" | "tickets" | "contacts" | "docs">("tickets");
   const [selectedDoc, setSelectedDoc] = useState<{ id: string; title: string; description: string; path: string } | null>(null);
 
   const [newPassword, setNewPassword] = useState("");
@@ -286,7 +286,7 @@ const Admin = () => {
       setSelectedUserContactMobile("");
       setSelectedUserRole("user");
       setSelectedUserIpLink("");
-      setActiveSection("create");
+      setActiveSection("tickets");
       setPasswordRecords([]);
       setPasswordSearch("");
       setRevealedPasswords(new Set());
@@ -706,7 +706,7 @@ const Admin = () => {
       setSelectedUserIpLink("");
       setPasswordRecords([]);
       setRevealedPasswords(new Set());
-      setActiveSection("create");
+      setActiveSection("tickets");
     } catch (error) {
       setStatus(error instanceof Error ? error.message : "Could not sign out.");
     }
