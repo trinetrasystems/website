@@ -1151,8 +1151,12 @@ const Admin = () => {
                           className="w-full rounded-lg border border-border bg-background px-4 py-3 outline-none transition-all focus:ring-2 focus:ring-primary/40"
                         >
                           <option value="user">Normal User</option>
-                          <option value="member">Member</option>
-                          <option value="admin">Admin</option>
+                          {userRole === "admin" && (
+                            <>
+                              <option value="member">Member</option>
+                              <option value="admin">Admin</option>
+                            </>
+                          )}
                         </select>
                       </div>
                       <div className="space-y-2">
@@ -1300,8 +1304,12 @@ const Admin = () => {
                               className="w-full rounded-lg border border-border bg-background px-4 py-3 outline-none transition-all focus:ring-2 focus:ring-primary/40"
                             >
                               <option value="user">Normal User</option>
-                              <option value="member">Member</option>
-                              <option value="admin">Admin</option>
+                              {userRole === "admin" && (
+                                <>
+                                  <option value="member">Member</option>
+                                  <option value="admin">Admin</option>
+                                </>
+                              )}
                             </select>
                           </div>
                           <div className="space-y-2">
