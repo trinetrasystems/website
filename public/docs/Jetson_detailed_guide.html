@@ -823,6 +823,87 @@
     }
     
 </style>
+<style>
+/* ═══════════ GLOBAL MOBILE RESPONSIVENESS OVERRIDES ═══════════ */
+@media (max-width: 768px) {
+  /* Adjust Main Container Paddings */
+  .master-hero, .scope-f2 .hero, .scope-f3 .hero, .scope-f4 .hero { 
+    padding: 2.5rem 1.2rem !important; 
+  }
+  .master-toc, .part-divider, .scope-f1, .scope-f2 .container, .scope-f3 .wrap, .scope-f4 .wrap {
+    padding-left: 1rem !important; 
+    padding-right: 1rem !important; 
+  }
+  
+  /* Adjust Section Paddings */
+  .scope-f1 .step-body, .scope-f2 .section-body, .scope-f3 .sec-body, .scope-f4 .sec-body,
+  .scope-f2 .scenario-body, .scope-f4 .method-content {
+    padding: 1.2rem 1rem !important;
+  }
+  .scope-f1 .step-header, .scope-f2 .section-head, .scope-f3 .sec-head, .scope-f4 .sec-head,
+  .scope-f2 .scenario-head, .scope-f4 .method-header {
+    padding: 1.2rem 1rem !important;
+    flex-wrap: wrap;
+    gap: 0.8rem;
+  }
+
+  /* Compress titles */
+  .master-hero h1, .scope-f2 .hero h1, .scope-f3 .hero h1, .scope-f4 .hero h1 { 
+    font-size: 1.6rem !important; 
+  }
+
+  /* Info boxes */
+  .scope-f1 .info-box, .scope-f2 .box, .scope-f3 .box, .scope-f4 .box {
+    padding: 1rem !important;
+    font-size: 13px !important;
+    flex-direction: column;
+  }
+  .scope-f1 .info-box .icon, .scope-f2 .box-icon, .scope-f3 .box-i, .scope-f4 .bi {
+    margin-bottom: 0.5rem;
+  }
+
+  /* Allow standard tables to scroll horizontally */
+  .scope-f1 .param-table, .scope-f2 .tbl, .scope-f3 .tbl, .scope-f4 .tbl {
+    display: block !important;
+    width: 100% !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Custom grid tables */
+  .scope-f2 .ip-grid, .scope-f3 .flow, .scope-f4 .flow {
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch;
+    width: 100% !important;
+  }
+  .scope-f2 .ip-row { min-width: 650px !important; }
+  .scope-f3 .flow-row, .scope-f4 .flow-row { min-width: 700px !important; }
+  
+  /* Arch diagrams scroll natively sometimes, but reinforce it */
+  .scope-f2 .arch, .scope-f3 .arch, .scope-f4 .arch {
+    padding: 1rem !important;
+    display: block;
+    overflow-x: auto !important;
+  }
+  /* Prevent flex wrapping shrinking boxes */
+  .scope-f2 .arch-row, .scope-f3 .arow, .scope-f4 .ar {
+    flex-wrap: nowrap !important;
+    min-width: 650px !important;
+  }
+
+  /* Code blocks */
+  pre.code {
+    padding: 1rem !important;
+    font-size: 11px !important;
+    overflow-x: auto !important;
+  }
+  
+  /* Comparison grids - if not already stacked */
+  .scope-f2 .grid2, .scope-f3 .g2, .scope-f4 .g2, .scope-f4 .compare-grid, .scope-f4 .toc-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+</style>
 </head>
 <body>
 
