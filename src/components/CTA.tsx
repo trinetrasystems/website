@@ -7,7 +7,7 @@ const CTA = () => {
   const isInView = useInView(ref, { once: true, margin: "-100px" });
 
   return (
-    <section id="contact" className="py-12 md:py-24 px-4 md:px-6" ref={ref}>
+    <section id="cta" className="py-12 md:py-24 px-4 md:px-6" ref={ref}>
       <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
         animate={isInView ? { opacity: 1, scale: 1 } : {}}
@@ -33,6 +33,10 @@ const CTA = () => {
             </motion.a>
             <motion.a
               href="#contact-form"
+              onClick={(e) => {
+                e.preventDefault();
+                document.getElementById("contact")?.scrollIntoView({ behavior: "smooth" });
+              }}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               className="inline-flex items-center gap-2 px-10 py-4 rounded-xl glass-strong border-white/20 font-bold text-lg hover:bg-white/10 transition-all text-foreground dark:text-white drop-shadow-md"
