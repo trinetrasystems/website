@@ -138,6 +138,7 @@ const Admin = () => {
   const [users, setUsers] = useState<UserProfile[]>([]);
   const [userSearch, setUserSearch] = useState("");
   const [contactSearch, setContactSearch] = useState("");
+  const [activeTicketCount, setActiveTicketCount] = useState(0);
   const [selectedUserId, setSelectedUserId] = useState("");
   const [selectedUserUsername, setSelectedUserUsername] = useState("");
   const [selectedUserContactEmail, setSelectedUserContactEmail] = useState("");
@@ -280,6 +281,7 @@ const Admin = () => {
       setSubmissions([]);
       setUsers([]);
       setUserSearch("");
+      setActiveTicketCount(0);
       setSelectedUserId("");
       setSelectedUserUsername("");
       setSelectedUserContactEmail("");
@@ -370,6 +372,15 @@ const Admin = () => {
       limit(100)
     );
 
+    const unsubscribeTickets = onSnapshot(
+      collection(db, "tickets"),
+      (snapshot) => {
+        const activeCount = snapshot.docs.filter(d => d.data().status === "Active").length;
+        setActiveTicketCount(activeCount);
+      },
+      (error) => console.error("Could not load tickets count", error)
+    );
+
     const unsubscribeSubmissions = onSnapshot(
       submissionsQuery,
       (snapshot) => {
@@ -415,6 +426,7 @@ const Admin = () => {
       unsubscribeUsers();
       unsubscribeSubmissions();
       unsubscribePasswords();
+      unsubscribeTickets();
     };
   }, [canShowDashboard, selectedUserId]);
 
@@ -978,12 +990,17 @@ const Admin = () => {
                   <button
                     type="button"
                     onClick={() => setActiveSection("forms")}
-                    className={`rounded-lg px-4 py-2 text-sm font-medium transition ${activeSection === "forms"
+                    className={`rounded-lg px-4 py-2 text-sm font-medium transition flex items-center gap-2 ${activeSection === "forms"
                       ? "bg-primary text-primary-foreground"
                       : "border border-border bg-background hover:bg-secondary/40"
                       }`}
                   >
                     Submitted Forms
+                    {submissions.filter(s => s.status === "pending").length > 0 && (
+                      <span className={`inline-flex items-center justify-center rounded-full text-[10px] font-bold h-5 w-5 ${activeSection === "forms" ? "bg-primary-foreground text-primary" : "bg-primary text-primary-foreground"}`}>
+                        {submissions.filter(s => s.status === "pending").length}
+                      </span>
+                    )}
                   </button>
                   <button
                     type="button"
@@ -1000,12 +1017,17 @@ const Admin = () => {
                   <button
                     type="button"
                     onClick={() => setActiveSection("tickets")}
-                    className={`rounded-lg px-4 py-2 text-sm font-medium transition ${activeSection === "tickets"
+                    className={`rounded-lg px-4 py-2 text-sm font-medium transition flex items-center gap-2 ${activeSection === "tickets"
                       ? "bg-primary text-primary-foreground"
                       : "border border-border bg-background hover:bg-secondary/40"
                       }`}
                   >
                     Support Tickets
+                    {activeTicketCount > 0 && (
+                      <span className={`inline-flex items-center justify-center rounded-full text-[10px] font-bold h-5 w-5 ${activeSection === "tickets" ? "bg-primary-foreground text-primary" : "bg-primary text-primary-foreground"}`}>
+                        {activeTicketCount}
+                      </span>
+                    )}
                   </button>
                   <button
                     type="button"
