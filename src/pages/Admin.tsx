@@ -1138,11 +1138,7 @@ const Admin = () => {
               </div>
             )}
 
-            {status && !checkingAdmin && !canShowDashboard && (
-              <div className="mt-5 rounded-lg border border-red-500/20 bg-red-500/10 p-4 text-xs text-red-500 animate-pulse">
-                {status}
-              </div>
-            )}
+
 
           </section>
 
