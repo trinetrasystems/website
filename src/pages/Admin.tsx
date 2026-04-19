@@ -26,7 +26,7 @@ import {
   where,
 } from "firebase/firestore";
 import { adminAuth, auth, db } from "@/lib/firebase";
-import { Shield, LogIn, LogOut, RefreshCw, ArrowLeft, CheckCircle, Trash2, Eye, EyeOff, Key, Copy, Users, Phone, Mail, Search, FileText, Download, XCircle, MessageSquare } from "lucide-react";
+import { Shield, LogIn, LogOut, RefreshCw, ArrowLeft, CheckCircle, Trash2, Eye, EyeOff, Key, Copy, Users, Phone, Mail, Search, FileText, Download, XCircle, MessageSquare, Sun, Moon } from "lucide-react";
 import AppSidebar from "@/components/AppSidebar";
 import UserDashboard from "@/components/UserDashboard";
 import AdminTickets from "@/components/AdminTickets";
@@ -182,6 +182,7 @@ const Admin = () => {
   const [deletingUser, setDeletingUser] = useState(false);
   const [activeSection, setActiveSection] = useState<"create" | "edit" | "forms" | "tickets" | "contacts" | "docs">("tickets");
   const [selectedDoc, setSelectedDoc] = useState<{ id: string; title: string; description: string; path: string } | null>(null);
+  const [docTheme, setDocTheme] = useState<"light" | "dark">("light");
 
   const [adminActionSelectedRequest, setAdminActionSelectedRequest] = useState<DeleteRequest | null>(null);
   const [adminActionType, setAdminActionType] = useState<"approve" | "reject" | null>(null);
@@ -1917,6 +1918,18 @@ const Admin = () => {
                           {selectedDoc.title}
                         </h2>
                         <div className="flex items-center gap-3">
+                          <button
+                            type="button"
+                            onClick={() => setDocTheme(prev => prev === "light" ? "dark" : "light")}
+                            className="rounded-lg border border-border bg-background p-2 text-sm font-medium transition hover:bg-secondary/80 flex items-center gap-2"
+                            title={docTheme === "light" ? "Switch to Dark Mode" : "Switch to Light Mode"}
+                          >
+                            {docTheme === "light" ? (
+                              <Moon className="h-4 w-4" />
+                            ) : (
+                              <Sun className="h-4 w-4" />
+                            )}
+                          </button>
                           <a
                             href={selectedDoc.path}
                             download={selectedDoc.id}
@@ -1934,7 +1947,7 @@ const Admin = () => {
                           </button>
                         </div>
                       </div>
-                      <div className="flex-1 overflow-hidden relative bg-background">
+                      <div className={`flex-1 overflow-hidden relative bg-background transition-all duration-300 ${docTheme === 'dark' ? 'invert hue-rotate-180 bg-[#1a1a1a]' : ''}`}>
                         <iframe
                           src={selectedDoc.path}
                           className="absolute inset-0 w-full h-full border-none"
