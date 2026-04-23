@@ -4957,5 +4957,314 @@ vlc rtsp://192.168.1.12:8558/ds-test</pre>
   Light theme applied; terminal/code/arch blocks retain dark backgrounds with colored syntax highlighting.
 </div>
 
+
+<!-- Firebase SDK (compat version for easy CDN use in plain HTML) -->
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+
+<script>
+  // ── Firebase init ─────────────────────────────────────────────────────────
+  const firebaseConfig = {
+    apiKey:            "AIzaSyCIxcZYt7JwY6DUJ50DGxOH7S5_0xT2SVI",
+    authDomain:        "trinetra-demo.firebaseapp.com",
+    projectId:         "trinetra-demo",
+    storageBucket:     "trinetra-demo.firebasestorage.app",
+    messagingSenderId: "772686068265",
+    appId:             "1:772686068265:web:fe5790b53f3e8a70a2ba38"
+  };
+
+  if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+  const db = firebase.firestore();
+
+  // All notes for this page live under this single Firestore document.
+  // Each note is a field keyed by its numeric ID.
+  const DOC_REF = db.collection('docNotes').doc('jetson_guide');
+
+  // ── State ─────────────────────────────────────────────────────────────────
+  // notes map: { [id]: noteObj }
+  let notesMap = {};   // local mirror of Firestore data
+  let activeElements = {}; // { [id]: noteEl } – DOM elements currently rendered
+
+  // ── One-time migration: localStorage → Firestore ──────────────────────────
+  // Runs once per browser. If the user had notes saved locally before the
+  // Firebase upgrade, we upload them to Firestore and clear localStorage so
+  // they don't disappear.
+  (function migrateLocalNotes() {
+    const LS_KEY = 'trinetra_drag_notes';
+    const MIGRATED_KEY = 'trinetra_notes_migrated';
+    if (localStorage.getItem(MIGRATED_KEY)) return; // already migrated
+
+    try {
+      const raw = localStorage.getItem(LS_KEY);
+      if (!raw) { localStorage.setItem(MIGRATED_KEY, '1'); return; }
+
+      const oldNotes = JSON.parse(raw);
+      if (!Array.isArray(oldNotes) || oldNotes.length === 0) {
+        localStorage.setItem(MIGRATED_KEY, '1');
+        return;
+      }
+
+      // Build the Firestore merge payload
+      const payload = {};
+      oldNotes.forEach(n => {
+        if (!n || !n.id) return;
+        payload[n.id] = {
+          id:        n.id,
+          text:      n.text      || '',
+          x:         n.x         || 100,
+          y:         n.y         || 100,
+          minimized: n.minimized || false,
+        };
+      });
+
+      DOC_REF.set(payload, { merge: true })
+        .then(() => {
+          localStorage.removeItem(LS_KEY);
+          localStorage.setItem(MIGRATED_KEY, '1');
+          console.log(`[Trinetra] Migrated ${oldNotes.length} note(s) from localStorage → Firestore ✅`);
+        })
+        .catch(err => {
+          console.warn('[Trinetra] Note migration failed (will retry next load):', err);
+        });
+    } catch (e) {
+      console.warn('[Trinetra] Migration parse error:', e);
+      localStorage.setItem(MIGRATED_KEY, '1'); // don't retry a broken payload
+    }
+  })();
+
+  // ── Helpers ───────────────────────────────────────────────────────────────
+  const saveNote = (noteObj) => {
+    const cleanObj = {
+      id:        noteObj.id,
+      text:      noteObj.text      || '',
+      x:         noteObj.x         || 100,
+      y:         noteObj.y         || 100,
+      minimized: noteObj.minimized || false,
+    };
+    DOC_REF.set({ [noteObj.id]: cleanObj }, { merge: true }).catch(console.error);
+  };
+
+  const deleteNote = (id) => {
+    DOC_REF.update({ [id]: firebase.firestore.FieldValue.delete() }).catch(console.error);
+  };
+
+  // ── DOM renderer for a single note ───────────────────────────────────────
+  const createNoteDOM = (noteObj) => {
+    // Remove existing DOM element for this note if present
+    if (activeElements[noteObj.id]) {
+      const old = activeElements[noteObj.id];
+      if (old.cleanup) old.cleanup();
+      old.remove();
+      delete activeElements[noteObj.id];
+    }
+
+    const noteEl = document.createElement('div');
+    noteEl.className = 'drag-note-el';
+    noteEl.dataset.noteId = noteObj.id;
+    document.body.appendChild(noteEl);
+    activeElements[noteObj.id] = noteEl;
+
+    const renderState = () => {
+      noteEl.innerHTML = '';
+      if (noteObj.minimized) {
+        // ── ICON STATE ────────────────────────────────────────────────────
+        noteEl.style.cssText = `position: absolute; left: ${noteObj.x}px; top: ${noteObj.y}px; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; background: #fbbf24; border: 2px solid #f59e0b; border-radius: 50%; box-shadow: 2px 4px 10px rgba(0,0,0,0.2); cursor: grab; z-index: 9998; font-size: 18px; user-select: none; transition: transform 0.1s;`;
+        noteEl.innerHTML = '📝';
+        noteEl.title = 'Click to open, drag to move';
+      } else {
+        // ── OPEN STATE ─────────────────────────────────────────────────────
+        noteEl.style.cssText = `position: absolute; left: ${noteObj.x}px; top: ${noteObj.y}px; width: 240px; background: #fffbe6; border: 1px solid #f59e0b; box-shadow: 2px 8px 20px rgba(0,0,0,0.2); border-radius: 8px; z-index: 9999; display: flex; flex-direction: column; overflow: hidden;`;
+
+        const header = document.createElement('div');
+        header.className = 'note-header-drag';
+        header.title = 'Drag to move';
+        header.style.cssText = 'background: #fef3c7; padding: 8px 12px; cursor: grab; font-size: 13px; font-weight: bold; color: #b45309; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #fde68a; user-select: none;';
+        header.innerHTML = '<span>📌 Note</span>';
+
+        const delBtn = document.createElement('span');
+        delBtn.innerHTML = '🗑️';
+        delBtn.title = 'Delete note';
+        delBtn.style.cssText = 'cursor: pointer; font-size: 13px; padding: 2px; transition: transform 0.2s;';
+        delBtn.onclick = (e) => {
+          e.stopPropagation();
+          // Remove from Firestore — the real-time listener will remove the DOM
+          deleteNote(noteObj.id);
+        };
+        header.appendChild(delBtn);
+
+        const textarea = document.createElement('textarea');
+        textarea.value = noteObj.text || '';
+        textarea.placeholder = 'Type your note...';
+        textarea.style.cssText = 'width: 100%; height: 120px; border: none; background: transparent; resize: vertical; padding: 10px 12px; font-size: 14px; line-height: 1.5; font-family: inherit; color: #333; outline: none; box-sizing: border-box;';
+
+        let saveTimer = null;
+        textarea.oninput = () => {
+          noteObj.text = textarea.value;
+          clearTimeout(saveTimer);
+          saveTimer = setTimeout(() => saveNote(noteObj), 800); // debounce 800ms
+        };
+
+        const footer = document.createElement('div');
+        footer.style.cssText = 'padding: 8px 12px; background: #fffbe6; display: flex; justify-content: space-between; align-items: center;';
+
+        // Author badge (stored as anonymous "User")
+        const authorBadge = document.createElement('span');
+        authorBadge.style.cssText = 'font-size: 11px; color: #92400e; background: #fde68a; border-radius: 12px; padding: 2px 8px;';
+        authorBadge.textContent = '👤 Shared';
+        footer.appendChild(authorBadge);
+
+        const saveBtn = document.createElement('button');
+        saveBtn.innerHTML = 'Save & Hide';
+        saveBtn.style.cssText = 'background: #f59e0b; color: white; border: none; padding: 6px 14px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; box-shadow: 0 2px 4px rgba(245,158,11,0.3);';
+        saveBtn.onclick = (e) => {
+          e.stopPropagation();
+          noteObj.minimized = true;
+          saveNote(noteObj);
+          renderState();
+        };
+        footer.appendChild(saveBtn);
+
+        noteEl.appendChild(header);
+        noteEl.appendChild(textarea);
+        noteEl.appendChild(footer);
+
+        if (noteObj.isNew) setTimeout(() => textarea.focus(), 10);
+      }
+    };
+
+    renderState();
+
+    // ── Drag logic ──────────────────────────────────────────────────────────
+    let isDragging = false, hasMoved = false;
+    let startX, startY, initialLeft, initialTop;
+
+    const onMouseDown = (e) => {
+      if (!noteObj.minimized && !e.target.closest('.note-header-drag')) return;
+      isDragging = true;
+      hasMoved = false;
+      if (noteObj.minimized) {
+        noteEl.style.cursor = 'grabbing';
+        noteEl.style.transform = 'scale(1.1)';
+      } else {
+        noteEl.querySelector('.note-header-drag').style.cursor = 'grabbing';
+      }
+      startX = e.clientX; startY = e.clientY;
+      initialLeft = parseInt(noteEl.style.left, 10);
+      initialTop  = parseInt(noteEl.style.top,  10);
+      document.querySelectorAll('.drag-note-el').forEach(el => el.style.zIndex = 9998);
+      noteEl.style.zIndex = 10000;
+      e.preventDefault();
+    };
+
+    noteEl.addEventListener('mousedown', onMouseDown);
+
+    const onMouseMove = (e) => {
+      if (!isDragging) return;
+      hasMoved = true;
+      noteEl.style.left = (initialLeft + e.clientX - startX) + 'px';
+      noteEl.style.top  = (initialTop  + e.clientY - startY) + 'px';
+    };
+
+    const onMouseUp = () => {
+      if (!isDragging) return;
+      isDragging = false;
+      noteObj.x = parseInt(noteEl.style.left, 10);
+      noteObj.y = parseInt(noteEl.style.top,  10);
+      saveNote(noteObj);
+
+      if (noteObj.minimized) {
+        noteEl.style.cursor = 'grab';
+        noteEl.style.transform = 'scale(1)';
+      } else {
+        const hdr = noteEl.querySelector('.note-header-drag');
+        if (hdr) hdr.style.cursor = 'grab';
+      }
+
+      if (!hasMoved && noteObj.minimized) {
+        noteObj.minimized = false;
+        noteObj.isNew = true;
+        saveNote(noteObj);
+        renderState();
+      }
+    };
+
+    document.addEventListener('mousemove', onMouseMove);
+    document.addEventListener('mouseup', onMouseUp);
+
+    noteEl.cleanup = () => {
+      document.removeEventListener('mousemove', onMouseMove);
+      document.removeEventListener('mouseup', onMouseUp);
+    };
+
+    if (noteObj.isNew) noteObj.isNew = false;
+  };
+
+  // ── Real-time listener ───────────────────────────────────────────────────
+  document.addEventListener('DOMContentLoaded', () => {
+    // Instruction toast
+    const toast = document.createElement('div');
+    toast.innerHTML = '💡 Double-click anywhere to add a shared note (visible to everyone)';
+    toast.style.cssText = 'position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.85); color: white; padding: 10px 22px; border-radius: 20px; font-size: 13px; z-index: 10000; pointer-events: none; opacity: 1; transition: opacity 1s; white-space: nowrap;';
+    document.body.appendChild(toast);
+    setTimeout(() => { toast.style.opacity = '0'; setTimeout(() => toast.remove(), 1000); }, 5000);
+
+    // Subscribe to Firestore changes
+    DOC_REF.onSnapshot((snap) => {
+      if (!snap.exists) {
+        // Document doesn't exist yet — remove all rendered notes
+        Object.keys(activeElements).forEach(id => {
+          const el = activeElements[id];
+          if (el.cleanup) el.cleanup();
+          el.remove();
+        });
+        activeElements = {};
+        notesMap = {};
+        return;
+      }
+
+      const data = snap.data() || {};
+
+      // Detect deletions
+      Object.keys(notesMap).forEach(id => {
+        if (!data[id]) {
+          const el = activeElements[id];
+          if (el) { if (el.cleanup) el.cleanup(); el.remove(); }
+          delete activeElements[id];
+          delete notesMap[id];
+        }
+      });
+
+      // Detect additions / updates
+      Object.keys(data).forEach(id => {
+        const incoming = data[id];
+        notesMap[id] = incoming;
+        // Only re-render if the element doesn't exist yet, or position/text changed for remote users
+        createNoteDOM({ ...incoming });
+      });
+    }, (err) => {
+      console.warn('Firestore note sync error:', err);
+    });
+
+    // ── Double-click to create a new note ─────────────────────────────────
+    document.addEventListener('dblclick', (e) => {
+      if (e.target.closest('.drag-note-el') || ['BUTTON', 'A', 'INPUT', 'TEXTAREA', 'CODE', 'PRE'].includes(e.target.tagName)) return;
+      const selection = window.getSelection();
+      if (selection) selection.removeAllRanges();
+
+      const newNote = {
+        id:        Date.now(),
+        text:      '',
+        x:         Math.max(10, Math.min(e.pageX + 10, document.documentElement.scrollWidth - 250)),
+        y:         Math.max(10, Math.min(e.pageY - 10, document.documentElement.scrollHeight - 130)),
+        minimized: false,
+        isNew:     true,
+      };
+
+      // Persist to Firestore first; listener will re-render it
+      saveNote(newNote);
+    });
+  });
+</script>
+
 </body>
 </html>
