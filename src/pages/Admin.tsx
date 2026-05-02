@@ -111,23 +111,38 @@ const createAuthEmail = (value: string) => {
 // Auto-detect documents from public/docs folder using Vite's glob feature
 const docModules = import.meta.glob('/public/docs/*.{html,pdf,txt,md}');
 
+// Metadata overrides for known documents — add entries here for custom titles/descriptions.
+// Any file in public/docs/ not listed here will fall back to an auto-generated title.
+const DOC_METADATA: Record<string, { title: string; description: string }> = {
+  'Jetson_detailed_guide.html': {
+    title: '1. Jetson Setup — Detailed Guide',
+    description: 'Comprehensive step-by-step guide covering Jetson hardware setup, JetPack installation, YOLO model deployment, and DeepStream pipeline configuration.',
+  },
+  'working_initial_jetson_configs_code.html': {
+    title: '2. Working jetson configs for reference',
+    description: 'Minimal, tested reference for deploying YOLO26-S with TensorRT and RTSP streaming on Jetson. Includes all working config files and shell commands.',
+  },
+};
+
 const ADMIN_DOCS = Object.keys(docModules).map((filePath) => {
   const filename = filePath.split('/').pop() || '';
 
-  // Process the filename into a clean, readable title
-  const title = filename
+  // Use metadata override if available, otherwise auto-generate title
+  const meta = DOC_METADATA[filename];
+  const title = meta?.title ?? filename
     .replace(/\.(html|pdf|txt|md)$/i, '')
     .split(/[-_]+/)
     .map(word => word.charAt(0).toUpperCase() + word.slice(1))
     .join(' ');
+  const description = meta?.description ?? `Reference document: ${filename}`;
 
-  // Assets in the public folder are served at the root level ("/") 
+  // Assets in the public folder are served at the root level ("/")
   const servePath = filePath.replace('/public', '');
 
   return {
     id: filename,
-    title: title,
-    description: `Auto-detected file: ${filename}`,
+    title,
+    description,
     path: servePath,
   };
 });
@@ -507,7 +522,7 @@ const Admin = () => {
           id: doc.id,
           ...doc.data()
         } as DeleteRequest));
-        
+
         if (!isAdmin) {
           docs.sort((a, b) => {
             const timeA = a.createdAt?.toMillis ? a.createdAt.toMillis() : 0;
@@ -515,7 +530,7 @@ const Admin = () => {
             return timeB - timeA;
           });
         }
-        
+
         setDeleteRequests(docs);
       },
       (error) => {
@@ -803,7 +818,7 @@ const Admin = () => {
   const confirmAdminAction = async () => {
     if (!adminActionSelectedRequest || !adminActionType) return;
     const request = adminActionSelectedRequest;
-    
+
     try {
       if (adminActionType === 'approve') {
         const targetUser = users.find(u => u.id === request.targetUserId);
@@ -1560,11 +1575,10 @@ const Admin = () => {
                                   toast.error("Failed to cancel request: " + (error.message || "Unknown error"));
                                 }
                               }}
-                              className={`inline-flex items-center justify-center gap-2 rounded-lg border px-4 py-3 font-semibold transition-all ${
-                                existingUserDeleteRequest.status === 'pending'
-                                  ? 'border-amber-500/30 bg-amber-500/10 text-amber-600 hover:bg-amber-500/20'
-                                  : 'border-destructive/30 bg-destructive/10 text-destructive hover:bg-destructive/20'
-                              }`}
+                              className={`inline-flex items-center justify-center gap-2 rounded-lg border px-4 py-3 font-semibold transition-all ${existingUserDeleteRequest.status === 'pending'
+                                ? 'border-amber-500/30 bg-amber-500/10 text-amber-600 hover:bg-amber-500/20'
+                                : 'border-destructive/30 bg-destructive/10 text-destructive hover:bg-destructive/20'
+                                }`}
                             >
                               <XCircle className="h-4 w-4" />
                               {existingUserDeleteRequest.status === 'pending' ? 'Cancel Pending Request' : 'Clear Rejected Request'}
@@ -2065,8 +2079,8 @@ const Admin = () => {
                   {adminActionType === 'approve' ? 'Approve Deletion' : 'Reject Deletion'}
                 </AlertDialogTitle>
                 <AlertDialogDescription>
-                  {adminActionType === 'approve' 
-                    ? `Are you sure you want to approve the deletion for ${adminActionSelectedRequest?.targetUsername}? This action cannot be undone.` 
+                  {adminActionType === 'approve'
+                    ? `Are you sure you want to approve the deletion for ${adminActionSelectedRequest?.targetUsername}? This action cannot be undone.`
                     : `Are you sure you want to reject the deletion request for ${adminActionSelectedRequest?.targetUsername}?`}
                 </AlertDialogDescription>
               </AlertDialogHeader>
