@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Trinetra Image Monitor — Documentation</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: #0f1117;
+      color: #e2e8f0;
+      line-height: 1.7;
+    }
+
+    header {
+      background: linear-gradient(135deg, #1a1f2e 0%, #0f1117 100%);
+      border-bottom: 1px solid #2d3748;
+      padding: 48px 24px 40px;
+      text-align: center;
+    }
+
+    header h1 {
+      font-size: 2.4rem;
+      font-weight: 700;
+      color: #fff;
+      letter-spacing: -0.5px;
+    }
+
+    header p {
+      margin-top: 10px;
+      color: #94a3b8;
+      font-size: 1.05rem;
+    }
+
+    .badges {
+      margin-top: 18px;
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .badge {
+      background: #1e2535;
+      border: 1px solid #2d3748;
+      border-radius: 20px;
+      padding: 4px 14px;
+      font-size: 0.78rem;
+      color: #94a3b8;
+    }
+
+    .badge.green  { border-color: #22c55e; color: #22c55e; }
+    .badge.blue   { border-color: #3b82f6; color: #3b82f6; }
+    .badge.yellow { border-color: #eab308; color: #eab308; }
+
+    /* ── DOWNLOAD BANNER ── */
+    .download-banner {
+      background: linear-gradient(135deg, #1e3a5f 0%, #1a2744 100%);
+      border: 1px solid #3b82f6;
+      border-radius: 12px;
+      padding: 32px;
+      margin: 40px auto;
+      max-width: 860px;
+      text-align: center;
+    }
+
+    .download-banner h2 {
+      font-size: 1.4rem;
+      color: #fff;
+      margin-bottom: 8px;
+    }
+
+    .download-banner p {
+      color: #93c5fd;
+      margin-bottom: 24px;
+      font-size: 0.95rem;
+    }
+
+    .btn-download {
+      display: inline-block;
+      background: #3b82f6;
+      color: #fff;
+      font-weight: 600;
+      font-size: 1rem;
+      padding: 12px 32px;
+      border-radius: 8px;
+      text-decoration: none;
+      transition: background 0.2s;
+    }
+
+    .btn-download:hover { background: #2563eb; }
+
+    .update-paths {
+      margin-top: 24px;
+      background: #0f1a2e;
+      border: 1px solid #2d3748;
+      border-radius: 8px;
+      padding: 20px 24px;
+      text-align: left;
+    }
+
+    .update-paths h3 {
+      color: #facc15;
+      font-size: 0.95rem;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .update-paths table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.88rem;
+    }
+
+    .update-paths td {
+      padding: 6px 10px;
+      border-bottom: 1px solid #1e2535;
+      vertical-align: top;
+    }
+
+    .update-paths td:first-child {
+      font-family: monospace;
+      color: #f472b6;
+      white-space: nowrap;
+      width: 30%;
+    }
+
+    .update-paths td:last-child { color: #94a3b8; }
+
+    /* ── MAIN CONTENT ── */
+    .container {
+      max-width: 860px;
+      margin: 0 auto;
+      padding: 0 24px 80px;
+    }
+
+    section { margin-top: 48px; }
+
+    section h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      color: #fff;
+      padding-bottom: 10px;
+      border-bottom: 1px solid #2d3748;
+      margin-bottom: 20px;
+    }
+
+    section h3 {
+      font-size: 1rem;
+      font-weight: 600;
+      color: #cbd5e1;
+      margin: 20px 0 8px;
+    }
+
+    p { color: #94a3b8; margin-bottom: 12px; }
+
+    pre {
+      background: #1a1f2e;
+      border: 1px solid #2d3748;
+      border-radius: 8px;
+      padding: 18px 20px;
+      overflow-x: auto;
+      margin: 12px 0;
+    }
+
+    code {
+      font-family: "JetBrains Mono", "Fira Code", monospace;
+      font-size: 0.85rem;
+      color: #e2e8f0;
+    }
+
+    p code, li code {
+      background: #1e2535;
+      border: 1px solid #2d3748;
+      border-radius: 4px;
+      padding: 1px 6px;
+      font-size: 0.83rem;
+      color: #f472b6;
+    }
+
+    ul, ol { padding-left: 20px; color: #94a3b8; }
+    li { margin-bottom: 6px; }
+
+    .step {
+      display: flex;
+      gap: 16px;
+      align-items: flex-start;
+      margin-bottom: 20px;
+    }
+
+    .step-num {
+      background: #3b82f6;
+      color: #fff;
+      font-weight: 700;
+      font-size: 0.8rem;
+      min-width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-top: 2px;
+      flex-shrink: 0;
+    }
+
+    .step-body { flex: 1; }
+    .step-body p { margin-bottom: 6px; }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.88rem;
+      margin: 12px 0;
+    }
+
+    th {
+      background: #1e2535;
+      color: #94a3b8;
+      font-weight: 600;
+      text-align: left;
+      padding: 10px 14px;
+      border-bottom: 1px solid #2d3748;
+    }
+
+    td {
+      padding: 9px 14px;
+      border-bottom: 1px solid #1e2535;
+      color: #94a3b8;
+    }
+
+    td:first-child { font-family: monospace; color: #f472b6; }
+
+    .tag {
+      display: inline-block;
+      border-radius: 4px;
+      padding: 2px 8px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+
+    .tag.free { background: #14532d; color: #4ade80; }
+    .tag.paid { background: #7f1d1d; color: #f87171; }
+
+    .alert {
+      border-radius: 8px;
+      padding: 14px 18px;
+      margin: 16px 0;
+      font-size: 0.9rem;
+    }
+
+    .alert.info  { background: #0f2744; border-left: 3px solid #3b82f6; color: #93c5fd; }
+    .alert.warn  { background: #2d1f00; border-left: 3px solid #f59e0b; color: #fcd34d; }
+
+    footer {
+      text-align: center;
+      padding: 32px;
+      color: #4b5563;
+      font-size: 0.82rem;
+      border-top: 1px solid #1e2535;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>Trinetra Image Monitor</h1>
+</header>
+
+<div class="container">
+
+  <!-- DOWNLOAD BANNER -->
+  <div class="download-banner">
+    <h2>⬇ Step 1 — Download &amp; Update Paths</h2>
+    <p>Download the zip, extract it, open <code>monitor.py</code> and update the paths and credentials before copying to Jetson.</p>
+    <a class="btn-download" href="trinetra_monitor.zip" download>Download trinetra_monitor.zip</a>
+
+    <div class="update-paths">
+      <h3>⚠ Update these values in monitor.py before running</h3>
+      <table>
+        <tr>
+          <td>WATCH_FOLDER</td>
+          <td>Absolute path to the folder you want to monitor on Jetson</td>
+        </tr>
+        <tr>
+          <td>DB_PATH</td>
+          <td>Absolute path where SQLite queue file will be stored</td>
+        </tr>
+        <tr>
+          <td>LOG_PATH</td>
+          <td>Absolute path for the log file</td>
+        </tr>
+        <tr>
+          <td>TG_BOT_TOKEN</td>
+          <td>Your Telegram bot token from @BotFather</td>
+        </tr>
+        <tr>
+          <td>TG_CHAT_ID</td>
+          <td>Your Telegram chat ID (see Telegram setup below)</td>
+        </tr>
+        <tr>
+          <td>SMTP_USER</td>
+          <td>Your Gmail address</td>
+        </tr>
+        <tr>
+          <td>SMTP_PASS</td>
+          <td>Gmail App Password (16 chars, not your login password)</td>
+        </tr>
+        <tr>
+          <td>EMAIL_TO</td>
+          <td>Recipient email address</td>
+        </tr>
+      </table>
+    </div>
+  </div>
+
+  <!-- SETUP -->
+  <section>
+    <h2>Setup on Jetson</h2>
+
+    <div class="step">
+      <div class="step-num">1</div>
+      <div class="step-body">
+        <p>Install dependencies</p>
+        <pre><code>pip3 install requests watchdog</code></pre>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num">2</div>
+      <div class="step-body">
+        <p>Copy the extracted <code>script_monitor</code> folder to Jetson</p>
+        <pre><code>scp -r script_monitor/ nvidia@&lt;JETSON_IP&gt;:/home/nvidia/</code></pre>
+        <p>The <code>db/</code> and <code>logs/</code> folders are already included — no mkdir needed.</p>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num">3</div>
+      <div class="step-body">
+        <p>Install the systemd service (SSH into Jetson first)</p>
+        <pre><code>sudo cp /home/nvidia/script_monitor/monitor.service /etc/systemd/system/trinetra-monitor.service
+sudo systemctl daemon-reload
+sudo systemctl enable trinetra-monitor
+sudo systemctl start trinetra-monitor</code></pre>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num">4</div>
+      <div class="step-body">
+        <p>Verify it is running</p>
+        <pre><code>sudo systemctl status trinetra-monitor</code></pre>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num">5</div>
+      <div class="step-body">
+        <p>Test — drop an image into the watch folder</p>
+        <pre><code>cp any_image.jpg /home/nvidia/detected_frames/</code></pre>
+        <p>You should receive a Telegram message within seconds.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- SERVICE MANAGEMENT -->
+  <section>
+    <h2>Service Management</h2>
+    <pre><code># Check status
+sudo systemctl status trinetra-monitor
+
+# Stop
+sudo systemctl stop trinetra-monitor
+
+# Restart
+sudo systemctl restart trinetra-monitor
+
+# Live logs
+journalctl -u trinetra-monitor -f</code></pre>
+  </section>
+
+  <!-- CONFIG REFERENCE -->
+  <section>
+    <h2>Config Reference</h2>
+    <table>
+      <tr><th>Variable</th><th>Description</th></tr>
+      <tr><td>WATCH_FOLDER</td><td>Folder to monitor for new images</td></tr>
+      <tr><td>ENABLE_TELEGRAM</td><td>Toggle Telegram notifications</td></tr>
+      <tr><td>ENABLE_EMAIL</td><td>Toggle Email notifications</td></tr>
+      <tr><td>ENABLE_WHATSAPP</td><td>Toggle WhatsApp notifications</td></tr>
+      <tr><td>TG_BOT_TOKEN</td><td>Telegram bot token from @BotFather</td></tr>
+      <tr><td>TG_CHAT_ID</td><td>Your Telegram user/chat ID</td></tr>
+      <tr><td>SMTP_USER</td><td>Gmail address</td></tr>
+      <tr><td>SMTP_PASS</td><td>Gmail App Password (16 chars)</td></tr>
+      <tr><td>EMAIL_TO</td><td>Recipient email address</td></tr>
+      <tr><td>MAX_ATTEMPTS</td><td>Retry limit before job is parked in dead_letter table</td></tr>
+      <tr><td>RETRY_INTERVAL_SEC</td><td>Seconds between offline retry sweeps</td></tr>
+      <tr><td>DEDUP_WINDOW_SEC</td><td>Window (seconds) to suppress duplicate events for same file</td></tr>
+      <tr><td>SETTLE_SEC</td><td>Interval to check file size stability before enqueuing</td></tr>
+    </table>
+  </section>
+
+  <!-- FILE STRUCTURE -->
+  <section>
+    <h2>File Structure on Jetson</h2>
+    <pre><code>/home/nvidia/script_monitor/
+├── monitor.py          # main script
+├── monitor.service     # systemd service file
+├── README.md           # quick reference
+├── db/
+│   └── queue.db        # SQLite queue (auto-created on first run)
+└── logs/
+    └── notifier.log    # log file (auto-created on first run)</code></pre>
+  </section>
+
+</div>
+
+<footer>
+  Trinetra Image Monitor — built for NVIDIA Jetson &nbsp;|&nbsp; Telegram &amp; Email are free to use
+</footer>
+
+</body>
+</html>
