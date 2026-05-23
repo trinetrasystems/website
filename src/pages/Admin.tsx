@@ -22,9 +22,11 @@ import {
   setDoc,
   type Timestamp,
   updateDoc,
+  addDoc,
+  where,
 } from "firebase/firestore";
 import { adminAuth, auth, db } from "@/lib/firebase";
-import { Shield, LogIn, LogOut, RefreshCw, ArrowLeft, CheckCircle, Trash2, Eye, EyeOff, Key, Copy, Users, Phone, Mail, Search } from "lucide-react";
+import { Shield, LogIn, LogOut, RefreshCw, ArrowLeft, CheckCircle, Trash2, Eye, EyeOff, Key, Copy, Users, Phone, Mail, Search, FileText, Download, XCircle, MessageSquare, Sun, Moon } from "lucide-react";
 import AppSidebar from "@/components/AppSidebar";
 import UserDashboard from "@/components/UserDashboard";
 import AdminTickets from "@/components/AdminTickets";
@@ -59,7 +61,9 @@ type UserProfile = {
   authEmail: string;
   contactEmail?: string;
   contactMobile?: string;
-  role: "admin" | "user";
+  role: "admin" | "member" | "user";
+  isMember?: boolean;
+  permissions?: string[];
   ipLink: string;
   createdAtLabel: string;
   updatedAtLabel: string;
@@ -70,6 +74,18 @@ type PasswordRecord = {
   username: string;
   password: string;
   updatedAtLabel: string;
+};
+
+type DeleteRequest = {
+  id: string;
+  targetUserId: string;
+  targetUsername: string;
+  requestedByUid: string;
+  requestedByUsername: string;
+  reason: string;
+  status: "pending" | "approved" | "rejected";
+  createdAt: any;
+  adminMessage?: string;
 };
 
 type FirestoreTimestamp = Timestamp & {
@@ -92,13 +108,61 @@ const createAuthEmail = (value: string) => {
   const safeUsername = normalizedUsername.replace(/[^a-z0-9._-]/g, "-");
   return `${safeUsername || "user"}@trinetra.local`;
 };
+// Auto-detect documents from public/docs folder using Vite's glob feature
+const docModules = import.meta.glob('/public/docs/*.{html,pdf,txt,md}');
 
+// Metadata overrides for known documents — add entries here for custom titles/descriptions.
+// Any file in public/docs/ not listed here will fall back to an auto-generated title.
+const DOC_METADATA: Record<string, { title: string; description: string }> = {
+  'Jetson_detailed_guide.html': {
+    title: '1. Jetson Setup — Detailed Guide',
+    description: 'Comprehensive step-by-step guide covering Jetson hardware setup, JetPack installation, YOLO model deployment, and DeepStream pipeline configuration.',
+  },
+  'working_initial_jetson_configs_code.html': {
+    title: '2. Working jetson configs for reference',
+    description: 'Minimal, tested reference for deploying YOLO26-S with TensorRT and RTSP streaming on Jetson. Includes all working config files and shell commands.',
+  },
+};
+
+const ADMIN_DOCS = Object.keys(docModules).map((filePath) => {
+  const filename = filePath.split('/').pop() || '';
+
+  // Use metadata override if available, otherwise auto-generate title
+  const meta = DOC_METADATA[filename];
+  const title = meta?.title ?? filename
+    .replace(/\.(html|pdf|txt|md)$/i, '')
+    .split(/[-_]+/)
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ');
+  const description = meta?.description ?? `Reference document: ${filename}`;
+
+  // Assets in the public folder are served at the root level ("/")
+  const servePath = filePath.replace('/public', '');
+
+  return {
+    id: filename,
+    title,
+    description,
+    path: servePath,
+  };
+});
+
+
+const AVAILABLE_TABS = [
+  { id: "create", label: "Create User" },
+  { id: "edit", label: "Edit User" },
+  { id: "forms", label: "Submitted Forms" },
+  { id: "contacts", label: "Users & Passwords" },
+  { id: "tickets", label: "Support Tickets" },
+  { id: "docs", label: "Documentation" }
+];
 const Admin = () => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [checkingAdmin, setCheckingAdmin] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
-  const [userRole, setUserRole] = useState<"admin" | "user" | null>(null);
+  const [userRole, setUserRole] = useState<"admin" | "member" | "user" | null>(null);
+  const [loggedInUserPermissions, setLoggedInUserPermissions] = useState<string[]>([]);
   const [ipLink, setIpLink] = useState("");
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -108,22 +172,36 @@ const Admin = () => {
   const [newUserPassword, setNewUserPassword] = useState("");
   const [newUserContactEmail, setNewUserContactEmail] = useState("");
   const [newUserContactMobile, setNewUserContactMobile] = useState("");
-  const [newUserRole, setNewUserRole] = useState<"admin" | "user">("user");
+  const [newUserRole, setNewUserRole] = useState<"admin" | "member" | "user">("user");
+  const [newUserPermissions, setNewUserPermissions] = useState<string[]>([]);
   const [newUserIpLink, setNewUserIpLink] = useState("");
   const [creatingUser, setCreatingUser] = useState(false);
+
+  const [deleteRequests, setDeleteRequests] = useState<DeleteRequest[]>([]);
+  const [deleteReason, setDeleteReason] = useState("");
+  const [isDeleteReasonModalOpen, setIsDeleteReasonModalOpen] = useState(false);
+  const [requestingDelete, setRequestingDelete] = useState(false);
 
   const [users, setUsers] = useState<UserProfile[]>([]);
   const [userSearch, setUserSearch] = useState("");
   const [contactSearch, setContactSearch] = useState("");
+  const [activeTicketCount, setActiveTicketCount] = useState(0);
   const [selectedUserId, setSelectedUserId] = useState("");
   const [selectedUserUsername, setSelectedUserUsername] = useState("");
   const [selectedUserContactEmail, setSelectedUserContactEmail] = useState("");
   const [selectedUserContactMobile, setSelectedUserContactMobile] = useState("");
-  const [selectedUserRole, setSelectedUserRole] = useState<"admin" | "user">("user");
+  const [selectedUserRole, setSelectedUserRole] = useState<"admin" | "member" | "user">("user");
+  const [selectedUserPermissions, setSelectedUserPermissions] = useState<string[]>([]);
   const [selectedUserIpLink, setSelectedUserIpLink] = useState("");
   const [updatingUser, setUpdatingUser] = useState(false);
   const [deletingUser, setDeletingUser] = useState(false);
-  const [activeSection, setActiveSection] = useState<"create" | "edit" | "forms" | "tickets" | "contacts">("create");
+  const [activeSection, setActiveSection] = useState<"create" | "edit" | "forms" | "tickets" | "contacts" | "docs">("tickets");
+  const [selectedDoc, setSelectedDoc] = useState<{ id: string; title: string; description: string; path: string } | null>(null);
+  const [docTheme, setDocTheme] = useState<"light" | "dark">("light");
+
+  const [adminActionSelectedRequest, setAdminActionSelectedRequest] = useState<DeleteRequest | null>(null);
+  const [adminActionType, setAdminActionType] = useState<"approve" | "reject" | null>(null);
+  const [adminActionMessage, setAdminActionMessage] = useState("");
 
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -134,6 +212,12 @@ const Admin = () => {
   const [passwordRecords, setPasswordRecords] = useState<PasswordRecord[]>([]);
   const [passwordSearch, setPasswordSearch] = useState("");
   const [revealedPasswords, setRevealedPasswords] = useState<Set<string>>(new Set());
+
+  const hasPermission = (tabId: string) => {
+    if (userRole === "admin") return true;
+    if (userRole === "member") return loggedInUserPermissions.includes(tabId);
+    return false;
+  };
 
   const handlePasswordChange = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -196,22 +280,22 @@ const Admin = () => {
 
   const [submissions, setSubmissions] = useState<Submission[]>([]);
 
-  const canShowDashboard = useMemo(() => Boolean(user && isAdmin), [user, isAdmin]);
+  const canShowDashboard = useMemo(() => Boolean(user && (isAdmin || userRole === "member")), [user, isAdmin, userRole]);
   const selectedUser = users.find((profile) => profile.id === selectedUserId) || null;
-  const pageTitle = isAdmin ? "Admin Console" : userRole === "user" ? "User Dashboard" : "Access Portal";
-  const pageSubtitle = isAdmin
+  const pageTitle = (isAdmin || userRole === "member") ? "Admin Console" : userRole === "user" ? "User Dashboard" : "Access Portal";
+  const pageSubtitle = (isAdmin || userRole === "member")
     ? "User Management"
     : userRole === "user"
       ? "Your account details"
       : "Sign in to continue";
   const filteredUsers = useMemo(() => {
     const searchValue = userSearch.trim().toLowerCase();
+    const visibleUsers = userRole === "member" ? users.filter(u => u.role === "user" && !u.isMember && !u.username.toLowerCase().includes("admin")) : users;
 
     if (!searchValue) {
-      return users;
+      return visibleUsers;
     }
-
-    return users.filter((profile) => {
+    return visibleUsers.filter((profile) => {
       return (
         profile.username.toLowerCase().includes(searchValue) ||
         profile.authEmail.toLowerCase().includes(searchValue) ||
@@ -220,7 +304,7 @@ const Admin = () => {
         profile.ipLink.toLowerCase().includes(searchValue)
       );
     });
-  }, [users, userSearch]);
+  }, [users, userSearch, userRole]);
 
   const filteredPasswords = useMemo(() => {
     const searchValue = passwordSearch.trim().toLowerCase();
@@ -233,15 +317,25 @@ const Admin = () => {
   }, [passwordRecords, passwordSearch]);
 
   const filteredContacts = useMemo(() => {
-    if (!contactSearch.trim()) return users;
+    const baseUsers = userRole === "member" ? users.filter(u => u.role === "user" && !u.isMember && !u.username.toLowerCase().includes("admin")) : users;
+    if (!contactSearch.trim()) return baseUsers;
     const q = contactSearch.toLowerCase();
-    return users.filter(user => 
+    return baseUsers.filter(user =>
       user.id.toLowerCase().includes(q) ||
       user.username.toLowerCase().includes(q) ||
       (user.contactEmail && user.contactEmail.toLowerCase().includes(q)) ||
       (user.contactMobile && user.contactMobile.toLowerCase().includes(q))
     );
-  }, [users, contactSearch]);
+  }, [users, contactSearch, userRole]);
+
+  const visibleDeleteRequests = useMemo(() => {
+    if (isAdmin) return deleteRequests;
+    return deleteRequests.filter(r => r.requestedByUid === user?.uid);
+  }, [deleteRequests, isAdmin, user?.uid]);
+
+  const existingUserDeleteRequest = useMemo(() => {
+    return visibleDeleteRequests.find(r => r.targetUserId === selectedUserId && (r.status === 'pending' || r.status === 'rejected'));
+  }, [visibleDeleteRequests, selectedUserId]);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
@@ -256,13 +350,15 @@ const Admin = () => {
       setSubmissions([]);
       setUsers([]);
       setUserSearch("");
+      setActiveTicketCount(0);
       setSelectedUserId("");
       setSelectedUserUsername("");
       setSelectedUserContactEmail("");
       setSelectedUserContactMobile("");
       setSelectedUserRole("user");
+      setSelectedUserPermissions([]);
       setSelectedUserIpLink("");
-      setActiveSection("create");
+      setActiveSection("tickets");
       setPasswordRecords([]);
       setPasswordSearch("");
       setRevealedPasswords(new Set());
@@ -277,12 +373,14 @@ const Admin = () => {
         const profileDoc = await getDoc(doc(db, "users", currentUser.uid));
         if (profileDoc.exists()) {
           const data = profileDoc.data();
-          const role = (data.role || "user") as "admin" | "user";
+          const role = (data.isMember || data.role === "member") ? "member" :
+            (data.role === "admin" || (data.username && data.username.toLowerCase().includes("admin"))) ? "admin" : "user";
           setUserRole(role);
+          setLoggedInUserPermissions(data.permissions || []);
           setLoggedInUsername(data.username || "");
-          if (role === "admin") {
-            setIsAdmin(true);
-            setStatus("Admin access confirmed.");
+          if (role === "admin" || role === "member") {
+            setIsAdmin(role === "admin");
+            setStatus(`${role === "admin" ? "Admin" : "Member"} access confirmed.`);
           } else {
             setIpLink(data.ip_link || "");
             setStatus("User logged in successfully.");
@@ -317,7 +415,10 @@ const Admin = () => {
             authEmail: data.authEmail || data.email || "",
             contactEmail: data.contactEmail || "",
             contactMobile: data.contactMobile || "",
-            role: (data.role || "user") as "admin" | "user",
+            role: (data.isMember || data.role === "member") ? "member" :
+              (data.role === "admin" || (data.username && data.username.toLowerCase().includes("admin"))) ? "admin" : "user",
+            isMember: data.isMember || data.role === "member",
+            permissions: data.permissions || [],
             ipLink: data.ip_link || "",
             createdAtLabel: formatTimestamp(data.createdAt),
             updatedAtLabel: formatTimestamp(data.updatedAt),
@@ -333,6 +434,7 @@ const Admin = () => {
             setSelectedUserContactEmail(selected.contactEmail || "");
             setSelectedUserContactMobile(selected.contactMobile || "");
             setSelectedUserRole(selected.role);
+            setSelectedUserPermissions(selected.permissions || []);
             setSelectedUserIpLink(selected.ipLink);
           }
         }
@@ -344,6 +446,15 @@ const Admin = () => {
       collection(db, "publicSubmissions"),
       orderBy("createdAt", "desc"),
       limit(100)
+    );
+
+    const unsubscribeTickets = onSnapshot(
+      collection(db, "tickets"),
+      (snapshot) => {
+        const activeCount = snapshot.docs.filter(d => d.data().status === "Active").length;
+        setActiveTicketCount(activeCount);
+      },
+      (error) => console.error("Could not load tickets count", error)
     );
 
     const unsubscribeSubmissions = onSnapshot(
@@ -391,8 +502,44 @@ const Admin = () => {
       unsubscribeUsers();
       unsubscribeSubmissions();
       unsubscribePasswords();
+      unsubscribeTickets();
     };
   }, [canShowDashboard, selectedUserId]);
+
+  useEffect(() => {
+    if (!canShowDashboard || (!isAdmin && userRole !== "member")) return;
+
+    let dq;
+    if (isAdmin) {
+      dq = query(collection(db, "deleteRequests"), orderBy("createdAt", "desc"));
+    } else {
+      dq = query(collection(db, "deleteRequests"), where("requestedByUid", "==", user?.uid || ""));
+    }
+
+    const unsubscribeDeleteRequests = onSnapshot(dq,
+      (snapshot) => {
+        let docs = snapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        } as DeleteRequest));
+
+        if (!isAdmin) {
+          docs.sort((a, b) => {
+            const timeA = a.createdAt?.toMillis ? a.createdAt.toMillis() : 0;
+            const timeB = b.createdAt?.toMillis ? b.createdAt.toMillis() : 0;
+            return timeB - timeA;
+          });
+        }
+
+        setDeleteRequests(docs);
+      },
+      (error) => {
+        console.error("Delete requests fetch error:", error);
+      }
+    );
+
+    return () => unsubscribeDeleteRequests();
+  }, [canShowDashboard, isAdmin, userRole, user?.uid]);
 
   const handleLogin = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -469,8 +616,8 @@ const Admin = () => {
 
   const handleCreateUser = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (!isAdmin) {
-      setStatus("Only admins can create users.");
+    if (!hasPermission("create")) {
+      setStatus("Only admins or authorized members can create users.");
       return;
     }
     const normalizedUsername = normalizeUsername(newUserUsername);
@@ -504,7 +651,9 @@ const Admin = () => {
           email: authEmail,
           contactEmail: newUserContactEmail.trim(),
           contactMobile: newUserContactMobile.trim(),
-          role: newUserRole,
+          role: newUserRole === "member" ? "admin" : newUserRole,
+          isMember: newUserRole === "member",
+          permissions: newUserRole === "member" ? newUserPermissions : [],
           ip_link: newUserRole === "user" ? newUserIpLink : "",
           createdAt: serverTimestamp(),
           updatedAt: serverTimestamp(),
@@ -563,13 +712,20 @@ const Admin = () => {
     setSelectedUserContactEmail("");
     setSelectedUserContactMobile("");
     setSelectedUserRole("user");
+    setSelectedUserPermissions([]);
     setSelectedUserIpLink("");
     setStatus("Edit cancelled.");
   };
 
   const handleUpdateUser = async () => {
-    if (!isAdmin || !selectedUserId) {
-      setStatus("Select a user first.");
+    if (!hasPermission("edit") || !selectedUserId) {
+      setStatus("You lack permission or need to select a user first.");
+      return;
+    }
+
+    if (userRole === "member" && selectedUserRole !== "user") {
+      setStatus("Unauthorized: Members can only edit normal users.");
+      toast.error("You cannot modify Admin or Member accounts.");
       return;
     }
 
@@ -579,11 +735,11 @@ const Admin = () => {
     try {
       const normalizedUsername = normalizeUsername(selectedUserUsername);
 
-    if (!normalizedUsername || !selectedUserContactEmail || !selectedUserContactMobile) {
-      setStatus("Username, contact email, and mobile are required.");
-      toast.error("Please fill all mandatory fields.");
-      return;
-    }
+      if (!normalizedUsername || !selectedUserContactEmail || !selectedUserContactMobile) {
+        setStatus("Username, contact email, and mobile are required.");
+        toast.error("Please fill all mandatory fields.");
+        return;
+      }
 
       const existingLoginIndex = await getDoc(doc(db, "loginIndex", normalizedUsername));
       if (existingLoginIndex.exists() && existingLoginIndex.data()?.userId !== selectedUserId) {
@@ -603,7 +759,9 @@ const Admin = () => {
           email: selectedUserAuthEmail,
           contactEmail: selectedUserContactEmail.trim(),
           contactMobile: selectedUserContactMobile.trim(),
-          role: selectedUserRole,
+          role: selectedUserRole === "member" ? "admin" : selectedUserRole,
+          isMember: selectedUserRole === "member",
+          permissions: selectedUserRole === "member" ? selectedUserPermissions : [],
           ip_link: selectedUserRole === "user" ? selectedUserIpLink : "",
           updatedAt: serverTimestamp(),
         },
@@ -627,9 +785,79 @@ const Admin = () => {
     }
   };
 
+  const submitDeleteRequest = async () => {
+    if (!selectedUserId || !deleteReason.trim() || !user) return;
+
+    if (existingUserDeleteRequest && existingUserDeleteRequest.status === 'pending') {
+      toast.error("A pending deletion request already exists for this user.");
+      return;
+    }
+
+    setRequestingDelete(true);
+    try {
+      await addDoc(collection(db, "deleteRequests"), {
+        targetUserId: selectedUserId,
+        targetUsername: selectedUserUsername,
+        requestedByUid: user.uid,
+        requestedByUsername: username || user.email || "Unknown",
+        reason: deleteReason.trim(),
+        status: "pending",
+        createdAt: serverTimestamp(),
+      });
+      setIsDeleteReasonModalOpen(false);
+      setDeleteReason("");
+      toast.success("Delete request submitted for admin approval");
+      setStatus("Delete request pending approval.");
+    } catch (error) {
+      toast.error("Failed to submit delete request");
+    } finally {
+      setRequestingDelete(false);
+    }
+  };
+
+  const confirmAdminAction = async () => {
+    if (!adminActionSelectedRequest || !adminActionType) return;
+    const request = adminActionSelectedRequest;
+
+    try {
+      if (adminActionType === 'approve') {
+        const targetUser = users.find(u => u.id === request.targetUserId);
+        await deleteDoc(doc(db, "users", request.targetUserId));
+        if (targetUser?.usernameKey) {
+          await deleteDoc(doc(db, "loginIndex", targetUser.usernameKey));
+        }
+        await deleteDoc(doc(db, "userPasswords", request.targetUserId)).catch(() => undefined);
+
+        await updateDoc(doc(db, "deleteRequests", request.id), {
+          status: "approved",
+          adminMessage: adminActionMessage.trim()
+        });
+        toast.success("User deleted and request approved");
+      } else {
+        await updateDoc(doc(db, "deleteRequests", request.id), {
+          status: "rejected",
+          adminMessage: adminActionMessage.trim()
+        });
+        toast.success("Delete request rejected");
+      }
+    } catch (error) {
+      toast.error(`Failed to process ${adminActionType}`);
+    } finally {
+      setAdminActionSelectedRequest(null);
+      setAdminActionType(null);
+      setAdminActionMessage("");
+    }
+  };
+
   const handleDeleteSelectedUser = async () => {
-    if (!isAdmin || !selectedUserId) {
-      setStatus("Select a user first.");
+    if (!hasPermission("edit") || !selectedUserId) {
+      setStatus("You lack permission or need to select a user first.");
+      return;
+    }
+
+    if (userRole === "member" && selectedUserRole !== "user") {
+      setStatus("Unauthorized: Members can only delete normal users.");
+      toast.error("You cannot delete Admin or Member accounts.");
       return;
     }
 
@@ -647,6 +875,7 @@ const Admin = () => {
       setSelectedUserId("");
       setSelectedUserUsername("");
       setSelectedUserRole("user");
+      setSelectedUserPermissions([]);
       setSelectedUserIpLink("");
       setActiveSection("edit");
       setStatus("User deleted successfully.");
@@ -679,10 +908,11 @@ const Admin = () => {
       setSelectedUserContactEmail("");
       setSelectedUserContactMobile("");
       setSelectedUserRole("user");
+      setSelectedUserPermissions([]);
       setSelectedUserIpLink("");
       setPasswordRecords([]);
       setRevealedPasswords(new Set());
-      setActiveSection("create");
+      setActiveSection("tickets");
     } catch (error) {
       setStatus(error instanceof Error ? error.message : "Could not sign out.");
     }
@@ -810,10 +1040,10 @@ const Admin = () => {
                   </div>
                 )}
               </form>
-            ) : isAdmin ? (
+            ) : (isAdmin || userRole === "member") ? (
               <div className="mt-6 space-y-4">
                 <div className="rounded-lg border border-border bg-secondary/30 p-4 text-sm">
-                  <p className="font-medium text-primary">System Admin</p>
+                  <p className="font-medium text-primary">{isAdmin ? "System Admin" : "Team Member"}</p>
                   <p className="mt-1 truncate text-muted-foreground">
                     {loggedInUsername || (user?.email)}
                   </p>
@@ -913,17 +1143,17 @@ const Admin = () => {
                   )}
                 </div>
               </div>
+            ) : checkingAdmin ? (
+              <div className="mt-6 rounded-lg border border-border bg-secondary/20 p-4 text-xs text-muted-foreground animate-pulse">
+                Please wait...
+              </div>
             ) : (
               <div className="mt-6 rounded-lg border border-red-500/20 bg-red-500/10 p-4 text-xs text-red-500">
-                Your account does not have proper role assignment.
+                Please wait...
               </div>
             )}
 
-            {(checkingAdmin || (user && status && !canShowDashboard)) && (
-              <div className="mt-5 rounded-lg border border-border bg-secondary/20 p-4 text-xs text-muted-foreground animate-pulse">
-                {checkingAdmin ? "Verifying permissions..." : status}
-              </div>
-            )}
+
 
           </section>
 
@@ -931,7 +1161,7 @@ const Admin = () => {
             <div className="space-y-6">
               <section className="rounded-2xl border border-border bg-card p-6 shadow-lg">
                 <div className="flex flex-wrap items-center gap-3">
-                  <button
+                  {hasPermission("create") && (<button
                     type="button"
                     onClick={() => setActiveSection("create")}
                     className={`rounded-lg px-4 py-2 text-sm font-medium transition ${activeSection === "create"
@@ -940,8 +1170,8 @@ const Admin = () => {
                       }`}
                   >
                     Create User
-                  </button>
-                  <button
+                  </button>)}
+                  {hasPermission("edit") && (<button
                     type="button"
                     onClick={() => setActiveSection("edit")}
                     className={`rounded-lg px-4 py-2 text-sm font-medium transition ${activeSection === "edit"
@@ -950,18 +1180,23 @@ const Admin = () => {
                       }`}
                   >
                     Edit User
-                  </button>
-                  <button
+                  </button>)}
+                  {hasPermission("forms") && (<button
                     type="button"
                     onClick={() => setActiveSection("forms")}
-                    className={`rounded-lg px-4 py-2 text-sm font-medium transition ${activeSection === "forms"
+                    className={`rounded-lg px-4 py-2 text-sm font-medium transition flex items-center gap-2 ${activeSection === "forms"
                       ? "bg-primary text-primary-foreground"
                       : "border border-border bg-background hover:bg-secondary/40"
                       }`}
                   >
                     Submitted Forms
-                  </button>
-                  <button
+                    {submissions.filter(s => s.status === "pending").length > 0 && (
+                      <span className={`inline-flex items-center justify-center rounded-full text-[10px] font-bold h-5 w-5 ${activeSection === "forms" ? "bg-primary-foreground text-primary" : "bg-primary text-primary-foreground"}`}>
+                        {submissions.filter(s => s.status === "pending").length}
+                      </span>
+                    )}
+                  </button>)}
+                  {hasPermission("contacts") && (<button
                     type="button"
                     onClick={() => setActiveSection("contacts")}
                     className={`inline-flex items-center gap-1.5 rounded-lg px-4 py-2 text-sm font-medium transition ${activeSection === "contacts"
@@ -971,22 +1206,55 @@ const Admin = () => {
                   >
                     <Users className="h-3.5 w-3.5" />
                     Users & Passwords
-                  </button>
+                  </button>)}
 
-                  <button
+                  {(isAdmin || userRole === "member") && (
+                    <button
+                      type="button"
+                      onClick={() => setActiveSection("requests")}
+                      className={`relative rounded-lg px-4 py-2 text-sm font-medium transition ${activeSection === "requests"
+                        ? "bg-amber-500 text-white"
+                        : "border border-amber-500/40 bg-amber-500/10 text-amber-600 dark:text-amber-500 hover:bg-amber-500/20"
+                        }`}
+                    >
+                      Delete Requests
+                      {visibleDeleteRequests.filter(r => r.status === 'pending').length > 0 && (
+                        <span className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-red-500 text-[10px] font-bold text-white flex items-center justify-center">
+                          {visibleDeleteRequests.filter(r => r.status === 'pending').length}
+                        </span>
+                      )}
+                    </button>
+                  )}
+
+                  {hasPermission("tickets") && (<button
                     type="button"
                     onClick={() => setActiveSection("tickets")}
-                    className={`rounded-lg px-4 py-2 text-sm font-medium transition ${activeSection === "tickets"
+                    className={`rounded-lg px-4 py-2 text-sm font-medium transition flex items-center gap-2 ${activeSection === "tickets"
                       ? "bg-primary text-primary-foreground"
                       : "border border-border bg-background hover:bg-secondary/40"
                       }`}
                   >
                     Support Tickets
-                  </button>
+                    {activeTicketCount > 0 && (
+                      <span className={`inline-flex items-center justify-center rounded-full text-[10px] font-bold h-5 w-5 ${activeSection === "tickets" ? "bg-primary-foreground text-primary" : "bg-primary text-primary-foreground"}`}>
+                        {activeTicketCount}
+                      </span>
+                    )}
+                  </button>)}
+                  {hasPermission("docs") && (<button
+                    type="button"
+                    onClick={() => setActiveSection("docs")}
+                    className={`rounded-lg px-4 py-2 text-sm font-medium transition ${activeSection === "docs"
+                      ? "bg-primary text-primary-foreground"
+                      : "border border-border bg-background hover:bg-secondary/40"
+                      }`}
+                  >
+                    Documentation
+                  </button>)}
                 </div>
               </section>
 
-              {activeSection === "create" && (
+              {activeSection === "create" && hasPermission("create") && (
                 <section className="rounded-2xl border border-border bg-card p-6 shadow-lg">
                   <div>
                     <h2 className="text-2xl font-bold">Create User</h2>
@@ -1044,11 +1312,16 @@ const Admin = () => {
                         <label className="text-sm font-medium">Role</label>
                         <select
                           value={newUserRole}
-                          onChange={(event) => setNewUserRole(event.target.value as "admin" | "user")}
+                          onChange={(event) => setNewUserRole(event.target.value as "admin" | "member" | "user")}
                           className="w-full rounded-lg border border-border bg-background px-4 py-3 outline-none transition-all focus:ring-2 focus:ring-primary/40"
                         >
                           <option value="user">Normal User</option>
-                          <option value="admin">Admin</option>
+                          {userRole === "admin" && (
+                            <>
+                              <option value="member">Member</option>
+                              <option value="admin">Admin</option>
+                            </>
+                          )}
                         </select>
                       </div>
                       <div className="space-y-2">
@@ -1062,6 +1335,31 @@ const Admin = () => {
                         />
                       </div>
                     </div>
+
+                    {newUserRole === "member" && (
+                      <div className="space-y-3">
+                        <label className="text-sm font-medium">Member Permissions</label>
+                        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+                          {AVAILABLE_TABS.map((tab) => (
+                            <label key={tab.id} className="flex items-center gap-2 text-sm">
+                              <input
+                                type="checkbox"
+                                checked={newUserPermissions.includes(tab.id)}
+                                onChange={(e) => {
+                                  if (e.target.checked) {
+                                    setNewUserPermissions((prev) => [...prev, tab.id]);
+                                  } else {
+                                    setNewUserPermissions((prev) => prev.filter((id) => id !== tab.id));
+                                  }
+                                }}
+                                className="h-4 w-4 rounded border-border text-primary focus:ring-primary"
+                              />
+                              {tab.label}
+                            </label>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                     <button
                       type="submit"
                       disabled={creatingUser}
@@ -1074,7 +1372,7 @@ const Admin = () => {
                 </section>
               )}
 
-              {activeSection === "edit" && (
+              {activeSection === "edit" && hasPermission("edit") && (
                 <section className="rounded-2xl border border-border bg-card p-6 shadow-lg">
                   <div>
                     <h2 className="text-2xl font-bold">Edit User</h2>
@@ -1167,11 +1465,16 @@ const Admin = () => {
                             <label className="text-sm font-medium">Role</label>
                             <select
                               value={selectedUserRole}
-                              onChange={(event) => setSelectedUserRole(event.target.value as "admin" | "user")}
+                              onChange={(event) => setSelectedUserRole(event.target.value as "admin" | "member" | "user")}
                               className="w-full rounded-lg border border-border bg-background px-4 py-3 outline-none transition-all focus:ring-2 focus:ring-primary/40"
                             >
                               <option value="user">Normal User</option>
-                              <option value="admin">Admin</option>
+                              {userRole === "admin" && (
+                                <>
+                                  <option value="member">Member</option>
+                                  <option value="admin">Admin</option>
+                                </>
+                              )}
                             </select>
                           </div>
                           <div className="space-y-2">
@@ -1186,7 +1489,48 @@ const Admin = () => {
                             />
                           </div>
                         </div>
-                        <div className="grid grid-cols-2 gap-3">
+
+                        {selectedUserRole === "member" && (
+                          <div className="space-y-3">
+                            <label className="text-sm font-medium">Member Permissions</label>
+                            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+                              {AVAILABLE_TABS.map((tab) => (
+                                <label key={tab.id} className="flex items-center gap-2 text-sm">
+                                  <input
+                                    type="checkbox"
+                                    checked={selectedUserPermissions.includes(tab.id)}
+                                    onChange={(e) => {
+                                      if (e.target.checked) {
+                                        setSelectedUserPermissions((prev) => [...prev, tab.id]);
+                                      } else {
+                                        setSelectedUserPermissions((prev) => prev.filter((id) => id !== tab.id));
+                                      }
+                                    }}
+                                    className="h-4 w-4 rounded border-border text-primary focus:ring-primary"
+                                  />
+                                  {tab.label}
+                                </label>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                        {existingUserDeleteRequest && (
+                          <div className={`col-span-full rounded-xl border p-4 text-sm ${existingUserDeleteRequest.status === 'pending' ? 'border-amber-500/20 bg-amber-500/5 text-amber-600 dark:text-amber-500' : 'border-destructive/20 bg-destructive/5 text-destructive'}`}>
+                            <div className="flex items-center gap-2 font-bold mb-1">
+                              {existingUserDeleteRequest.status === 'pending' ? (
+                                <><RefreshCw className="h-4 w-4 animate-[spin_3s_linear_infinite]" /> Deletion Request Pending</>
+                              ) : (
+                                <><XCircle className="h-4 w-4" /> Deletion Request Rejected</>
+                              )}
+                            </div>
+                            {existingUserDeleteRequest.status === 'rejected' && (
+                              <p className="text-muted-foreground italic mt-2">
+                                Admin Note: "{existingUserDeleteRequest.adminMessage || 'No reason provided.'}"
+                              </p>
+                            )}
+                          </div>
+                        )}
+                        <div className="grid grid-cols-2 gap-3 mt-4">
                           <button
                             type="button"
                             onClick={handleCancelSelectedUser}
@@ -1199,7 +1543,7 @@ const Admin = () => {
                             <AlertDialogTrigger asChild>
                               <button
                                 type="button"
-                                disabled={updatingUser}
+                                disabled={updatingUser || (userRole === "member" && selectedUserRole !== "user")}
                                 className="inline-flex items-center justify-center gap-2 rounded-lg bg-primary px-4 py-3 font-semibold text-primary-foreground transition-all hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
                               >
                                 <Shield className="h-4 w-4" />
@@ -1219,35 +1563,91 @@ const Admin = () => {
                               </AlertDialogFooter>
                             </AlertDialogContent>
                           </AlertDialog>
-                          <AlertDialog>
-                            <AlertDialogTrigger asChild>
-                              <button
-                                type="button"
-                                disabled={deletingUser}
-                                className="inline-flex items-center justify-center gap-2 rounded-lg border border-destructive px-4 py-3 font-semibold text-destructive transition-all hover:bg-destructive/10 disabled:cursor-not-allowed disabled:opacity-60"
-                              >
-                                <Trash2 className="h-4 w-4" />
-                                {deletingUser ? "Deleting..." : "Delete User"}
-                              </button>
-                            </AlertDialogTrigger>
-                            <AlertDialogContent>
-                              <AlertDialogHeader>
-                                <AlertDialogTitle>Delete this user?</AlertDialogTitle>
-                                <AlertDialogDescription>
-                                  This action cannot be undone. The selected user profile will be removed from the database.
-                                </AlertDialogDescription>
-                              </AlertDialogHeader>
-                              <AlertDialogFooter>
-                                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                <AlertDialogAction
-                                  onClick={handleDeleteSelectedUser}
-                                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                          {existingUserDeleteRequest ? (
+                            <button
+                              type="button"
+                              onClick={async () => {
+                                try {
+                                  await deleteDoc(doc(db, "deleteRequests", existingUserDeleteRequest.id));
+                                  toast.success(`Delete request ${existingUserDeleteRequest.status === 'pending' ? 'cancelled' : 'cleared'}`);
+                                } catch (error: any) {
+                                  console.error("Delete error:", error);
+                                  toast.error("Failed to cancel request: " + (error.message || "Unknown error"));
+                                }
+                              }}
+                              className={`inline-flex items-center justify-center gap-2 rounded-lg border px-4 py-3 font-semibold transition-all ${existingUserDeleteRequest.status === 'pending'
+                                ? 'border-amber-500/30 bg-amber-500/10 text-amber-600 hover:bg-amber-500/20'
+                                : 'border-destructive/30 bg-destructive/10 text-destructive hover:bg-destructive/20'
+                                }`}
+                            >
+                              <XCircle className="h-4 w-4" />
+                              {existingUserDeleteRequest.status === 'pending' ? 'Cancel Pending Request' : 'Clear Rejected Request'}
+                            </button>
+                          ) : (
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <button
+                                  type="button"
+                                  disabled={deletingUser || (userRole === "member" && selectedUserRole !== "user")}
+                                  className="inline-flex items-center justify-center gap-2 rounded-lg border border-destructive px-4 py-3 font-semibold text-destructive transition-all hover:bg-destructive/10 disabled:cursor-not-allowed disabled:opacity-60"
                                 >
-                                  Delete
-                                </AlertDialogAction>
-                              </AlertDialogFooter>
-                            </AlertDialogContent>
-                          </AlertDialog>
+                                  <Trash2 className="h-4 w-4" />
+                                  {deletingUser ? "Deleting..." : "Delete User"}
+                                </button>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent>
+                                {userRole === "member" ? (
+                                  <>
+                                    <AlertDialogHeader>
+                                      <AlertDialogTitle>Request User Deletion</AlertDialogTitle>
+                                      <AlertDialogDescription>
+                                        Please provide a reason for deleting <strong>{selectedUserUsername}</strong>. This request will be sent to an admin for approval.
+                                      </AlertDialogDescription>
+                                    </AlertDialogHeader>
+                                    <div className="py-2">
+                                      <textarea
+                                        value={deleteReason}
+                                        onChange={(e) => setDeleteReason(e.target.value)}
+                                        placeholder="Explain why this user should be deleted..."
+                                        className="w-full min-h-[100px] rounded-lg border border-border bg-background p-3 text-sm outline-none focus:ring-2 focus:ring-primary/40"
+                                      />
+                                    </div>
+                                    <AlertDialogFooter>
+                                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                      <AlertDialogAction
+                                        disabled={!deleteReason.trim() || requestingDelete}
+                                        onClick={(e) => {
+                                          e.preventDefault();
+                                          submitDeleteRequest();
+                                        }}
+                                        className="bg-primary text-primary-foreground hover:bg-primary/90"
+                                      >
+                                        {requestingDelete ? "Submitting..." : "Submit Request"}
+                                      </AlertDialogAction>
+                                    </AlertDialogFooter>
+                                  </>
+                                ) : (
+                                  <>
+                                    <AlertDialogHeader>
+                                      <AlertDialogTitle>Delete this user?</AlertDialogTitle>
+                                      <AlertDialogDescription>
+                                        This action cannot be undone. The selected user profile will be removed from the database.
+                                      </AlertDialogDescription>
+                                    </AlertDialogHeader>
+                                    <AlertDialogFooter>
+                                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                      <AlertDialogAction
+                                        onClick={handleDeleteSelectedUser}
+                                        className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                      >
+                                        Delete
+                                      </AlertDialogAction>
+                                    </AlertDialogFooter>
+                                  </>
+                                )}
+                              </AlertDialogContent>
+                            </AlertDialog>
+                          )}
                         </div>
                         <p className="text-xs text-muted-foreground">
                           Created: {selectedUser?.createdAtLabel || "Unknown"}
@@ -1264,7 +1664,124 @@ const Admin = () => {
                 </section>
               )}
 
-              {activeSection === "forms" && (
+              {activeSection === "requests" && (isAdmin || userRole === "member") && (
+                <section className="space-y-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h2 className="text-2xl font-bold">{isAdmin ? "Delete Requests" : "My Delete Requests"}</h2>
+                      <p className="text-sm text-muted-foreground">{isAdmin ? "Approve or reject user deletion requests from team members." : "Status of the user deletion requests you have submitted."}</p>
+                    </div>
+                  </div>
+
+                  <div className="grid gap-4">
+                    {visibleDeleteRequests.length === 0 ? (
+                      <div className="rounded-2xl border border-dashed border-border p-12 text-center text-muted-foreground">
+                        {isAdmin ? "No pending delete requests." : "You have not submitted any delete requests."}
+                      </div>
+                    ) : (
+                      visibleDeleteRequests.map((req) => (
+                        <div key={req.id} className={`rounded-2xl border border-border bg-card p-6 shadow-sm transition-all ${req.status !== 'pending' ? 'opacity-60 grayscale' : 'hover:border-primary/50'}`}>
+                          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                            <div className="space-1 flex-1">
+                              <div className="flex items-center gap-3 mb-2">
+                                <span className={`rounded-full px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider ${req.status === 'pending' ? 'bg-amber-500/10 text-amber-600 border border-amber-500/20' :
+                                  req.status === 'approved' ? 'bg-emerald-500/10 text-emerald-600 border border-emerald-500/20' :
+                                    'bg-destructive/10 text-destructive border border-destructive/20'
+                                  }`}>
+                                  {req.status}
+                                </span>
+                                <span className="text-sm font-bold text-foreground">
+                                  Request #{req.id.slice(0, 6)}
+                                </span>
+                              </div>
+
+                              <div className="grid md:grid-cols-2 gap-6">
+                                <div className="space-y-1">
+                                  <p className="text-[10px] uppercase font-bold text-muted-foreground">Target User</p>
+                                  <p className="text-base font-bold text-primary">{req.targetUsername}</p>
+                                  <p className="text-xs text-muted-foreground font-mono">{req.targetUserId}</p>
+                                </div>
+                                <div className="space-y-1">
+                                  <p className="text-[10px] uppercase font-bold text-muted-foreground">Requested By</p>
+                                  <p className="text-sm font-medium">{req.requestedByUsername}</p>
+                                  <p className="text-xs text-muted-foreground italic">{formatTimestamp(req.createdAt)}</p>
+                                </div>
+                              </div>
+
+                              <div className="rounded-xl bg-secondary/30 p-4 border border-border/50 mt-4">
+                                <p className="text-[10px] uppercase font-bold text-muted-foreground mb-1.5 flex items-center gap-1.5">
+                                  <MessageSquare className="h-3 w-3" /> Reason for deletion
+                                </p>
+                                <p className="text-sm text-foreground/90 italic leading-relaxed">
+                                  "{req.reason}"
+                                </p>
+                              </div>
+                              {req.adminMessage && (
+                                <div className="rounded-xl bg-primary/10 p-4 border border-primary/20 mt-3">
+                                  <p className="text-[10px] uppercase font-bold text-primary mb-1.5 flex items-center gap-1.5">
+                                    <MessageSquare className="h-3 w-3" /> Admin Note
+                                  </p>
+                                  <p className="text-sm text-foreground/90 italic leading-relaxed">
+                                    "{req.adminMessage}"
+                                  </p>
+                                </div>
+                              )}
+                            </div>
+
+                            {req.status === 'pending' && (
+                              <div className="flex flex-row md:flex-col gap-2 shrink-0 self-start">
+                                {isAdmin && (
+                                  <>
+                                    <button
+                                      onClick={() => {
+                                        setAdminActionSelectedRequest(req);
+                                        setAdminActionType('approve');
+                                      }}
+                                      className="flex-1 inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-500 px-4 py-2.5 text-sm font-bold text-white transition-all hover:bg-emerald-600"
+                                    >
+                                      <CheckCircle className="h-4 w-4" />
+                                      Approve
+                                    </button>
+                                    <button
+                                      onClick={() => {
+                                        setAdminActionSelectedRequest(req);
+                                        setAdminActionType('reject');
+                                      }}
+                                      className="flex-1 inline-flex items-center justify-center gap-2 rounded-xl border border-destructive/30 bg-destructive/10 px-4 py-2.5 text-sm font-bold text-destructive transition-all hover:bg-destructive/20"
+                                    >
+                                      <XCircle className="h-4 w-4" />
+                                      Reject
+                                    </button>
+                                  </>
+                                )}
+                                {(!isAdmin || req.requestedByUid === user?.uid) && (
+                                  <button
+                                    onClick={async () => {
+                                      try {
+                                        await deleteDoc(doc(db, "deleteRequests", req.id));
+                                        toast.success("Delete request cancelled");
+                                      } catch (error: any) {
+                                        console.error("Delete error:", error);
+                                        toast.error("Failed to cancel request: " + (error.message || "Unknown error"));
+                                      }
+                                    }}
+                                    className="flex-1 inline-flex items-center justify-center gap-2 rounded-xl border border-muted-foreground/30 bg-secondary px-4 py-2.5 text-sm font-bold text-muted-foreground transition-all hover:bg-secondary/40"
+                                  >
+                                    <XCircle className="h-4 w-4" />
+                                    Cancel Request
+                                  </button>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </section>
+              )}
+
+              {activeSection === "forms" && hasPermission("forms") && (
                 <section className="rounded-2xl border border-border bg-card p-6 shadow-lg">
                   <div className="flex items-center justify-between gap-4">
                     <div>
@@ -1357,13 +1874,102 @@ const Admin = () => {
                 </section>
               )}
 
-              {activeSection === "tickets" && (
+              {activeSection === "tickets" && hasPermission("tickets") && (
                 <section className="rounded-2xl border border-border bg-card p-6 shadow-lg">
                   <AdminTickets />
                 </section>
               )}
 
-              {activeSection === "contacts" && (
+              {activeSection === "docs" && hasPermission("docs") && (
+                <section className="rounded-2xl border border-border bg-card p-6 shadow-lg relative overflow-hidden">
+                  <div>
+                    <h2 className="text-2xl font-bold">Admin Documentation</h2>
+                    <p className="mt-1 text-sm text-muted-foreground">
+                      Internal reference guides and configuration documentation.
+                    </p>
+                  </div>
+
+                  <div className="mt-6 grid gap-4 md:grid-cols-2">
+                    {ADMIN_DOCS.map((doc) => (
+                      <div
+                        key={doc.id}
+                        onClick={() => setSelectedDoc(doc)}
+                        className="group relative flex flex-col items-start gap-2 rounded-xl border border-border bg-secondary/10 p-5 text-left transition-all hover:bg-secondary/30 hover:border-primary/30 hover:shadow-md cursor-pointer"
+                      >
+                        <div className="flex w-full items-center justify-between gap-3">
+                          <div className="flex items-center gap-3">
+                            <div className="rounded-lg bg-primary/10 p-2 text-primary transition-all group-hover:bg-primary/20">
+                              <FileText className="h-5 w-5" />
+                            </div>
+                            <h3 className="font-semibold">{doc.title}</h3>
+                          </div>
+                          <a
+                            href={doc.path}
+                            download={doc.id}
+                            onClick={(e) => e.stopPropagation()}
+                            className="rounded-lg p-2 text-muted-foreground transition-all hover:bg-primary/10 hover:text-primary"
+                            title="Download document"
+                          >
+                            <Download className="h-4 w-4" />
+                          </a>
+                        </div>
+                        {doc.description && (
+                          <p className="text-sm text-muted-foreground mt-2">{doc.description}</p>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+
+                  {selectedDoc && (
+                    <div className="fixed inset-0 z-[100] flex flex-col bg-background animate-in fade-in zoom-in-95 duration-200">
+                      <div className="flex items-center justify-between border-b border-border p-4 bg-card shadow-sm">
+                        <h2 className="text-xl font-bold flex items-center gap-2">
+                          <FileText className="h-5 w-5 text-primary" />
+                          {selectedDoc.title}
+                        </h2>
+                        <div className="flex items-center gap-3">
+                          <button
+                            type="button"
+                            onClick={() => setDocTheme(prev => prev === "light" ? "dark" : "light")}
+                            className="rounded-lg border border-border bg-background p-2 text-sm font-medium transition hover:bg-secondary/80 flex items-center gap-2"
+                            title={docTheme === "light" ? "Switch to Dark Mode" : "Switch to Light Mode"}
+                          >
+                            {docTheme === "light" ? (
+                              <Moon className="h-4 w-4" />
+                            ) : (
+                              <Sun className="h-4 w-4" />
+                            )}
+                          </button>
+                          <a
+                            href={selectedDoc.path}
+                            download={selectedDoc.id}
+                            className="rounded-lg border border-border bg-background px-4 py-2 text-sm font-medium transition hover:bg-secondary/80 flex items-center gap-2"
+                          >
+                            <Download className="h-4 w-4" />
+                            Download
+                          </a>
+                          <button
+                            type="button"
+                            onClick={() => setSelectedDoc(null)}
+                            className="rounded-lg border border-border bg-background px-4 py-2 text-sm font-medium transition hover:bg-secondary/80 focus:outline-none"
+                          >
+                            Close Fullscreen
+                          </button>
+                        </div>
+                      </div>
+                      <div className={`flex-1 overflow-hidden relative bg-background transition-all duration-300 ${docTheme === 'dark' ? 'invert hue-rotate-180 bg-[#1a1a1a]' : ''}`}>
+                        <iframe
+                          src={selectedDoc.path}
+                          className="absolute inset-0 w-full h-full border-none"
+                          title={selectedDoc.title}
+                        />
+                      </div>
+                    </div>
+                  )}
+                </section>
+              )}
+
+              {activeSection === "contacts" && hasPermission("contacts") && (
                 <section className="rounded-2xl border border-border bg-card p-6 shadow-lg">
                   <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                     <div>
@@ -1374,9 +1980,9 @@ const Admin = () => {
                     </div>
                     <div className="flex items-center w-full md:w-auto relative">
                       <Search className="h-4 w-4 absolute left-3 text-muted-foreground" />
-                      <input 
-                        type="text" 
-                        placeholder="Search by ID, email, or username..." 
+                      <input
+                        type="text"
+                        placeholder="Search by ID, email, or username..."
                         value={contactSearch}
                         onChange={(e) => setContactSearch(e.target.value)}
                         className="w-full md:w-64 rounded-xl border border-border bg-background py-2 pl-9 pr-4 text-sm outline-none focus:ring-2 focus:ring-primary/40"
@@ -1403,52 +2009,52 @@ const Admin = () => {
                           filteredContacts.map((profile) => {
                             const pwdRecord = passwordRecords.find((r) => r.uid === profile.id || r.username === profile.username);
                             const isRevealed = revealedPasswords.has(profile.id);
-                            
+
                             return (
-                            <tr key={profile.id} className="hover:bg-secondary/20 transition-colors">
-                              <td className="px-4 py-3 font-medium">{profile.username}</td>
-                              <td className="px-4 py-3 select-all">{profile.contactEmail || <span className="italic text-muted-foreground">None</span>}</td>
-                              <td className="px-4 py-3 select-all">{profile.contactMobile || <span className="italic text-muted-foreground">None</span>}</td>
-                              <td className="px-4 py-3">
-                                {pwdRecord ? (
-                                  <div className="flex items-center gap-1">
-                                    <code
-                                      className={`rounded px-2 py-1 font-mono text-sm ${isRevealed
-                                        ? "bg-amber-500/10 text-amber-700 dark:text-amber-300"
-                                        : "bg-secondary/50 tracking-widest text-muted-foreground select-none"
-                                        }`}
-                                    >
-                                      {isRevealed ? pwdRecord.password : "••••••••"}
-                                    </code>
-                                    <button
-                                      type="button"
-                                      onClick={() => toggleRevealPassword(profile.id)}
-                                      title={isRevealed ? "Hide password" : "Show password"}
-                                      className="rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-secondary/50 hover:text-foreground"
-                                    >
-                                      {isRevealed ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                                    </button>
-                                    {isRevealed && (
+                              <tr key={profile.id} className="hover:bg-secondary/20 transition-colors">
+                                <td className="px-4 py-3 font-medium">{profile.username}</td>
+                                <td className="px-4 py-3 select-all">{profile.contactEmail || <span className="italic text-muted-foreground">None</span>}</td>
+                                <td className="px-4 py-3 select-all">{profile.contactMobile || <span className="italic text-muted-foreground">None</span>}</td>
+                                <td className="px-4 py-3">
+                                  {pwdRecord ? (
+                                    <div className="flex items-center gap-1">
+                                      <code
+                                        className={`rounded px-2 py-1 font-mono text-sm ${isRevealed
+                                          ? "bg-amber-500/10 text-amber-700 dark:text-amber-300"
+                                          : "bg-secondary/50 tracking-widest text-muted-foreground select-none"
+                                          }`}
+                                      >
+                                        {isRevealed ? pwdRecord.password : "••••••••"}
+                                      </code>
                                       <button
                                         type="button"
-                                        onClick={() => handleCopyPassword(pwdRecord.password)}
-                                        title="Copy password"
+                                        onClick={() => toggleRevealPassword(profile.id)}
+                                        title={isRevealed ? "Hide password" : "Show password"}
                                         className="rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-secondary/50 hover:text-foreground"
                                       >
-                                        <Copy className="h-4 w-4" />
+                                        {isRevealed ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                                       </button>
-                                    )}
-                                  </div>
-                                ) : (
-                                  <span className="text-xs italic text-muted-foreground">None</span>
-                                )}
-                              </td>
-                              <td className="px-4 py-3">
-                                <span className={`rounded-full border px-2 py-0.5 text-[10px] uppercase font-bold tracking-wider whitespace-nowrap ${profile.role === 'admin' ? 'bg-amber-500/10 border-amber-500/30 text-amber-600 dark:text-amber-500' : 'bg-secondary border-border/50 text-muted-foreground'}`}>
-                                  {profile.role}
-                                </span>
-                              </td>
-                            </tr>
+                                      {isRevealed && (
+                                        <button
+                                          type="button"
+                                          onClick={() => handleCopyPassword(pwdRecord.password)}
+                                          title="Copy password"
+                                          className="rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-secondary/50 hover:text-foreground"
+                                        >
+                                          <Copy className="h-4 w-4" />
+                                        </button>
+                                      )}
+                                    </div>
+                                  ) : (
+                                    <span className="text-xs italic text-muted-foreground">None</span>
+                                  )}
+                                </td>
+                                <td className="px-4 py-3">
+                                  <span className={`rounded-full border px-2 py-0.5 text-[10px] uppercase font-bold tracking-wider whitespace-nowrap ${profile.role === 'admin' ? 'bg-amber-500/10 border-amber-500/30 text-amber-600 dark:text-amber-500' : profile.role === 'member' ? 'bg-teal-500/10 border-teal-500/30 text-teal-600 dark:text-teal-500' : 'bg-secondary border-border/50 text-muted-foreground'}`}>
+                                    {profile.role}
+                                  </span>
+                                </td>
+                              </tr>
                             );
                           })
                         )}
@@ -1459,6 +2065,45 @@ const Admin = () => {
               )}
             </div>
           )}
+
+          <AlertDialog open={!!adminActionSelectedRequest} onOpenChange={(open) => {
+            if (!open) {
+              setAdminActionSelectedRequest(null);
+              setAdminActionType(null);
+              setAdminActionMessage("");
+            }
+          }}>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>
+                  {adminActionType === 'approve' ? 'Approve Deletion' : 'Reject Deletion'}
+                </AlertDialogTitle>
+                <AlertDialogDescription>
+                  {adminActionType === 'approve'
+                    ? `Are you sure you want to approve the deletion for ${adminActionSelectedRequest?.targetUsername}? This action cannot be undone.`
+                    : `Are you sure you want to reject the deletion request for ${adminActionSelectedRequest?.targetUsername}?`}
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <div className="py-2 space-y-2">
+                <label className="text-sm font-semibold text-foreground">Message (Optional)</label>
+                <textarea
+                  className="w-full min-h-[100px] rounded-lg border border-border bg-background p-3 text-sm outline-none focus:ring-2 focus:ring-primary/40 resize-none"
+                  placeholder="Leave a message for the record..."
+                  value={adminActionMessage}
+                  onChange={(e) => setAdminActionMessage(e.target.value)}
+                />
+              </div>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction
+                  onClick={confirmAdminAction}
+                  className={adminActionType === 'approve' ? "bg-emerald-500 hover:bg-emerald-600 focus:ring-emerald-500 text-white" : "bg-destructive hover:bg-destructive focus:ring-destructive text-white"}
+                >
+                  {adminActionType === 'approve' ? 'Confirm Approval' : 'Confirm Rejection'}
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         </div>
       </div>
     </div>

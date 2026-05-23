@@ -1,6 +1,5 @@
 import { motion, useInView } from "framer-motion";
 import { useRef } from "react";
-import { Check } from "lucide-react";
 
 const Pricing = () => {
   const ref = useRef(null);
@@ -28,22 +27,22 @@ const Pricing = () => {
         >
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
             <div className="space-y-6">
-              {[
-                "Affordable setup cost",
-                "Monthly subscription per camera",
-                "Maintenance and updates included",
-              ].map((item, i) => (
-                <div key={i} className="flex items-center gap-3">
-                  <div className="w-6 h-6 rounded-full bg-primary/20 flex items-center justify-center shrink-0">
-                    <Check className="w-4 h-4 text-primary" />
-                  </div>
-                  <span className="text-lg font-medium">{item}</span>
-                </div>
-              ))}
+              <div>
+                <h3 className="text-xl font-bold mb-2">Affordable One-Time Setup</h3>
+                <p className="text-muted-foreground">Start with a low upfront investment. No heavy infrastructure costs.</p>
+              </div>
+              <div>
+                <h3 className="text-xl font-bold mb-2">Flexible Maintenance Plans</h3>
+                <p className="text-muted-foreground">Choose monthly or yearly support plans based on your needs.</p>
+              </div>
             </div>
             <div className="text-center">
               <motion.a
                 href="#contact"
+                onClick={(e) => {
+                  e.preventDefault();
+                  document.getElementById("contact")?.scrollIntoView({ behavior: "smooth" });
+                }}
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 className="inline-block px-10 py-4 rounded-xl bg-primary text-primary-foreground font-bold text-xl shadow-lg hover:shadow-primary/30 transition-all font-outfit"

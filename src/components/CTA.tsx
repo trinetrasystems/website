@@ -19,7 +19,7 @@ const CTA = () => {
             We value your <span className="text-gradient">safety and time</span>.
           </h2>
           <p className="text-muted-foreground text-xl md:text-2xl font-semibold mb-10 max-w-2xl mx-auto">
-            Call the founder now for a quick demo and consultation.
+            Call us now for a quick demo and consultation.
           </p>
           <p className="text-muted-foreground text-base mb-4">
             Get started with AI-powered CCTV analytics and real-time monitoring solutions for your business.
@@ -36,6 +36,10 @@ const CTA = () => {
             </motion.a>
             <motion.a
               href="#contact-form"
+              onClick={(e) => {
+                e.preventDefault();
+                document.getElementById("contact")?.scrollIntoView({ behavior: "smooth" });
+              }}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               className="inline-flex items-center gap-2 px-10 py-4 rounded-xl glass-strong border-white/20 font-bold text-lg hover:bg-white/10 transition-all text-foreground dark:text-white drop-shadow-md"

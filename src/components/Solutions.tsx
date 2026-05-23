@@ -5,7 +5,7 @@ import solutionImg from "@/assets/ai-monitoring.png";
 
 const solutions = [
   "Automatically monitors all cameras",
-  "Sends near real-time alerts",
+  "Sends Real-Time Alerts",
   "Runs completely on your premises",
   "Reduces risks, accidents, and manual effort",
 ];
