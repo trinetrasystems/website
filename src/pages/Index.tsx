@@ -14,6 +14,7 @@ import Contact from "@/components/Contact";
 import Footer from "@/components/Footer";
 import Pricing from "@/components/Pricing";
 import SeeItInAction from "@/components/SeeItInAction";
+import SEOHead from "@/components/SEOHead";
 
 const Index = () => {
   const navigate = useNavigate();
@@ -37,6 +38,12 @@ const Index = () => {
     <div className="min-h-screen">
       <AppSidebar />
       <main className="pt-16 lg:pt-20">
+        <SEOHead
+          title="AI Surveillance & Camera Detection Solutions | Smart CCTV Analytics | Trinetra Systems"
+          description="Trinetra Systems provides AI-powered surveillance, smart camera detection, person tracking, vehicle analytics, real-time monitoring, and security solutions for societies, industries, and enterprises in India."
+          keywords="AI surveillance solutions, camera detection system, AI camera analytics, smart surveillance, person detection, vehicle detection, society security AI, real-time monitoring, AI-powered CCTV analytics"
+          canonicalPath="/"
+        />
         <Hero />
         <About />
         <Solutions />

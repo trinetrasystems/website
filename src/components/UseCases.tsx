@@ -100,7 +100,7 @@ const UseCases = () => {
           className="text-center mb-8 md:mb-16"
         >
           <h2 className="text-3xl md:text-5xl font-bold mb-4 md:mb-6">
-            <span className="text-gradient">Real-world Use Cases</span>
+            AI Detection <span className="text-gradient">Use Cases</span>
           </h2>
         </motion.div>
 

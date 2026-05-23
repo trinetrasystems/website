@@ -4,7 +4,7 @@ const Footer = () => {
   return (
     <footer className="border-t border-border/30 py-12 px-6">
       <div className="max-w-6xl mx-auto">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-10 mb-10">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-10 mb-10">
           <div>
             <div className="flex items-center gap-2 mb-4">
               <Eye className="w-6 h-6 text-primary" />
@@ -23,6 +23,18 @@ const Footer = () => {
               <li><a href="#usecases" className="hover:text-foreground transition-colors">Use Cases</a></li>
               <li><a href="#sla" className="hover:text-foreground transition-colors">SLA</a></li>
               <li><a href="#contact" className="hover:text-foreground transition-colors">Contact</a></li>
+            </ul>
+          </div>
+
+          <div>
+            <h4 className="font-semibold mb-4">Our Solutions</h4>
+            <ul className="space-y-2 text-sm text-muted-foreground">
+              <li><a href="/ai-surveillance" className="hover:text-foreground transition-colors">AI Surveillance</a></li>
+              <li><a href="/person-detection" className="hover:text-foreground transition-colors">Person Detection</a></li>
+              <li><a href="/vehicle-detection" className="hover:text-foreground transition-colors">Vehicle Detection</a></li>
+              <li><a href="/society-security" className="hover:text-foreground transition-colors">Society Security</a></li>
+              <li><a href="/anpr-system" className="hover:text-foreground transition-colors">ANPR System</a></li>
+              <li><a href="/blog" className="hover:text-foreground transition-colors">Blog</a></li>
             </ul>
           </div>
 

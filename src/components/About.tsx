@@ -23,8 +23,11 @@ const About = () => {
            className="text-center mb-12 md:mb-16"
         >
           <h2 className="text-3xl md:text-5xl font-bold mb-6">
-            Why <span className="text-red-500">Traditional CCTV</span> Fails
+            Why <span className="text-red-500">Traditional CCTV</span> Fails at AI Detection
           </h2>
+          <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
+            Traditional CCTV relies on manual monitoring — our AI camera analytics and smart surveillance platform detects incidents automatically in real time.
+          </p>
         </motion.div>
 
         <motion.div

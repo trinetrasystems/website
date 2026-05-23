@@ -21,6 +21,9 @@ const CTA = () => {
           <p className="text-muted-foreground text-xl md:text-2xl font-semibold mb-10 max-w-2xl mx-auto">
             Call us now for a quick demo and consultation.
           </p>
+          <p className="text-muted-foreground text-base mb-4">
+            Get started with AI-powered CCTV analytics and real-time monitoring solutions for your business.
+          </p>
           <div className="flex flex-wrap gap-6 justify-center">
             <motion.a
               href="tel:+919924315066"

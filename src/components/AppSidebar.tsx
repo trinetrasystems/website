@@ -1,6 +1,6 @@
 import { MouseEvent, useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Home, Sparkles, Grid3X3, Star, CircleDollarSign, Mail, Lock, Menu, X, Eye } from "lucide-react";
+import { Home, Sparkles, Grid3X3, Star, CircleDollarSign, Mail, Lock, Menu, X, Eye, Shield, BookOpen } from "lucide-react";
 import { Link } from "react-router-dom";
 import { ThemeToggle } from "./ThemeToggle";
 import { auth, db } from "@/lib/firebase";
@@ -11,10 +11,12 @@ const navItems = [
   { title: "Home", href: "#home", icon: Home },
   { title: "Features", href: "#features", icon: Sparkles },
   { title: "Use Cases", href: "#usecases", icon: Grid3X3 },
-  { title: "SLA Report", href: "#sla", icon: Star },
+  { title: "Solutions", href: "/ai-surveillance", icon: Shield, isRoute: true },
+  { title: "Blog", href: "/blog", icon: BookOpen, isRoute: true },
   { title: "Pricing", href: "#pricing", icon: CircleDollarSign },
   { title: "Contact", href: "#contact-form", icon: Mail },
 ];
+
 
 const AppSidebar = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -91,17 +93,28 @@ const AppSidebar = () => {
 
           {/* Nav Items */}
           <nav className="hidden lg:flex items-center gap-2">
-            {navItems.map((item) => (
-              <a
-                key={item.title}
-                href={item.href}
-                onClick={handleHashNavigation(item.href)}
-                className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-all duration-300 group"
-              >
-                <item.icon className="w-4 h-4 group-hover:scale-110 transition-transform text-primary/70 group-hover:text-primary" />
-                <span>{item.title}</span>
-              </a>
-            ))}
+            {navItems.map((item) =>
+              (item as any).isRoute ? (
+                <Link
+                  key={item.title}
+                  to={item.href}
+                  className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-all duration-300 group"
+                >
+                  <item.icon className="w-4 h-4 group-hover:scale-110 transition-transform text-primary/70 group-hover:text-primary" />
+                  <span>{item.title}</span>
+                </Link>
+              ) : (
+                <a
+                  key={item.title}
+                  href={item.href}
+                  onClick={handleHashNavigation(item.href)}
+                  className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-all duration-300 group"
+                >
+                  <item.icon className="w-4 h-4 group-hover:scale-110 transition-transform text-primary/70 group-hover:text-primary" />
+                  <span>{item.title}</span>
+                </a>
+              )
+            )}
           </nav>
 
           {/* Action Area */}
@@ -161,17 +174,29 @@ const AppSidebar = () => {
               </div>
 
               <div className="flex flex-col gap-2">
-                {navItems.map((item) => (
-                  <a
-                    key={item.title}
-                    href={item.href}
-                    onClick={handleHashNavigation(item.href)}
-                    className="flex items-center gap-4 px-4 py-4 rounded-2xl text-lg font-bold text-muted-foreground hover:text-primary hover:bg-primary/5 transition-all"
-                  >
-                    <item.icon className="w-6 h-6" />
-                    <span>{item.title}</span>
-                  </a>
-                ))}
+                {navItems.map((item) =>
+                  (item as any).isRoute ? (
+                    <Link
+                      key={item.title}
+                      to={item.href}
+                      onClick={() => setMobileOpen(false)}
+                      className="flex items-center gap-4 px-4 py-4 rounded-2xl text-lg font-bold text-muted-foreground hover:text-primary hover:bg-primary/5 transition-all"
+                    >
+                      <item.icon className="w-6 h-6" />
+                      <span>{item.title}</span>
+                    </Link>
+                  ) : (
+                    <a
+                      key={item.title}
+                      href={item.href}
+                      onClick={handleHashNavigation(item.href)}
+                      className="flex items-center gap-4 px-4 py-4 rounded-2xl text-lg font-bold text-muted-foreground hover:text-primary hover:bg-primary/5 transition-all"
+                    >
+                      <item.icon className="w-6 h-6" />
+                      <span>{item.title}</span>
+                    </a>
+                  )
+                )}
               </div>
 
               <div className="mt-auto flex flex-col gap-4">
