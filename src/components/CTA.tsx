@@ -7,7 +7,7 @@ const CTA = () => {
   const isInView = useInView(ref, { once: true, margin: "-100px" });
 
   return (
-    <section id="contact" className="py-12 md:py-24 px-4 md:px-6" ref={ref}>
+    <section id="cta" className="py-12 md:py-24 px-4 md:px-6" ref={ref}>
       <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
         animate={isInView ? { opacity: 1, scale: 1 } : {}}
@@ -20,6 +20,9 @@ const CTA = () => {
           </h2>
           <p className="text-muted-foreground text-xl md:text-2xl font-semibold mb-10 max-w-2xl mx-auto">
             Call the founder now for a quick demo and consultation.
+          </p>
+          <p className="text-muted-foreground text-base mb-4">
+            Get started with AI-powered CCTV analytics and real-time monitoring solutions for your business.
           </p>
           <div className="flex flex-wrap gap-6 justify-center">
             <motion.a

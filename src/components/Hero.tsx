@@ -9,8 +9,8 @@ const Hero = () => {
     <section id="home" className="relative min-h-screen flex items-center overflow-hidden">
       {/* Background Images */}
       <div className="absolute inset-0">
-        <img src={lightBg} alt="" className="absolute inset-0 w-full h-full object-cover object-center dark:hidden" />
-        <img src={darkBg} alt="" className="absolute inset-0 w-full h-full object-cover object-center hidden dark:block" />
+        <img src={lightBg} alt="AI surveillance and camera detection system dashboard" className="absolute inset-0 w-full h-full object-cover object-center dark:hidden" />
+        <img src={darkBg} alt="AI-powered smart CCTV analytics platform" className="absolute inset-0 w-full h-full object-cover object-center hidden dark:block" />
         {/* Stronger overlay for better text contrast */}
         <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-black/40 to-black/60 dark:from-black/80 dark:via-black/60 dark:to-black/80" />
         <div className="absolute inset-0 bg-grid opacity-20 dark:opacity-10" />
@@ -33,13 +33,13 @@ const Hero = () => {
           </div>
 
           <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold leading-tight mb-6 drop-shadow-[0_2px_10px_rgba(0,0,0,0.8)]">
-            <span className="text-white drop-shadow-[0_2px_8px_rgba(0,0,0,0.7)]">Turn Your Existing CCTV Into a</span>
+            <span className="text-white drop-shadow-[0_2px_8px_rgba(0,0,0,0.7)]">AI-Powered Surveillance &</span>
             <br />
-            <span className="bg-gradient-to-r from-amber-500 to-orange-600 dark:from-[#ffb300] dark:to-[#ff6f00] bg-clip-text text-transparent drop-shadow-[0_2px_8px_rgba(0,0,0,0.8)]">Real-Time AI Safety System</span>
+            <span className="bg-gradient-to-r from-amber-500 to-orange-600 dark:from-[#ffb300] dark:to-[#ff6f00] bg-clip-text text-transparent drop-shadow-[0_2px_8px_rgba(0,0,0,0.8)]">Camera Detection Solutions</span>
           </h1>
 
           <p className="max-w-3xl mb-10 text-2xl md:text-3xl font-bold text-white drop-shadow-lg leading-tight">
-            Monitor everything. Miss nothing. <span className="bg-gradient-to-r from-amber-500 to-orange-600 dark:from-[#ffb300] dark:to-[#ff6f00] bg-clip-text text-transparent drop-shadow-[0_2px_8px_rgba(0,0,0,0.8)] italic">Instant alerts</span> powered by Edge AI.
+            Turn your existing CCTV into a smart AI surveillance system with real-time detection, <span className="bg-gradient-to-r from-amber-500 to-orange-600 dark:from-[#ffb300] dark:to-[#ff6f00] bg-clip-text text-transparent drop-shadow-[0_2px_8px_rgba(0,0,0,0.8)] italic">instant alerts</span>, and complete data privacy.
           </p>
 
           <ul className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-12 text-white font-bold">

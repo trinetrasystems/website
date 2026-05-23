@@ -25,7 +25,7 @@ const Features = () => {
           className="text-center mb-12"
         >
           <h2 className="text-3xl md:text-5xl font-bold mb-6">
-            Core <span className="text-gradient">Features</span>
+            Core Features of Our <span className="text-gradient">AI Camera Detection System</span>
           </h2>
         </motion.div>
 

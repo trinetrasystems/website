@@ -24,7 +24,7 @@ const Solutions = () => {
           className="text-center mb-12 md:mb-16"
         >
           <h2 className="text-3xl md:text-5xl font-bold mb-6">
-            AI Monitoring That <span className="text-gradient">Works For You</span>
+            AI Surveillance Solutions That <span className="text-gradient">Work For You</span>
           </h2>
         </motion.div>
 

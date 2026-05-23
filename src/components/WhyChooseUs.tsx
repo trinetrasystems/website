@@ -24,7 +24,7 @@ const WhyChooseUs = () => {
           className="text-center mb-12 md:mb-16"
         >
           <h2 className="text-3xl md:text-5xl font-bold mb-6">
-            Why <span className="text-gradient">Trinetra Systems</span>
+            Why Choose <span className="text-gradient">Trinetra Systems</span> for Smart Surveillance
           </h2>
         </motion.div>
 
