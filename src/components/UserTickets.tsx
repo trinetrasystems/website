@@ -122,7 +122,7 @@ export default function UserTickets({ user, username }: UserTicketsProps) {
         updatedAt: serverTimestamp(),
       });
 
-      toast.success("Your support ticket has been created. We'll reach out to you as soon as possible.");
+      toast.success("Your support ticket has been created with Ticket ID: ${generatedTicketNumber}. We'll reach out to you as soon as possible.");
       
       setTitle("");
       setDescription("");

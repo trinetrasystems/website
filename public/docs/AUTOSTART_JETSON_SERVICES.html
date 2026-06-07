@@ -1,0 +1,700 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Jetson DeepStream Auto-Start Runbook</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #fafaf7;
+    --bg-elev: #ffffff;
+    --bg-code: #f1efe9;
+    --fg: #1c1c1a;
+    --fg-muted: #6b6b66;
+    --border: #e5e3dc;
+    --accent: #0d7c66;
+    --accent-fg: #ffffff;
+    --shadow: 0 1px 2px rgba(0,0,0,0.04), 0 4px 12px rgba(0,0,0,0.04);
+    --code-comment: #8a8a82;
+    --code-string: #0a6b51;
+    --code-keyword: #b5440f;
+    --warn-bg: #fdf6e3;
+    --warn-border: #d4a017;
+  }
+  [data-theme="dark"] {
+    --bg: #16181a;
+    --bg-elev: #1d2023;
+    --bg-code: #0f1113;
+    --fg: #e8e6df;
+    --fg-muted: #8e8d85;
+    --border: #2a2d31;
+    --accent: #4ec9a7;
+    --accent-fg: #0a1410;
+    --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 4px 16px rgba(0,0,0,0.3);
+    --code-comment: #6a6a62;
+    --code-string: #7fc8a9;
+    --code-keyword: #e8a06a;
+    --warn-bg: #2a2410;
+    --warn-border: #d4a017;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    font-family: 'IBM Plex Sans', -apple-system, sans-serif;
+    background: var(--bg);
+    color: var(--fg);
+    line-height: 1.65;
+    font-size: 16px;
+    transition: background 0.2s, color 0.2s;
+  }
+  header {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background: var(--bg);
+    border-bottom: 1px solid var(--border);
+    padding: 16px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .header-title {
+    font-weight: 600;
+    font-size: 14px;
+    letter-spacing: 0.02em;
+    color: var(--fg-muted);
+    text-transform: uppercase;
+  }
+  .theme-toggle {
+    background: var(--bg-elev);
+    border: 1px solid var(--border);
+    color: var(--fg);
+    padding: 6px 14px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.15s;
+  }
+  .theme-toggle:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+  main {
+    max-width: 820px;
+    margin: 0 auto;
+    padding: 48px 24px 96px;
+  }
+  h1 {
+    font-size: 32px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    margin: 0 0 8px;
+    line-height: 1.2;
+  }
+  h2 {
+    font-size: 22px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    margin: 56px 0 16px;
+    padding-top: 24px;
+    border-top: 1px solid var(--border);
+  }
+  h2:first-of-type { border-top: none; padding-top: 0; }
+  p { margin: 0 0 16px; }
+  ul { padding-left: 22px; margin: 0 0 16px; }
+  li { margin-bottom: 6px; }
+  ol { padding-left: 22px; margin: 0 0 16px; }
+  code {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.88em;
+    background: var(--bg-code);
+    padding: 1px 6px;
+    border-radius: 4px;
+    color: var(--fg);
+  }
+  strong { font-weight: 600; }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  .lead {
+    color: var(--fg-muted);
+    font-size: 15px;
+    margin-bottom: 32px;
+  }
+  .boot-flow {
+    background: var(--bg-elev);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px 20px;
+    margin: 24px 0;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 13px;
+    line-height: 1.7;
+    color: var(--fg-muted);
+  }
+  .boot-flow strong { color: var(--fg); }
+  .note {
+    background: var(--warn-bg);
+    border-left: 3px solid var(--warn-border);
+    padding: 12px 16px;
+    margin: 20px 0;
+    border-radius: 4px;
+    font-size: 14.5px;
+  }
+  .code-block {
+    position: relative;
+    margin: 16px 0 24px;
+  }
+  pre {
+    background: var(--bg-code);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px 18px;
+    overflow-x: auto;
+    margin: 0;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 13.5px;
+    line-height: 1.6;
+  }
+  pre code {
+    background: none;
+    padding: 0;
+    border-radius: 0;
+    color: var(--fg);
+    font-size: inherit;
+  }
+  .copy-btn {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: var(--bg-elev);
+    border: 1px solid var(--border);
+    color: var(--fg-muted);
+    padding: 4px 10px;
+    border-radius: 5px;
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    opacity: 0;
+    transition: all 0.15s;
+  }
+  .code-block:hover .copy-btn { opacity: 1; }
+  .copy-btn:hover {
+    color: var(--accent);
+    border-color: var(--accent);
+  }
+  .copy-btn.copied {
+    color: var(--accent);
+    border-color: var(--accent);
+    opacity: 1;
+  }
+  hr { display: none; }
+  .step-num {
+    display: inline-block;
+    color: var(--accent);
+    font-family: 'IBM Plex Mono', monospace;
+    font-weight: 500;
+    margin-right: 6px;
+  }
+  /* Mobile */
+  @media (max-width: 600px) {
+    main { padding: 32px 16px 64px; }
+    h1 { font-size: 26px; }
+    h2 { font-size: 19px; margin-top: 40px; }
+    pre { font-size: 12.5px; padding: 14px; }
+    .copy-btn { opacity: 1; }
+    header { padding: 12px 16px; }
+    .header-title { font-size: 12px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-title">Jetson Auto-Start Runbook</div>
+  <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme">
+    <span id="themeIcon">◐</span>
+    <span id="themeLabel">Dark</span>
+  </button>
+</header>
+
+<main>
+
+<h1>Jetson DeepStream + mediamtx + Dashboard</h1>
+<p class="lead">Single document covering full teardown and rebuild of the auto-start pipeline.</p>
+
+<p>Components installed by this runbook:</p>
+<ul>
+  <li><strong>mediamtx</strong> — Docker container, HLS/RTSP gateway (HLS on 8888, WebRTC on 8889)</li>
+  <li><strong>mediamtx-postsync</strong> — systemd service, restarts mediamtx after NTP sync (handles Jetson RTC drift)</li>
+  <li><strong>trinetra-dashboard</strong> — systemd service, FastAPI dashboard on port 8080</li>
+  <li><strong>deepstream-yolo</strong> — user systemd service, runs <code>deepstream-app</code> with HDMI display + RTSP at <code>rtsp://localhost:8554/ds-test</code></li>
+  <li><strong>GDM3 auto-login</strong> — so the user session (and DeepStream window) starts without manual login</li>
+</ul>
+
+<div class="boot-flow">
+  <strong>Boot sequence:</strong><br>
+  NTP sync → mediamtx restart → GDM auto-login → graphical user session → DeepStream pipeline → mediamtx pulls RTSP → HLS available
+</div>
+
+<div class="note">
+  <strong>Note on mediamtx:</strong> No separate installation needed. The <code>docker run bluenviron/mediamtx</code> command in Step 3 auto-pulls the image on first run.
+</div>
+
+<h2><span class="step-num">00</span>Install Docker (skip if already installed)</h2>
+
+<div class="code-block">
+<pre><code>docker --version || sudo apt install -y docker.io
+sudo systemctl enable --now docker
+sudo usermod -aG docker nvidia   # so 'nvidia' can run docker without sudo (logout/login after)</code></pre>
+</div>
+
+<p>Verify:</p>
+<div class="code-block">
+<pre><code>docker --version
+sudo systemctl is-active docker</code></pre>
+</div>
+
+<p>JetPack 6 usually has Docker pre-installed — the first line is a no-op in that case.</p>
+
+<h2><span class="step-num">01</span>Cleanup (run this to remove any prior setup)</h2>
+
+<p>Stops and removes every service/file this runbook creates. Safe to run even if some don't exist.</p>
+
+<div class="code-block">
+<pre><code># Stop and remove user-level deepstream service
+systemctl --user disable --now deepstream-yolo.service 2&gt;/dev/null
+rm -f ~/.config/systemd/user/deepstream-yolo.service
+systemctl --user daemon-reload
+
+# Stop and remove system-level services
+sudo systemctl disable --now deepstream-yolo.service 2&gt;/dev/null
+sudo systemctl disable --now trinetra-dashboard.service 2&gt;/dev/null
+sudo systemctl disable --now mediamtx-postsync.service 2&gt;/dev/null
+sudo rm -f /etc/systemd/system/deepstream-yolo.service
+sudo rm -f /etc/systemd/system/trinetra-dashboard.service
+sudo rm -f /etc/systemd/system/mediamtx-postsync.service
+sudo systemctl daemon-reload
+
+# Remove mediamtx container
+sudo docker rm -f mediamtx 2&gt;/dev/null
+
+# Verify all gone
+ls /etc/systemd/system/deepstream-yolo.service /etc/systemd/system/trinetra-dashboard.service /etc/systemd/system/mediamtx-postsync.service ~/.config/systemd/user/deepstream-yolo.service 2&gt;&amp;1
+sudo docker ps -a | grep mediamtx</code></pre>
+</div>
+
+<p>The <code>ls</code> should show "No such file or directory" for each, and <code>docker ps</code> should show no mediamtx row.</p>
+
+<h2><span class="step-num">02</span>DeepStream config file</h2>
+
+<p>Path: <code>~/DeepStream-Yolo/deepstream_app_config.txt</code></p>
+
+<div class="code-block">
+<pre><code>cd ~/DeepStream-Yolo
+
+cat &gt; deepstream_app_config.txt &lt;&lt;'EOF'
+[application]
+enable-perf-measurement=1
+perf-measurement-interval-sec=5
+
+[tiled-display]
+enable=1
+rows=2
+columns=3
+width=1920
+height=1080
+gpu-id=0
+nvbuf-memory-type=0
+
+[source0]
+enable=1
+type=3
+uri=file:///opt/nvidia/deepstream/deepstream/samples/streams/yoga.mp4
+num-sources=1
+gpu-id=0
+cudadec-memtype=0
+
+[source1]
+enable=1
+type=3
+uri=file:///opt/nvidia/deepstream/deepstream/samples/streams/fisheye_dist.mp4
+num-sources=1
+gpu-id=0
+cudadec-memtype=0
+
+[source2]
+enable=1
+type=3
+uri=file:///opt/nvidia/deepstream/deepstream/samples/streams/sample_100fps.mp4
+num-sources=1
+gpu-id=0
+cudadec-memtype=0
+
+[source3]
+enable=1
+type=3
+uri=file:///opt/nvidia/deepstream/deepstream/samples/streams/sample_ride_bike.mov
+num-sources=1
+gpu-id=0
+cudadec-memtype=0
+
+[source4]
+enable=1
+type=3
+uri=file:///opt/nvidia/deepstream/deepstream/samples/streams/sample_run.mov
+num-sources=1
+gpu-id=0
+cudadec-memtype=0
+
+[source5]
+enable=1
+type=3
+uri=file:///opt/nvidia/deepstream/deepstream/samples/streams/sample_walk.mov
+num-sources=1
+gpu-id=0
+cudadec-memtype=0
+
+# Display sink (HDMI / EGL window)
+[sink0]
+enable=1
+type=2
+sync=0
+gpu-id=0
+nvbuf-memory-type=0
+
+# RTSP streaming sink
+[sink1]
+enable=1
+# Type: 1=FakeSink 2=EglSink 3=File 4=RTSPStreaming 5=Overlay
+type=4
+# 1=h264 2=h265
+codec=1
+# 0=Hardware  1=Software (Orin Nano has no NVENC, use 1)
+enc-type=1
+sync=1
+bitrate=4000000
+profile=0
+iframeinterval=30
+rtsp-port=8554
+udp-port=5400
+
+[osd]
+enable=1
+gpu-id=0
+border-width=5
+text-size=15
+text-color=1;1;1;1
+text-bg-color=0.3;0.3;0.3;1
+font=Serif
+show-clock=0
+clock-x-offset=800
+clock-y-offset=820
+clock-text-size=12
+clock-color=1;0;0;0
+nvbuf-memory-type=0
+
+[streammux]
+gpu-id=0
+live-source=0
+batch-size=6
+batched-push-timeout=40000
+width=1920
+height=1080
+enable-padding=0
+nvbuf-memory-type=0
+
+[primary-gie]
+enable=1
+gpu-id=0
+gie-unique-id=1
+batch-size=6
+nvbuf-memory-type=0
+config-file=config_infer_primary_yolo26.txt
+
+[tests]
+file-loop=1
+EOF
+
+sed -i 's/\r$//' deepstream_app_config.txt
+sed -i 's/[[:space:]]*$//' deepstream_app_config.txt</code></pre>
+</div>
+
+<p>The two <code>sed</code> lines strip CRLF and trailing whitespace — both have caused parser failures before.</p>
+
+<h2><span class="step-num">03</span>mediamtx Docker container</h2>
+
+<div class="code-block">
+<pre><code>sudo docker rm -f mediamtx 2&gt;/dev/null
+
+sudo docker run -d --name mediamtx --restart unless-stopped \
+  --network host \
+  -e MTX_RTSP=no \
+  -e MTX_HLSADDRESS=:8888 \
+  -e MTX_HLSALWAYSREMUX=yes \
+  -e MTX_WEBRTCADDRESS=:8889 \
+  -e MTX_PATHS_DS-TEST_SOURCE=rtsp://localhost:8554/ds-test \
+  -e MTX_PATHS_DS-TEST_RTSPTRANSPORT=tcp \
+  bluenviron/mediamtx</code></pre>
+</div>
+
+<p><code>--restart unless-stopped</code> makes Docker auto-start it on every boot.</p>
+
+<h2><span class="step-num">04</span>mediamtx-postsync systemd service</h2>
+
+<p>Restarts the mediamtx container once NTP has corrected the clock. Without this, mediamtx starts with a wrong system time at boot (Jetson dev kit has no RTC battery) and the HLS muxer takes ~3 minutes to recover.</p>
+
+<div class="code-block">
+<pre><code>sudo tee /etc/systemd/system/mediamtx-postsync.service &gt; /dev/null &lt;&lt;'EOF'
+[Unit]
+Description=Restart mediamtx after NTP sync
+After=systemd-time-wait-sync.service docker.service
+Wants=systemd-time-wait-sync.service
+Requires=docker.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/docker restart mediamtx
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+sudo systemctl enable systemd-time-wait-sync.service
+sudo systemctl daemon-reload
+sudo systemctl enable mediamtx-postsync.service</code></pre>
+</div>
+
+<h2><span class="step-num">05</span>GDM3 auto-login + force X11</h2>
+
+<p>DeepStream's EGL sink needs X11 (not Wayland), and the user service needs an actual logged-in session.</p>
+
+<div class="code-block">
+<pre><code>sudo tee /etc/gdm3/custom.conf &gt; /dev/null &lt;&lt;'EOF'
+# GDM configuration storage
+[daemon]
+WaylandEnable=false
+AutomaticLoginEnable=true
+AutomaticLogin=nvidia
+
+[security]
+
+[xdmcp]
+
+[chooser]
+
+[debug]
+EOF</code></pre>
+</div>
+
+<h2><span class="step-num">06</span>Trinetra dashboard systemd service</h2>
+
+<p>System-level service for the FastAPI dashboard.</p>
+
+<div class="code-block">
+<pre><code># Make sure deps are installed once
+sudo apt install -y python3-fastapi python3-uvicorn 2&gt;/dev/null
+
+sudo tee /etc/systemd/system/trinetra-dashboard.service &gt; /dev/null &lt;&lt;'EOF'
+[Unit]
+Description=Trinetra Watch Dashboard (FastAPI)
+After=network-online.target docker.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=nvidia
+WorkingDirectory=/home/nvidia/trinetra-watch-main
+Environment=HOME=/home/nvidia
+ExecStart=/usr/bin/python3 -m uvicorn main:app --host 0.0.0.0 --port 8080
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+sudo systemctl daemon-reload
+sudo systemctl enable --now trinetra-dashboard.service</code></pre>
+</div>
+
+<h2><span class="step-num">07</span>DeepStream user service (HDMI display)</h2>
+
+<p>User-level service, runs inside the auto-logged-in graphical session so it inherits <code>DISPLAY</code> and <code>XAUTHORITY</code> automatically.</p>
+
+<div class="code-block">
+<pre><code>mkdir -p ~/.config/systemd/user
+
+cat &gt; ~/.config/systemd/user/deepstream-yolo.service &lt;&lt;'EOF'
+[Unit]
+Description=DeepStream YOLO Pipeline (user session)
+After=graphical-session.target
+PartOf=graphical-session.target
+
+[Service]
+Type=simple
+WorkingDirectory=/home/nvidia/DeepStream-Yolo
+ExecStartPre=/bin/sleep 10
+ExecStart=/usr/bin/deepstream-app -c deepstream_app_config.txt
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=graphical-session.target
+EOF
+
+systemctl --user daemon-reload
+systemctl --user enable deepstream-yolo.service</code></pre>
+</div>
+
+<p><code>Restart=always</code> ensures the window comes back if you accidentally close it.</p>
+
+<h2><span class="step-num">08</span>Reboot</h2>
+
+<div class="code-block">
+<pre><code>sudo reboot</code></pre>
+</div>
+
+<p>After boot you should see (in order):</p>
+<ol>
+  <li>No password screen — GDM auto-logs in <code>nvidia</code></li>
+  <li>Desktop appears on HDMI</li>
+  <li>~10 seconds later: DeepStream tiled-display window opens</li>
+  <li>mediamtx pulls the RTSP feed shortly after</li>
+  <li>Dashboard reachable at <code>http://&lt;jetson-ip&gt;:8080</code></li>
+  <li>HLS reachable at <code>http://&lt;jetson-ip&gt;:8888/ds-test/</code></li>
+</ol>
+
+<h2>Verification commands</h2>
+
+<div class="code-block">
+<pre><code># Did the post-sync service run cleanly?
+systemctl status mediamtx-postsync.service
+
+# mediamtx running?
+sudo docker ps | grep mediamtx
+sudo docker logs --tail 30 mediamtx
+
+# Dashboard service
+systemctl status trinetra-dashboard.service
+
+# DeepStream user service
+systemctl --user status deepstream-yolo.service
+journalctl --user -u deepstream-yolo.service -b --no-pager | tail -30
+
+# Confirm only ONE deepstream-app process is running
+ps aux | grep deepstream-app | grep -v grep</code></pre>
+</div>
+
+<h2>Common operations</h2>
+
+<div class="code-block">
+<pre><code># Restart deepstream window (after closing it manually)
+systemctl --user restart deepstream-yolo.service
+
+# Stop deepstream just for now
+systemctl --user stop deepstream-yolo.service
+
+# Disable deepstream from auto-starting on boot
+systemctl --user disable deepstream-yolo.service
+
+# Re-enable
+systemctl --user enable --now deepstream-yolo.service
+
+# Same pattern for system services (use sudo, no --user flag)
+sudo systemctl restart trinetra-dashboard.service
+sudo systemctl restart mediamtx-postsync.service
+sudo docker restart mediamtx
+
+# Tail live logs
+journalctl --user -u deepstream-yolo.service -f
+sudo journalctl -u trinetra-dashboard.service -f
+sudo docker logs -f mediamtx</code></pre>
+</div>
+
+<h2>Notes / gotchas seen during setup</h2>
+
+<ul>
+  <li><strong>Trailing whitespace in DeepStream config URIs</strong> caused <code>Failed to load uri file: No such file or directory</code>. The <code>sed</code> cleanup in Step 2 prevents this.</li>
+  <li><strong>CRLF line endings</strong> from copy-paste also break the parser; same <code>sed</code> handles it.</li>
+  <li><strong><code>enc-type=0</code></strong> (HW encoder) fails on Orin Nano — use <code>enc-type=1</code> (software). On Orin NX/AGX you can use <code>0</code>.</li>
+  <li><strong>System-level deepstream service vs user-level</strong> — only one should exist. The user-level version is the right one when you want the HDMI window. Step 1 cleanup removes both to avoid two windows.</li>
+  <li><strong>GDM3 config</strong> must have <code>AutomaticLoginEnable=true</code> and <code>AutomaticLogin=nvidia</code> uncommented and not mistakenly include the descriptive comment line without a <code>#</code>.</li>
+</ul>
+
+</main>
+
+<script>
+  // Theme handling
+  const root = document.documentElement;
+  const toggle = document.getElementById('themeToggle');
+  const icon = document.getElementById('themeIcon');
+  const label = document.getElementById('themeLabel');
+
+  function applyTheme(theme) {
+    root.setAttribute('data-theme', theme);
+    if (theme === 'dark') {
+      icon.textContent = '◑';
+      label.textContent = 'Light';
+    } else {
+      icon.textContent = '◐';
+      label.textContent = 'Dark';
+    }
+  }
+
+  // Init: stored > system preference
+  const stored = localStorage.getItem('theme');
+  const systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+  applyTheme(stored || (systemDark ? 'dark' : 'light'));
+
+  toggle.addEventListener('click', () => {
+    const next = root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+    applyTheme(next);
+    localStorage.setItem('theme', next);
+  });
+
+  // Copy buttons
+  document.querySelectorAll('.code-block').forEach(block => {
+    const btn = document.createElement('button');
+    btn.className = 'copy-btn';
+    btn.textContent = 'Copy';
+    btn.setAttribute('aria-label', 'Copy code');
+    block.appendChild(btn);
+
+    btn.addEventListener('click', async () => {
+      const code = block.querySelector('code').innerText;
+      try {
+        await navigator.clipboard.writeText(code);
+      } catch (err) {
+        // Fallback for older browsers / file:// origins
+        const ta = document.createElement('textarea');
+        ta.value = code;
+        ta.style.position = 'fixed';
+        ta.style.opacity = '0';
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+      }
+      btn.textContent = 'Copied';
+      btn.classList.add('copied');
+      setTimeout(() => {
+        btn.textContent = 'Copy';
+        btn.classList.remove('copied');
+      }, 1500);
+    });
+  });
+</script>
+
+</body>
+</html>
