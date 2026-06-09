@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RTSP → DeepStream → HLS Pipeline</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --bg: #1a1a1a;
+    --bg-card: #242424;
+    --bg-code: #0e0e0e;
+    --text: #e8e8e8;
+    --text-mute: #a0a0a0;
+    --accent: #4ec9b0;
+    --accent-hover: #6ddbc4;
+    --border: #333;
+    --link: #569cd6;
+  }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+    padding: 32px 20px;
+    max-width: 980px;
+    margin: 0 auto;
+    font-size: 15px;
+  }
+
+  h1 {
+    font-size: 26px;
+    margin-bottom: 8px;
+    color: #fff;
+    border-bottom: 2px solid var(--accent);
+    padding-bottom: 12px;
+  }
+
+  h2 {
+    font-size: 20px;
+    margin: 36px 0 12px;
+    color: var(--accent);
+    padding: 10px 14px;
+    background: var(--bg-card);
+    border-left: 4px solid var(--accent);
+    border-radius: 3px;
+  }
+
+  h3 {
+    font-size: 16px;
+    margin: 20px 0 10px;
+    color: #fff;
+  }
+
+  p, li {
+    color: var(--text);
+    margin-bottom: 10px;
+  }
+
+  ul, ol { padding-left: 24px; margin-bottom: 12px; }
+  li { margin-bottom: 6px; }
+
+  .subtitle {
+    color: var(--text-mute);
+    margin-bottom: 24px;
+    font-size: 14px;
+  }
+
+  /* Code block */
+  .code-block {
+    position: relative;
+    background: var(--bg-code);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    margin: 12px 0 18px;
+    overflow: hidden;
+  }
+
+  .code-block pre {
+    padding: 16px 60px 16px 18px;
+    overflow-x: auto;
+    font-family: "JetBrains Mono", "Consolas", "Monaco", monospace;
+    font-size: 13.5px;
+    line-height: 1.6;
+    color: #f0f0f0;
+    white-space: pre;
+  }
+
+  .copy-btn {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    background: #2a2a2a;
+    border: 1px solid #444;
+    color: #ccc;
+    padding: 6px 8px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    transition: all 0.15s;
+    font-family: inherit;
+  }
+
+  .copy-btn:hover {
+    background: #3a3a3a;
+    color: #fff;
+    border-color: #666;
+  }
+
+  .copy-btn.copied {
+    background: #1d4d3f;
+    color: #4ec9b0;
+    border-color: #4ec9b0;
+  }
+
+  .copy-btn svg {
+    width: 14px;
+    height: 14px;
+  }
+
+  /* Inline code */
+  code {
+    font-family: "JetBrains Mono", "Consolas", "Monaco", monospace;
+    background: #2a2a2a;
+    color: #ce9178;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-size: 13px;
+  }
+
+  /* Table */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 12px 0 18px;
+    background: var(--bg-card);
+    border-radius: 6px;
+    overflow: hidden;
+  }
+
+  th, td {
+    padding: 10px 14px;
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+    font-size: 14px;
+  }
+
+  th {
+    background: #2d2d2d;
+    color: var(--accent);
+    font-weight: 600;
+  }
+
+  tr:last-child td { border-bottom: none; }
+
+  td code { font-size: 12.5px; }
+
+  /* Links */
+  a {
+    color: var(--link);
+    text-decoration: none;
+    word-break: break-all;
+  }
+
+  a:hover { text-decoration: underline; color: #79b6e0; }
+
+  /* URL box */
+  .url-box {
+    display: block;
+    background: var(--bg-code);
+    border: 1px solid var(--border);
+    padding: 12px 14px;
+    border-radius: 5px;
+    margin: 8px 0;
+    font-family: "JetBrains Mono", monospace;
+    font-size: 13px;
+  }
+
+  .url-box .label {
+    display: block;
+    font-size: 11.5px;
+    color: var(--text-mute);
+    margin-bottom: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-family: inherit;
+  }
+
+  /* Note */
+  .note {
+    background: #2a2418;
+    border-left: 3px solid #d7a843;
+    padding: 10px 14px;
+    margin: 12px 0;
+    border-radius: 3px;
+    font-size: 14px;
+    color: #e0d4b0;
+  }
+
+  .note strong { color: #f0c560; }
+
+  /* Step number */
+  .step-num {
+    display: inline-block;
+    background: var(--accent);
+    color: #0a2820;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    text-align: center;
+    line-height: 22px;
+    font-size: 13px;
+    font-weight: 700;
+    margin-right: 8px;
+    vertical-align: middle;
+  }
+
+  hr {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 36px 0;
+  }
+</style>
+</head>
+<body>
+
+<h1>RTSP → DeepStream → HLS Pipeline</h1>
+<p class="subtitle">Reference commands for laptop test stream + Jetson DeepStream + mediamtx HLS conversion.</p>
+
+<!-- LAPTOP -->
+<h2>1. On Laptop — Create RTSP stream from video file</h2>
+
+<h3><span class="step-num">1</span>Start mediamtx (RTSP server)</h3>
+<div class="code-block">
+  <button class="copy-btn" data-target="cmd-l1"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>Copy</button>
+  <pre id="cmd-l1">docker run -d --name mediamtx --restart unless-stopped -p 8554:8554 -p 8888:8888 -p 8889:8889 bluenviron/mediamtx</pre>
+</div>
+
+<h3><span class="step-num">2</span>Push the video as RTSP (keep terminal open)</h3>
+<div class="code-block">
+  <button class="copy-btn" data-target="cmd-l2"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>Copy</button>
+  <pre id="cmd-l2">ffmpeg -re -stream_loop -1 -i testing.mp4 \
+  -c:v libx264 -preset ultrafast -tune zerolatency \
+  -b:v 3M -maxrate 3M -bufsize 6M \
+  -g 60 -pix_fmt yuv420p \
+  -rtsp_transport tcp \
+  -f rtsp rtsp://localhost:8554/cam1</pre>
+</div>
+
+<p>RTSP feed is now available at <code>rtsp://&lt;laptop-ip&gt;:8554/cam1</code></p>
+
+<hr>
+
+<!-- JETSON TEST -->
+<h2>2. On Jetson — Verify the RTSP feed (optional)</h2>
+<p>Before running DeepStream, confirm the Jetson can pull the laptop's stream. Use TCP transport to avoid packet loss over Tailscale.</p>
+
+<div class="code-block">
+  <button class="copy-btn" data-target="cmd-j1"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>Copy</button>
+  <pre id="cmd-j1">ffplay -rtsp_transport tcp -fflags nobuffer -flags low_delay \
+  rtsp://100.121.142.58:8554/cam1</pre>
+</div>
+
+<p class="note"><strong>Replace IP:</strong> <code>100.121.142.58</code> is the laptop's Tailscale IP. Get yours with <code>tailscale ip</code> on the laptop.</p>
+
+<hr>
+
+<!-- JETSON HLS -->
+<h2>3. On Jetson — Convert DeepStream RTSP to HLS</h2>
+
+<h3><span class="step-num">1</span>Run DeepStream</h3>
+<p>Start your DeepStream pipeline. It will publish RTSP at <code>rtsp://localhost:8554/ds-test</code></p>
+<div class="code-block">
+  <button class="copy-btn" data-target="cmd-j2"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>Copy</button>
+  <pre id="cmd-j2">deepstream-app -c deepstream_config.txt</pre>
+</div>
+
+<h3><span class="step-num">2</span>Start mediamtx (HLS converter)</h3>
+
+<div class="code-block">
+  <button class="copy-btn" data-target="cmd-j3"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>Copy</button>
+  <pre id="cmd-j3">sudo docker rm -f mediamtx
+
+sudo docker run -d --name mediamtx --restart unless-stopped \
+  --network host \
+  -e MTX_RTSP=no \
+  -e MTX_HLSADDRESS=:8888 \
+  -e MTX_HLSALWAYSREMUX=yes \
+  -e MTX_WEBRTCADDRESS=:8889 \
+  -e MTX_PATHS_DS-TEST_SOURCE=rtsp://localhost:8554/ds-test \
+  -e MTX_PATHS_DS-TEST_SOURCEPROTOCOL=tcp \
+  -e MTX_PATHS_DS-TEST_SOURCEONDEMAND=no \
+  bluenviron/mediamtx</pre>
+</div>
+
+<h3>Environment variables</h3>
+<table>
+  <thead>
+    <tr><th>Variable</th><th>Purpose</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><code>MTX_RTSP=no</code></td><td>Disable mediamtx's own RTSP server (DeepStream owns 8554)</td></tr>
+    <tr><td><code>MTX_HLSADDRESS=:8888</code></td><td>HLS endpoint port</td></tr>
+    <tr><td><code>MTX_HLSALWAYSREMUX=yes</code></td><td>Force clean H.264 → HLS remuxing (more browser-compatible)</td></tr>
+    <tr><td><code>MTX_WEBRTCADDRESS=:8889</code></td><td>WebRTC viewer endpoint (sub-second latency)</td></tr>
+    <tr><td><code>..._SOURCE</code></td><td>Where mediamtx pulls the RTSP from (DeepStream's output)</td></tr>
+    <tr><td><code>..._SOURCEPROTOCOL=tcp</code></td><td>Use TCP transport, avoid UDP packet loss</td></tr>
+    <tr><td><code>..._SOURCEONDEMAND=no</code></td><td>Connect to DeepStream immediately, not only when a viewer arrives</td></tr>
+  </tbody>
+</table>
+
+<h3><span class="step-num">3</span>Verify</h3>
+<div class="code-block">
+  <button class="copy-btn" data-target="cmd-j4"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>Copy</button>
+  <pre id="cmd-j4"># Check container is running
+sudo docker ps | grep mediamtx
+
+# Check it connected to DeepStream and is muxing HLS
+sudo docker logs mediamtx | tail -20
+# Look for: "is publishing to path 'ds-test'"
+#          "is converting into HLS, 1 track (H264)"
+
+# Verify HLS playlist is alive (need -L to follow cookie redirect)
+curl -sL http://localhost:8888/ds-test/index.m3u8 | head -5
+# Expect: #EXTM3U ... #EXT-X-VERSION:9 ...</pre>
+</div>
+
+<hr>
+
+<!-- BROWSER -->
+<h2>4. View the dashboard stream in browser</h2>
+<p>Open on any device on the same VPN. Two URLs available:</p>
+
+<a class="url-box" href="http://100.88.150.34:8888/ds-test/index.m3u8" target="_blank">
+  <span class="label">HLS — for stream.html / hls.js dashboards · ~5–10s latency</span>
+  http://&lt;jetson-ip&gt;:8888/ds-test/index.m3u8
+</a>
+
+<a class="url-box" href="http://100.88.150.34:8889/ds-test" target="_blank">
+  <span class="label">WebRTC — built-in mediamtx viewer · sub-second latency</span>
+  http://&lt;jetson-ip&gt;:8889/ds-test
+</a>
+
+<hr>
+
+<!-- AUTO-START -->
+<h2>5. Auto-start on boot</h2>
+
+<h3>Docker daemon (mediamtx auto-starts via <code>--restart unless-stopped</code>)</h3>
+<div class="code-block">
+  <button class="copy-btn" data-target="cmd-a1"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>Copy</button>
+  <pre id="cmd-a1"># Check Docker daemon auto-starts
+sudo systemctl is-enabled docker
+# If output is "disabled", enable it:
+sudo systemctl enable docker
+
+# Test by rebooting
+sudo reboot
+
+# After login, confirm mediamtx is running
+sudo docker ps | grep mediamtx</pre>
+</div>
+
+<h3>DeepStream auto-start (systemd service)</h3>
+<p>DeepStream isn't a container, so it needs its own service unit:</p>
+
+<div class="code-block">
+  <button class="copy-btn" data-target="cmd-a2"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>Copy</button>
+  <pre id="cmd-a2">sudo tee /etc/systemd/system/deepstream.service > /dev/null &lt;&lt;'EOF'
+[Unit]
+Description=DeepStream YOLO Inference Pipeline
+After=network-online.target docker.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=nvidia
+WorkingDirectory=/home/nvidia/deepstream
+ExecStart=/usr/bin/deepstream-app -c /home/nvidia/deepstream/deepstream_config.txt
+Restart=on-failure
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+sudo systemctl daemon-reload
+sudo systemctl enable deepstream
+sudo systemctl start deepstream
+
+# Verify
+sudo systemctl status deepstream
+journalctl -u deepstream -f</pre>
+</div>
+
+<p class="note"><strong>Boot order:</strong> Docker starts → mediamtx auto-starts → systemd starts DeepStream. mediamtx will log <code>connection refused</code> for a few seconds before DeepStream is ready, then auto-connect on its 5-second retry. No manual intervention needed.</p>
+
+<h3>Manual control</h3>
+<div class="code-block">
+  <button class="copy-btn" data-target="cmd-a3"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>Copy</button>
+  <pre id="cmd-a3"># DeepStream
+sudo systemctl restart deepstream
+sudo systemctl stop deepstream
+sudo systemctl status deepstream
+
+# mediamtx
+sudo docker restart mediamtx
+sudo docker stop mediamtx
+sudo docker logs -f mediamtx</pre>
+</div>
+
+<script>
+document.querySelectorAll('.copy-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const target = document.getElementById(btn.dataset.target);
+    const text = target.innerText;
+    navigator.clipboard.writeText(text).then(() => {
+      const original = btn.innerHTML;
+      btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>Copied';
+      btn.classList.add('copied');
+      setTimeout(() => {
+        btn.innerHTML = original;
+        btn.classList.remove('copied');
+      }, 1500);
+    }).catch(err => {
+      // Fallback for older browsers / non-HTTPS
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+      btn.classList.add('copied');
+      btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>Copied';
+      setTimeout(() => {
+        btn.classList.remove('copied');
+        btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>Copy';
+      }, 1500);
+    });
+  });
+});
+</script>
+
+</body>
+</html>

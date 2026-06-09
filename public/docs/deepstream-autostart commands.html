@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DeepStream Autostart</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Syne:wght@700;800&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0a0c0f;
+    --surface: #111418;
+    --surface2: #181c22;
+    --border: #1e2530;
+    --green: #00e5a0;
+    --green-dim: #00e5a020;
+    --orange: #ff6b35;
+    --orange-dim: #ff6b3520;
+    --text: #e2e8f0;
+    --muted: #4a5568;
+    --code: #a8d8a8;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'JetBrains Mono', monospace;
+    min-height: 100vh;
+    padding: 48px 24px;
+  }
+
+  header {
+    max-width: 860px;
+    margin: 0 auto 48px;
+    display: flex;
+    align-items: baseline;
+    gap: 16px;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 24px;
+  }
+
+  header h1 {
+    font-family: 'Syne', sans-serif;
+    font-size: 22px;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+    color: #fff;
+  }
+
+  header span {
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+
+  .grid {
+    max-width: 860px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+  }
+
+  @media (max-width: 700px) { .grid { grid-template-columns: 1fr; } }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+
+  .card-header {
+    padding: 14px 18px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .card.green .card-header { background: var(--green-dim); }
+  .card.orange .card-header { background: var(--orange-dim); }
+
+  .dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .card.green .dot { background: var(--green); box-shadow: 0 0 8px var(--green); }
+  .card.orange .dot { background: var(--orange); box-shadow: 0 0 8px var(--orange); }
+
+  .card-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+  }
+  .card.green .card-title { color: var(--green); }
+  .card.orange .card-title { color: var(--orange); }
+
+  .section {
+    padding: 16px 18px;
+    border-bottom: 1px solid var(--border);
+  }
+  .section:last-child { border-bottom: none; }
+
+  .section-label {
+    font-size: 9px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 10px;
+  }
+
+  .cmd {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 8px 10px;
+    background: var(--surface2);
+    border-radius: 6px;
+    margin-bottom: 6px;
+    cursor: pointer;
+    transition: background 0.15s;
+    border: 1px solid transparent;
+  }
+  .cmd:last-child { margin-bottom: 0; }
+  .cmd:hover { border-color: var(--border); background: #1e2530; }
+  .card.green .cmd:hover { border-color: #00e5a030; }
+  .card.orange .cmd:hover { border-color: #ff6b3530; }
+
+  .cmd-text {
+    font-size: 11px;
+    color: var(--code);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    flex: 1;
+  }
+
+  .cmd-label {
+    font-size: 10px;
+    color: var(--muted);
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  .copy-btn {
+    background: none;
+    border: none;
+    color: var(--muted);
+    cursor: pointer;
+    font-size: 11px;
+    padding: 2px 6px;
+    border-radius: 4px;
+    flex-shrink: 0;
+    transition: color 0.15s;
+    font-family: 'JetBrains Mono', monospace;
+  }
+  .copy-btn:hover { color: var(--text); }
+  .copy-btn.copied { color: var(--green); }
+
+  .setup-block {
+    background: var(--surface2);
+    border-radius: 6px;
+    padding: 12px;
+    font-size: 10.5px;
+    color: var(--code);
+    line-height: 1.7;
+    position: relative;
+  }
+
+  .copy-all {
+    position: absolute;
+    top: 8px; right: 8px;
+    background: var(--border);
+    border: none;
+    color: var(--muted);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    padding: 3px 8px;
+    border-radius: 4px;
+    cursor: pointer;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    transition: color 0.15s;
+  }
+  .copy-all:hover { color: var(--text); }
+  .copy-all.copied { color: var(--green); }
+
+  .comment { color: var(--muted); }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>DeepStream Autostart</h1>
+  <span>Jetson AGX Orin · systemd</span>
+</header>
+
+<div class="grid">
+
+  <!-- DEEPSTREAM (default) -->
+  <div class="card green">
+    <div class="card-header">
+      <div class="dot"></div>
+      <div class="card-title">deepstream</div>
+    </div>
+
+    <div class="section">
+      <div class="section-label">Setup — run once</div>
+      <div class="setup-block">
+        <button class="copy-all" onclick="copyAll(this, 'setup-ds')">copy</button>
+        <pre id="setup-ds">cat > ~/start_deepstream.sh &lt;&lt; 'EOF'
+#!/bin/bash
+exec deepstream-app \
+  -c ~/DeepStream-Yolo/deepstream_app_config.txt \
+  2>&1 | tee ~/deepstream.log
+EOF
+chmod +x ~/start_deepstream.sh
+
+sudo tee /etc/systemd/system/deepstream.service &lt;&lt; 'EOF'
+[Unit]
+Description=DeepStream YOLO Pipeline
+After=network-online.target nvargus-daemon.service
+Wants=network-online.target
+Requires=nvargus-daemon.service
+
+[Service]
+Type=simple
+User=nvidia
+WorkingDirectory=/home/nvidia
+ExecStart=/home/nvidia/start_deepstream.sh
+Restart=on-failure
+RestartSec=10
+LimitNOFILE=65536
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+sudo systemctl daemon-reload</pre>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-label">Commands</div>
+      <div class="cmd" onclick="copy(this, 'sudo systemctl start deepstream.service')">
+        <span class="cmd-text">sudo systemctl start deepstream.service</span>
+        <span class="cmd-label">start</span>
+        <button class="copy-btn">copy</button>
+      </div>
+      <div class="cmd" onclick="copy(this, 'sudo systemctl stop deepstream.service')">
+        <span class="cmd-text">sudo systemctl stop deepstream.service</span>
+        <span class="cmd-label">stop</span>
+        <button class="copy-btn">copy</button>
+      </div>
+      <div class="cmd" onclick="copy(this, 'sudo systemctl restart deepstream.service')">
+        <span class="cmd-text">sudo systemctl restart deepstream.service</span>
+        <span class="cmd-label">restart</span>
+        <button class="copy-btn">copy</button>
+      </div>
+      <div class="cmd" onclick="copy(this, 'sudo systemctl enable deepstream.service')">
+        <span class="cmd-text">sudo systemctl enable deepstream.service</span>
+        <span class="cmd-label">enable</span>
+        <button class="copy-btn">copy</button>
+      </div>
+      <div class="cmd" onclick="copy(this, 'sudo systemctl disable deepstream.service')">
+        <span class="cmd-text">sudo systemctl disable deepstream.service</span>
+        <span class="cmd-label">disable</span>
+        <button class="copy-btn">copy</button>
+      </div>
+      <div class="cmd" onclick="copy(this, 'sudo systemctl status deepstream.service')">
+        <span class="cmd-text">sudo systemctl status deepstream.service</span>
+        <span class="cmd-label">status</span>
+        <button class="copy-btn">copy</button>
+      </div>
+      <div class="cmd" onclick="copy(this, `tail -f ~/deepstream.log | grep -i 'fps\\|error\\|warn\\|failed'`)">
+        <span class="cmd-text">tail -f ~/deepstream.log | grep -i "fps\|error\|warn"</span>
+        <span class="cmd-label">logs</span>
+        <button class="copy-btn">copy</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- DEEPSTREAMCUSTOM -->
+  <div class="card orange">
+    <div class="card-header">
+      <div class="dot"></div>
+      <div class="card-title">deepstreamcustom</div>
+    </div>
+
+    <div class="section">
+      <div class="section-label">Setup — run once</div>
+      <div class="setup-block">
+        <button class="copy-all" onclick="copyAll(this, 'setup-dsc')">copy</button>
+        <pre id="setup-dsc">cat > ~/start_deepstreamcustom.sh &lt;&lt; 'EOF'
+#!/bin/bash
+exec ~/deepstream-app-custom/deepstream-app \
+  -c ~/DeepStream-Yolo/deepstream_app_config.txt \
+  2>&1 | tee ~/deepstreamcustom.log
+EOF
+chmod +x ~/start_deepstreamcustom.sh
+
+sudo tee /etc/systemd/system/deepstreamcustom.service &lt;&lt; 'EOF'
+[Unit]
+Description=DeepStream Custom Pipeline
+After=network-online.target nvargus-daemon.service
+Wants=network-online.target
+Requires=nvargus-daemon.service
+
+[Service]
+Type=simple
+User=nvidia
+WorkingDirectory=/home/nvidia
+ExecStart=/home/nvidia/start_deepstreamcustom.sh
+Restart=on-failure
+RestartSec=10
+LimitNOFILE=65536
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+sudo systemctl daemon-reload</pre>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-label">Commands</div>
+      <div class="cmd" onclick="copy(this, 'sudo systemctl start deepstreamcustom.service')">
+        <span class="cmd-text">sudo systemctl start deepstreamcustom.service</span>
+        <span class="cmd-label">start</span>
+        <button class="copy-btn">copy</button>
+      </div>
+      <div class="cmd" onclick="copy(this, 'sudo systemctl stop deepstreamcustom.service')">
+        <span class="cmd-text">sudo systemctl stop deepstreamcustom.service</span>
+        <span class="cmd-label">stop</span>
+        <button class="copy-btn">copy</button>
+      </div>
+      <div class="cmd" onclick="copy(this, 'sudo systemctl restart deepstreamcustom.service')">
+        <span class="cmd-text">sudo systemctl restart deepstreamcustom.service</span>
+        <span class="cmd-label">restart</span>
+        <button class="copy-btn">copy</button>
+      </div>
+      <div class="cmd" onclick="copy(this, 'sudo systemctl enable deepstreamcustom.service')">
+        <span class="cmd-text">sudo systemctl enable deepstreamcustom.service</span>
+        <span class="cmd-label">enable</span>
+        <button class="copy-btn">copy</button>
+      </div>
+      <div class="cmd" onclick="copy(this, 'sudo systemctl disable deepstreamcustom.service')">
+        <span class="cmd-text">sudo systemctl disable deepstreamcustom.service</span>
+        <span class="cmd-label">disable</span>
+        <button class="copy-btn">copy</button>
+      </div>
+      <div class="cmd" onclick="copy(this, 'sudo systemctl status deepstreamcustom.service')">
+        <span class="cmd-text">sudo systemctl status deepstreamcustom.service</span>
+        <span class="cmd-label">status</span>
+        <button class="copy-btn">copy</button>
+      </div>
+      <div class="cmd" onclick="copy(this, `tail -f ~/deepstreamcustom.log | grep -i 'fps\\|error\\|warn\\|failed'`)">
+        <span class="cmd-text">tail -f ~/deepstreamcustom.log | grep -i "fps\|error\|warn"</span>
+        <span class="cmd-label">logs</span>
+        <button class="copy-btn">copy</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+function copy(row, text) {
+  navigator.clipboard.writeText(text);
+  const btn = row.querySelector('.copy-btn');
+  btn.textContent = 'done';
+  btn.classList.add('copied');
+  setTimeout(() => { btn.textContent = 'copy'; btn.classList.remove('copied'); }, 1500);
+}
+
+function copyAll(btn, id) {
+  const el = document.getElementById(id);
+  const text = el.textContent
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>');
+  navigator.clipboard.writeText(text);
+  btn.textContent = 'done';
+  btn.classList.add('copied');
+  setTimeout(() => { btn.textContent = 'copy'; btn.classList.remove('copied'); }, 1500);
+}
+</script>
+</body>
+</html>
