@@ -314,16 +314,8 @@ const ResidentialCCTV = () => (
             </p>
           </motion.div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-            <motion.div className="glass rounded-2xl overflow-hidden" {...fadeUp()}>
-              <img src="/residential/image-14-1.png" alt="Trinetra live dashboard command center" className="w-full h-64 object-cover" loading="lazy" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
-            </motion.div>
-            <motion.div className="glass rounded-2xl overflow-hidden" {...fadeUp(0.15)}>
-              <img src="/residential/image-14-2.png" alt="Trinetra visitor sessions and audit log" className="w-full h-64 object-cover" loading="lazy" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
-            </motion.div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {/* Feature cards */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
             {[
               { icon: Eye, title: "Live View", desc: "Real-time status of all cameras and active sessions across the entire society." },
               { icon: Database, title: "Logs & Audit", desc: "Searchable historical log of all visits and vehicles — find any event in seconds." },
@@ -336,6 +328,54 @@ const ResidentialCCTV = () => (
                 </div>
                 <h3 className="font-bold mb-2">{f.title}</h3>
                 <p className="text-sm text-muted-foreground">{f.desc}</p>
+              </motion.div>
+            ))}
+          </div>
+
+          {/* Hero dashboard screenshot */}
+          <motion.div className="glass rounded-2xl overflow-hidden mb-6" {...fadeUp(0.1)}>
+            <img
+              src="/dashboard_photoes/dash-1.png"
+              alt="Trinetra AI surveillance live dashboard — real-time camera monitoring"
+              className="w-full h-auto object-cover"
+              loading="lazy"
+            />
+          </motion.div>
+
+          {/* 2-col screenshots */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+            {[
+              { src: "/dashboard_photoes/dash-2.png", alt: "Trinetra vehicle tracking dashboard with ANPR" },
+              { src: "/dashboard_photoes/dash-3.png", alt: "Trinetra visitor session timeline view" },
+            ].map((img, i) => (
+              <motion.div key={img.src} className="glass rounded-2xl overflow-hidden" {...fadeUp(i * 0.12)}>
+                <img src={img.src} alt={img.alt} className="w-full h-auto object-cover" loading="lazy" />
+              </motion.div>
+            ))}
+          </div>
+
+          {/* 3-col screenshots */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+            {[
+              { src: "/dashboard_photoes/dash-4.png", alt: "Trinetra person tracking cross-camera view" },
+              { src: "/dashboard_photoes/dash-5.png", alt: "Trinetra loitering detection alert dashboard" },
+              { src: "/dashboard_photoes/dash-6.png", alt: "Trinetra delivery visitor monitoring screen" },
+            ].map((img, i) => (
+              <motion.div key={img.src} className="glass rounded-2xl overflow-hidden" {...fadeUp(i * 0.1)}>
+                <img src={img.src} alt={img.alt} className="w-full h-auto object-cover" loading="lazy" />
+              </motion.div>
+            ))}
+          </div>
+
+          {/* Final 3 screenshots */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {[
+              { src: "/dashboard_photoes/dash-7.png", alt: "Trinetra audit log searchable history" },
+              { src: "/dashboard_photoes/dash-8.png", alt: "Trinetra real-time alert notifications panel" },
+              { src: "/dashboard_photoes/dash-9.png", alt: "Trinetra digital audit trail society security" },
+            ].map((img, i) => (
+              <motion.div key={img.src} className="glass rounded-2xl overflow-hidden" {...fadeUp(i * 0.1)}>
+                <img src={img.src} alt={img.alt} className="w-full h-auto object-cover" loading="lazy" />
               </motion.div>
             ))}
           </div>
