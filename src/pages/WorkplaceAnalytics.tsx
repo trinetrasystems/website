@@ -19,9 +19,9 @@ const fadeUp = (delay = 0) => ({
 const WorkplaceAnalytics = () => (
   <div className="min-h-screen bg-background">
     <SEOHead
-      title="AI Workplace Analytics | Desk & Meeting Room Utilization | Trinetra Systems"
-      description="Transform CCTV infrastructure into actionable workplace intelligence. AI-powered employee productivity monitoring, desk utilization, meeting room analytics, and cafeteria tracking."
-      keywords="workplace analytics AI, desk occupancy tracking, meeting room utilization, employee productivity monitoring, cafeteria occupancy analytics, office space optimization AI, edge AI workplace intelligence, Trinetra Systems workplace"
+      title="AI Workplace Analytics | Employee Productivity & Space Utilization | Trinetra Systems"
+      description="Transform CCTV infrastructure into actionable workplace intelligence. Get comprehensive cafeteria and meeting room utilization solutions for offices, along with advanced employee productivity monitoring."
+      keywords="workplace employee productivity monitoring, cafeteria utilization solutions for offices, meeting room utilization solutions for offices, desk occupancy tracking, office space optimization AI, edge AI workplace intelligence, Trinetra Systems workplace analytics"
       canonicalPath="/workplace-analytics"
     />
     <AppSidebar />
@@ -40,7 +40,7 @@ const WorkplaceAnalytics = () => (
                 AI-Powered <span className="text-gradient">Workplace Analytics</span>
               </h1>
               <p className="text-lg md:text-xl text-muted-foreground mb-8">
-                Transform your existing CCTV infrastructure into actionable workplace intelligence. Monitor space utilization, occupancy, and productivity with 100% on-premise privacy.
+                Transform your existing CCTV infrastructure into actionable workplace intelligence. Monitor space utilization, occupancy, and employee productivity with 100% on-premise privacy. Delivering comprehensive cafeteria and meeting room utilization solutions for offices.
               </p>
               
               <div className="flex flex-wrap justify-center gap-4 md:gap-8 mb-8">
@@ -81,7 +81,7 @@ const WorkplaceAnalytics = () => (
             <motion.div className="glass p-6 rounded-2xl" {...fadeUp(0.1)}>
               <Monitor className="w-10 h-10 text-red-400 mb-4" />
               <h3 className="text-xl font-bold mb-2">Inefficient Desk Usage</h3>
-              <p className="text-muted-foreground">Hybrid work leaves large floor areas under-occupied and over-leased. Productivity is hard to measure.</p>
+              <p className="text-muted-foreground">Hybrid work leaves large floor areas under-occupied and over-leased. Employee productivity monitoring is hard to measure manually.</p>
             </motion.div>
             <motion.div className="glass p-6 rounded-2xl" {...fadeUp(0.2)}>
               <Users className="w-10 h-10 text-red-400 mb-4" />
@@ -106,7 +106,7 @@ const WorkplaceAnalytics = () => (
                 <span className="text-gradient">Desk Occupancy</span> & Utilization
               </h2>
               <p className="text-lg text-muted-foreground mb-6">
-                Monitor real-time desk occupancy, identify productive desk time, and detect idle seats across your organization.
+                Monitor real-time desk occupancy, identify productive desk time for comprehensive employee productivity monitoring, and detect idle seats across your organization.
               </p>
               <ul className="space-y-4">
                 {[
@@ -123,11 +123,11 @@ const WorkplaceAnalytics = () => (
               </ul>
             </motion.div>
             <motion.div className="glass p-2 rounded-2xl" {...fadeUp(0.2)}>
-              <img src="/workplace/image18.png" alt="Live YOLO desk detection" className="w-full h-auto rounded-xl" />
+              <img src="/workplace/image18.png" alt="AI employee productivity monitoring and live desk occupancy detection" className="w-full h-auto rounded-xl" />
             </motion.div>
           </div>
           <motion.div className="glass p-2 rounded-2xl" {...fadeUp(0.3)}>
-            <img src="/workplace/image25.png" alt="Desk Occupancy Dashboard" className="w-full h-auto rounded-xl" />
+            <img src="/workplace/image25.png" alt="Workplace analytics dashboard showing desk utilization and employee productivity metrics" className="w-full h-auto rounded-xl" />
           </motion.div>
         </div>
       </section>
@@ -137,14 +137,14 @@ const WorkplaceAnalytics = () => (
         <div className="max-w-7xl mx-auto">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center mb-12">
             <motion.div className="order-2 lg:order-1 glass p-2 rounded-2xl" {...fadeUp(0.2)}>
-              <img src="/workplace/image35.png" alt="Live Meeting Room Occupancy Detection" className="w-full h-auto rounded-xl" />
+              <img src="/workplace/image35.png" alt="Live meeting room utilization solutions tracking for office spaces" className="w-full h-auto rounded-xl" />
             </motion.div>
             <motion.div className="order-1 lg:order-2" {...fadeUp()}>
               <h2 className="text-3xl md:text-4xl font-bold mb-6">
                 <span className="text-gradient">Meeting Room</span> Utilization
               </h2>
               <p className="text-lg text-muted-foreground mb-6">
-                Compare booked time versus actual usage. Identify ghost meetings and optimize your collaborative spaces based on real data.
+                Compare booked time versus actual usage. Identify ghost meetings and optimize your collaborative spaces based on real data using our advanced meeting room utilization solutions for offices.
               </p>
               <ul className="space-y-4">
                 {[
@@ -162,7 +162,7 @@ const WorkplaceAnalytics = () => (
             </motion.div>
           </div>
           <motion.div className="glass p-2 rounded-2xl" {...fadeUp(0.3)}>
-            <img src="/workplace/image40.png" alt="Meeting Room Utilization Dashboard" className="w-full h-auto rounded-xl" />
+            <img src="/workplace/image40.png" alt="Meeting room utilization solutions dashboard for corporate offices" className="w-full h-auto rounded-xl" />
           </motion.div>
         </div>
       </section>
@@ -193,11 +193,11 @@ const WorkplaceAnalytics = () => (
               </ul>
             </motion.div>
             <motion.div className="glass p-2 rounded-2xl" {...fadeUp(0.2)}>
-              <img src="/workplace/image42.png" alt="Live Cafeteria Occupancy Detection" className="w-full h-auto rounded-xl" />
+              <img src="/workplace/image42.png" alt="AI-powered cafeteria occupancy and utilization analytics for offices" className="w-full h-auto rounded-xl" />
             </motion.div>
           </div>
           <motion.div className="glass p-2 rounded-2xl" {...fadeUp(0.3)}>
-            <img src="/workplace/image45.png" alt="Cafeteria Utilization Dashboard" className="w-full h-auto rounded-xl" />
+            <img src="/workplace/image45.png" alt="Cafeteria utilization solutions dashboard showing peak hours and occupancy" className="w-full h-auto rounded-xl" />
           </motion.div>
         </div>
       </section>
