@@ -19,6 +19,7 @@ import LoiteringDetection from "./pages/LoiteringDetection.tsx";
 import AnprSystem from "./pages/AnprSystem.tsx";
 import Blog from "./pages/Blog.tsx";
 import BlogPost from "./pages/BlogPost.tsx";
+import ResidentialCCTV from "./pages/ResidentialCCTV.tsx";
 
 const queryClient = new QueryClient();
 
@@ -42,6 +43,7 @@ const App = () => (
             <Route path="/anpr-system" element={<AnprSystem />} />
             <Route path="/blog" element={<Blog />} />
             <Route path="/blog/:slug" element={<BlogPost />} />
+            <Route path="/residential-cctv-ai-surveillance" element={<ResidentialCCTV />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
