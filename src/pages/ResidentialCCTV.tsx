@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { ArrowRight, CheckCircle2, Car, User, Bell, Shield, Eye, Database, MapPin, Clock, Camera, AlertTriangle } from "lucide-react";
+import { ArrowRight, CheckCircle2, Car, User, Bell, Shield, Eye, Database, MapPin, Clock, Camera, AlertTriangle, UserX, ShieldAlert, Building2, Lock, Wifi } from "lucide-react";
 import AppSidebar from "@/components/AppSidebar";
 import SEOHead from "@/components/SEOHead";
 import Contact from "@/components/Contact";
@@ -15,9 +15,9 @@ const fadeUp = (delay = 0) => ({
 const ResidentialCCTV = () => (
   <div className="min-h-screen">
     <SEOHead
-      title="AI CCTV Surveillance for Residential Societies | Person Tracking & Delivery Monitoring | Trinetra Systems"
-      description="Trinetra Systems provides AI-powered CCTV surveillance for residential societies — real-time person tracking, delivery visitor monitoring, vehicle ANPR, loitering detection, and digital audit trail. Powered by NVIDIA Jetson edge AI."
-      keywords="residential CCTV AI surveillance, AI camera for society, person tracking residential, delivery tracking CCTV, visitor tracking apartment, vehicle tracking society, ANPR residential gate, loitering detection apartment, smart society security India, AI surveillance residential complex, cross-camera person tracking, digital audit trail society, gated community AI CCTV, Trinetra Systems residential"
+      title="AI CCTV Surveillance for Residential Societies | Society Security | Trinetra Systems"
+      description="Trinetra Systems provides AI-powered CCTV surveillance for residential societies — outsider detection, person tracking, delivery monitoring, vehicle ANPR, intrusion prevention, loitering detection, and digital audit trail. Powered by NVIDIA Jetson edge AI."
+      keywords="residential CCTV AI surveillance, society security AI, AI camera for society, person tracking residential, delivery tracking CCTV, visitor tracking apartment, vehicle tracking society, ANPR residential gate, loitering detection apartment, smart society security India, gated community security, outsider detection AI, apartment security system India, AI surveillance residential complex, cross-camera person tracking, digital audit trail society, gated community AI CCTV, intrusion detection residential, WhatsApp security alerts society, Trinetra Systems residential"
       canonicalPath="/residential-cctv-ai-surveillance"
     />
     <AppSidebar />
@@ -118,6 +118,38 @@ const ResidentialCCTV = () => (
                 </div>
                 <div className="text-xs font-bold text-primary mb-1">Step {s.step}</div>
                 <div className="text-sm font-semibold">{s.label}</div>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Security Features — merged from society-security */}
+      <section className="py-16 md:py-24 px-4 md:px-6 bg-gradient-dark">
+        <div className="max-w-6xl mx-auto">
+          <motion.div className="text-center mb-12" {...fadeUp()}>
+            <h2 className="text-3xl md:text-4xl font-bold mb-4">
+              Complete <span className="text-gradient">Society Security</span> Features
+            </h2>
+            <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
+              Beyond tracking — Trinetra protects every entry point, monitors every zone, and keeps guards informed in real time.
+            </p>
+          </motion.div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {[
+              { icon: UserX, title: "Outsider Detection", desc: "AI automatically identifies unfamiliar faces and unknown persons entering the society premises, triggering instant security alerts before any incident occurs." },
+              { icon: ShieldAlert, title: "Intrusion Prevention", desc: "Monitor boundary walls, restricted areas, and emergency exits with AI-powered zone intrusion detection — alerts fire the moment a line is crossed." },
+              { icon: Building2, title: "Gate Access Monitoring", desc: "Automated vehicle and pedestrian access logging at society gates with ANPR and person tracking — zero manual entry required." },
+              { icon: Wifi, title: "Instant WhatsApp Alerts", desc: "Security guards and society managers receive instant WhatsApp alerts with photos for every suspicious event — no app installation needed." },
+              { icon: Eye, title: "24/7 AI Watchguard", desc: "Continuous AI monitoring of all CCTV cameras — never miss an incident, even during guard shift changes or night hours." },
+              { icon: Lock, title: "Complete Data Privacy", desc: "All video processing happens on-premise within the society via NVIDIA Jetson — no footage is ever sent to the cloud, ensuring full resident privacy." },
+            ].map((f, i) => (
+              <motion.div key={f.title} className="glass rounded-2xl p-6 glow-hover transition-all duration-300 group" {...fadeUp(i * 0.08)}>
+                <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                  <f.icon className="w-6 h-6 text-primary" />
+                </div>
+                <h3 className="text-lg font-bold mb-2">{f.title}</h3>
+                <p className="text-sm text-muted-foreground leading-relaxed">{f.desc}</p>
               </motion.div>
             ))}
           </div>
