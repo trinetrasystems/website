@@ -332,53 +332,69 @@ const ResidentialCCTV = () => (
             ))}
           </div>
 
-          {/* Hero dashboard screenshot */}
-          <motion.div className="glass rounded-2xl overflow-hidden mb-6" {...fadeUp(0.1)}>
+          {/* dash-1: Full-width hero — live dashboard with loitering alert banner, stats and chart */}
+          <motion.div className="glass rounded-2xl overflow-hidden mb-6 border border-primary/10" {...fadeUp(0.1)}>
+            <div className="relative">
+              <img
+                src="/dashboard_photoes/dash-1.png"
+                alt="Trinetra live dashboard — loitering alert, detections today, currently in premises"
+                className="w-full h-auto object-cover"
+                loading="lazy"
+              />
+              <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-background/90 to-transparent px-6 py-5">
+                <div className="flex items-center gap-2 mb-1">
+                  <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
+                  <span className="text-red-400 text-xs font-bold uppercase tracking-wider">Live — Loitering Alert Active</span>
+                </div>
+                <p className="text-sm text-muted-foreground">Real-time dashboard showing detections, active sessions, loitering alerts, and live notifications</p>
+              </div>
+            </div>
+          </motion.div>
+
+          {/* dash-4 + dash-8: Side by side — delivery tracking & audit log */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+            <motion.div className="glass rounded-2xl overflow-hidden" {...fadeUp(0.1)}>
+              <img
+                src="/dashboard_photoes/dash-4.png"
+                alt="Trinetra delivery person DELIVERY-REDPASS tracked across cameras — loitering detection"
+                className="w-full h-auto object-cover"
+                loading="lazy"
+              />
+              <div className="px-5 py-4 border-t border-border/30">
+                <p className="text-xs font-semibold text-primary mb-1">Delivery Visitor Tracking</p>
+                <p className="text-xs text-muted-foreground">DELIVERY-REDPASS tracked from entry gate — loitering alert triggered after 15 min threshold</p>
+              </div>
+            </motion.div>
+            <motion.div className="glass rounded-2xl overflow-hidden" {...fadeUp(0.2)}>
+              <img
+                src="/dashboard_photoes/dash-8.png"
+                alt="Trinetra audit log — 7 detections, full notification history with ENTRY, EXIT, SIGHTING events"
+                className="w-full h-auto object-cover"
+                loading="lazy"
+              />
+              <div className="px-5 py-4 border-t border-border/30">
+                <p className="text-xs font-semibold text-primary mb-1">Digital Audit Trail</p>
+                <p className="text-xs text-muted-foreground">Searchable history of all ENTRY, SIGHTING, and EXIT events — timestamped per camera</p>
+              </div>
+            </motion.div>
+          </div>
+
+          {/* dash-9: Full-width real CCTV photo — most impactful */}
+          <motion.div className="glass rounded-2xl overflow-hidden" {...fadeUp(0.15)}>
             <img
-              src="/dashboard_photoes/dash-1.png"
-              alt="Trinetra AI surveillance live dashboard — real-time camera monitoring"
+              src="/dashboard_photoes/dash-9.png"
+              alt="Real CCTV footage — delivery person tracked in society garden by Trinetra AI surveillance"
               className="w-full h-auto object-cover"
               loading="lazy"
             />
+            <div className="px-6 py-5 border-t border-border/30">
+              <div className="flex items-center gap-2 mb-2">
+                <Camera className="w-4 h-4 text-accent" />
+                <span className="text-xs font-bold text-accent uppercase tracking-wider">CAM 5 — Garden · 11:28:12</span>
+              </div>
+              <p className="text-sm text-muted-foreground">Trinetra AI identifies and tracks the delivery person (DELIVERY-REDPASS) across the society garden in real time — no guard input required</p>
+            </div>
           </motion.div>
-
-          {/* 2-col screenshots */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-            {[
-              { src: "/dashboard_photoes/dash-2.png", alt: "Trinetra vehicle tracking dashboard with ANPR" },
-              { src: "/dashboard_photoes/dash-3.png", alt: "Trinetra visitor session timeline view" },
-            ].map((img, i) => (
-              <motion.div key={img.src} className="glass rounded-2xl overflow-hidden" {...fadeUp(i * 0.12)}>
-                <img src={img.src} alt={img.alt} className="w-full h-auto object-cover" loading="lazy" />
-              </motion.div>
-            ))}
-          </div>
-
-          {/* 3-col screenshots */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-            {[
-              { src: "/dashboard_photoes/dash-4.png", alt: "Trinetra person tracking cross-camera view" },
-              { src: "/dashboard_photoes/dash-5.png", alt: "Trinetra loitering detection alert dashboard" },
-              { src: "/dashboard_photoes/dash-6.png", alt: "Trinetra delivery visitor monitoring screen" },
-            ].map((img, i) => (
-              <motion.div key={img.src} className="glass rounded-2xl overflow-hidden" {...fadeUp(i * 0.1)}>
-                <img src={img.src} alt={img.alt} className="w-full h-auto object-cover" loading="lazy" />
-              </motion.div>
-            ))}
-          </div>
-
-          {/* Final 3 screenshots */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {[
-              { src: "/dashboard_photoes/dash-7.png", alt: "Trinetra audit log searchable history" },
-              { src: "/dashboard_photoes/dash-8.png", alt: "Trinetra real-time alert notifications panel" },
-              { src: "/dashboard_photoes/dash-9.png", alt: "Trinetra digital audit trail society security" },
-            ].map((img, i) => (
-              <motion.div key={img.src} className="glass rounded-2xl overflow-hidden" {...fadeUp(i * 0.1)}>
-                <img src={img.src} alt={img.alt} className="w-full h-auto object-cover" loading="lazy" />
-              </motion.div>
-            ))}
-          </div>
         </div>
       </section>
 
