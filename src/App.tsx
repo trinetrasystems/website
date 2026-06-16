@@ -1,4 +1,5 @@
 import { Analytics } from "@vercel/analytics/react";
+import { SpeedInsights } from "@vercel/speed-insights/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { ThemeProvider } from "next-themes";
@@ -45,6 +46,7 @@ const App = () => (
             <Route path="*" element={<NotFound />} />
           </Routes>
         <Analytics />
+        <SpeedInsights />
         </BrowserRouter>
       </TooltipProvider>
     </ThemeProvider>
