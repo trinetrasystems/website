@@ -1,6 +1,6 @@
 import { MouseEvent, useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Home, Sparkles, Grid3X3, Star, CircleDollarSign, Mail, Lock, Menu, X, Eye, Shield, BookOpen, BarChart3 } from "lucide-react";
+import { Home, Sparkles, Grid3X3, Star, CircleDollarSign, Mail, Lock, Menu, X, Eye, Shield, BookOpen, BarChart3, Globe2, Building2 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { ThemeToggle } from "./ThemeToggle";
 import { auth, db } from "@/lib/firebase";
@@ -13,8 +13,10 @@ const navItems = [
   { title: "Use Cases", href: "#usecases", icon: Grid3X3 },
   { title: "Solutions", href: "/ai-surveillance", icon: Shield, isRoute: true },
   { title: "Workplace", href: "/workplace-analytics", icon: BarChart3, isRoute: true },
+  { title: "Residential Security", href: "/residential-cctv-ai-surveillance", icon: Building2, isRoute: true },
   { title: "Blog", href: "/blog", icon: BookOpen, isRoute: true },
   { title: "Pricing", href: "#pricing", icon: CircleDollarSign },
+  { title: "Global Reach", href: "#global-reach", icon: Globe2, isHighlight: true },
   { title: "Contact", href: "#contact-form", icon: Mail },
 ];
 
@@ -104,6 +106,16 @@ const AppSidebar = () => {
                   <item.icon className="w-4 h-4 group-hover:scale-110 transition-transform text-primary/70 group-hover:text-primary" />
                   <span>{item.title}</span>
                 </Link>
+              ) : (item as any).isHighlight ? (
+                <a
+                  key={item.title}
+                  href={item.href}
+                  onClick={handleHashNavigation(item.href)}
+                  className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all duration-300 group border border-amber-500/30 bg-amber-500/5 hover:bg-amber-500/15 text-amber-600 dark:text-amber-400 hover:border-amber-500/50 hover:shadow-[0_0_12px_rgba(245,158,11,0.15)]"
+                >
+                  <item.icon className="w-4 h-4 group-hover:scale-110 transition-transform text-amber-500 animate-pulse" style={{ animationDuration: '3s' }} />
+                  <span>{item.title}</span>
+                </a>
               ) : (
                 <a
                   key={item.title}
@@ -186,6 +198,16 @@ const AppSidebar = () => {
                       <item.icon className="w-6 h-6" />
                       <span>{item.title}</span>
                     </Link>
+                  ) : (item as any).isHighlight ? (
+                    <a
+                      key={item.title}
+                      href={item.href}
+                      onClick={handleHashNavigation(item.href)}
+                      className="flex items-center gap-4 px-4 py-4 rounded-2xl text-lg font-bold text-amber-600 dark:text-amber-400 bg-amber-500/5 border border-amber-500/20 hover:bg-amber-500/10 transition-all"
+                    >
+                      <item.icon className="w-6 h-6 text-amber-500" />
+                      <span>{item.title}</span>
+                    </a>
                   ) : (
                     <a
                       key={item.title}
