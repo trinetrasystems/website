@@ -438,26 +438,26 @@ const GlobalReach = () => {
         </motion.div>
 
         {/* Value Proposition Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-6">
           {valueProps.map((prop, i) => (
             <motion.div
               key={prop.title}
               initial={{ opacity: 0, y: 30 }}
               animate={isInView ? { opacity: 1, y: 0 } : {}}
               transition={{ duration: 0.5, delay: 0.8 + i * 0.15 }}
-              className={`glass rounded-2xl p-6 md:p-8 glow-hover transition-all duration-300 group border-white/5 ${prop.borderHover}`}
+              className={`glass rounded-2xl p-5 md:p-8 text-center glow-hover transition-all duration-300 group border-white/5 ${prop.borderHover} ${i === 2 ? "col-span-2 md:col-span-1" : ""}`}
             >
               <div
-                className={`w-12 h-12 md:w-14 md:h-14 rounded-2xl ${prop.bg} flex items-center justify-center mb-5 group-hover:scale-110 transition-transform duration-300`}
+                className={`w-12 h-12 md:w-16 md:h-16 rounded-2xl ${prop.bg} flex items-center justify-center mx-auto mb-4 md:mb-6 group-hover:scale-110 transition-transform duration-300`}
               >
                 <prop.icon
-                  className={`w-6 h-6 md:w-7 md:h-7 ${prop.color}`}
+                  className={`w-6 h-6 md:w-8 md:h-8 ${prop.color}`}
                 />
               </div>
-              <h3 className="text-lg md:text-xl font-bold mb-2">
+              <h3 className="text-xs md:text-xl font-bold mb-1 md:mb-2">
                 {prop.title}
               </h3>
-              <p className="text-sm md:text-base text-muted-foreground leading-relaxed">
+              <p className="text-[10px] md:text-sm text-muted-foreground leading-relaxed">
                 {prop.desc}
               </p>
             </motion.div>
