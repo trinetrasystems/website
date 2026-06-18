@@ -15,6 +15,7 @@ import Footer from "@/components/Footer";
 import Pricing from "@/components/Pricing";
 import SeeItInAction from "@/components/SeeItInAction";
 import SEOHead from "@/components/SEOHead";
+import GlobalReach from "@/components/GlobalReach";
 
 const Index = () => {
   const navigate = useNavigate();
@@ -55,6 +56,7 @@ const Index = () => {
         <Pricing />
         <CTA />
         <WhyChooseUs />
+        <GlobalReach />
         <Contact />
         <Footer />
       </main>
