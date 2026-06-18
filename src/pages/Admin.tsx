@@ -154,8 +154,12 @@ const AVAILABLE_TABS = [
   { id: "forms", label: "Submitted Forms" },
   { id: "contacts", label: "Users & Passwords" },
   { id: "tickets", label: "Support Tickets" },
-  { id: "docs", label: "Documentation" }
+  { id: "docs", label: "Documentation" },
+  { id: "invoice", label: "Invoice Generator" }
 ];
+
+// Served from public/ at the site root.
+const INVOICE_GENERATOR_PATH = "/trinetra-invoice-generator.html";
 const Admin = () => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
@@ -195,9 +199,10 @@ const Admin = () => {
   const [selectedUserIpLink, setSelectedUserIpLink] = useState("");
   const [updatingUser, setUpdatingUser] = useState(false);
   const [deletingUser, setDeletingUser] = useState(false);
-  const [activeSection, setActiveSection] = useState<"create" | "edit" | "forms" | "tickets" | "contacts" | "docs">("tickets");
+  const [activeSection, setActiveSection] = useState<"create" | "edit" | "forms" | "tickets" | "contacts" | "docs" | "invoice" | "requests">("tickets");
   const [selectedDoc, setSelectedDoc] = useState<{ id: string; title: string; description: string; path: string } | null>(null);
   const [docTheme, setDocTheme] = useState<"light" | "dark">("light");
+  const [invoiceFullscreen, setInvoiceFullscreen] = useState(false);
 
   const [adminActionSelectedRequest, setAdminActionSelectedRequest] = useState<DeleteRequest | null>(null);
   const [adminActionType, setAdminActionType] = useState<"approve" | "reject" | null>(null);
@@ -1251,6 +1256,17 @@ const Admin = () => {
                   >
                     Documentation
                   </button>)}
+                  {hasPermission("invoice") && (<button
+                    type="button"
+                    onClick={() => setActiveSection("invoice")}
+                    className={`inline-flex items-center gap-1.5 rounded-lg px-4 py-2 text-sm font-medium transition ${activeSection === "invoice"
+                      ? "bg-primary text-primary-foreground"
+                      : "border border-border bg-background hover:bg-secondary/40"
+                      }`}
+                  >
+                    <FileText className="h-3.5 w-3.5" />
+                    Invoice Generator
+                  </button>)}
                 </div>
               </section>
 
@@ -1962,6 +1978,79 @@ const Admin = () => {
                           src={selectedDoc.path}
                           className="absolute inset-0 w-full h-full border-none"
                           title={selectedDoc.title}
+                        />
+                      </div>
+                    </div>
+                  )}
+                </section>
+              )}
+
+              {activeSection === "invoice" && hasPermission("invoice") && (
+                <section className="rounded-2xl border border-border bg-card p-6 shadow-lg">
+                  <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                    <div>
+                      <h2 className="text-2xl font-bold">GST Invoice Generator</h2>
+                      <p className="mt-1 text-sm text-muted-foreground">
+                        Create and download Trinetra Systems GST invoices as PDF.
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <button
+                        type="button"
+                        onClick={() => setInvoiceFullscreen(true)}
+                        className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground transition hover:opacity-90"
+                      >
+                        <FileText className="h-4 w-4" />
+                        Open Fullscreen
+                      </button>
+                      <a
+                        href={INVOICE_GENERATOR_PATH}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-2 rounded-lg border border-border bg-background px-4 py-2 text-sm font-medium transition hover:bg-secondary/40"
+                      >
+                        Open in New Tab
+                      </a>
+                    </div>
+                  </div>
+                  <div className="mt-6 overflow-hidden rounded-xl border border-border">
+                    <iframe
+                      src={INVOICE_GENERATOR_PATH}
+                      title="Trinetra GST Invoice Generator"
+                      className="h-[calc(100vh-220px)] min-h-[600px] w-full border-none bg-white"
+                    />
+                  </div>
+
+                  {invoiceFullscreen && (
+                    <div className="fixed inset-0 z-[100] flex flex-col bg-background animate-in fade-in zoom-in-95 duration-200">
+                      <div className="flex items-center justify-between border-b border-border p-4 bg-card shadow-sm">
+                        <h2 className="text-xl font-bold flex items-center gap-2">
+                          <FileText className="h-5 w-5 text-primary" />
+                          GST Invoice Generator
+                        </h2>
+                        <div className="flex items-center gap-3">
+                          <a
+                            href={INVOICE_GENERATOR_PATH}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="rounded-lg border border-border bg-background px-4 py-2 text-sm font-medium transition hover:bg-secondary/80 flex items-center gap-2"
+                          >
+                            Open in New Tab
+                          </a>
+                          <button
+                            type="button"
+                            onClick={() => setInvoiceFullscreen(false)}
+                            className="rounded-lg border border-border bg-background px-4 py-2 text-sm font-medium transition hover:bg-secondary/80 focus:outline-none"
+                          >
+                            Close Fullscreen
+                          </button>
+                        </div>
+                      </div>
+                      <div className="flex-1 overflow-hidden relative bg-background">
+                        <iframe
+                          src={INVOICE_GENERATOR_PATH}
+                          className="absolute inset-0 w-full h-full border-none"
+                          title="Trinetra GST Invoice Generator"
                         />
                       </div>
                     </div>
