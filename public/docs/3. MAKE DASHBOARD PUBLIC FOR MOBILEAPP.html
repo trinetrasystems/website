@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tailscale Funnel — Command Reference</title>
+<style>
+  :root {
+    --bg: #ffffff;
+    --ink: #1c1d22;
+    --muted: #6b7280;
+    --line: #e7e7ea;
+    --accent: #3a5bd9;
+    --term-bg: #14161f;
+    --term-ink: #e6e8ef;
+    --term-cmt: #7d8595;
+    --chip-bg: #f3f4f8;
+    --chip-ink: #b03060;
+    --note-bg: #f7f8fb;
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    line-height: 1.6;
+    font-size: 16px;
+  }
+  .wrap { max-width: 760px; margin: 0 auto; padding: 48px 22px 80px; }
+
+  header { border-bottom: 1px solid var(--line); padding-bottom: 26px; margin-bottom: 8px; }
+  .eyebrow {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase;
+    color: var(--accent); margin: 0 0 10px;
+  }
+  h1 { font-size: 30px; line-height: 1.15; margin: 0 0 10px; letter-spacing: -0.01em; }
+  .lead { color: var(--muted); margin: 0; font-size: 16.5px; }
+
+  h2 {
+    font-size: 13px; letter-spacing: 0.12em; text-transform: uppercase;
+    color: var(--ink); margin: 44px 0 14px; padding-bottom: 8px;
+    border-bottom: 1px solid var(--line);
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  }
+  p { margin: 0 0 14px; }
+  .step-label { color: var(--muted); font-size: 14px; margin: 0 0 6px; }
+
+  pre {
+    background: var(--term-bg); color: var(--term-ink);
+    border-radius: 8px; padding: 14px 16px; margin: 0 0 16px;
+    overflow-x: auto; font-size: 14px; line-height: 1.55;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  }
+  pre .cmt { color: var(--term-cmt); }
+  pre .url { color: #7fd1c0; }
+
+  code {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    background: var(--chip-bg); color: var(--chip-ink);
+    padding: 2px 6px; border-radius: 5px; font-size: 0.88em;
+    word-break: break-word;
+  }
+
+  .note {
+    background: var(--note-bg); border: 1px solid var(--line);
+    border-left: 3px solid var(--accent);
+    border-radius: 8px; padding: 16px 18px; margin: 0 0 16px;
+  }
+  .note p:last-child { margin-bottom: 0; }
+  .note strong { color: var(--ink); }
+
+  ul { margin: 0 0 14px; padding-left: 20px; }
+  li { margin-bottom: 8px; }
+
+  .pill {
+    display: inline-block; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 12px; background: var(--chip-bg); color: var(--ink);
+    padding: 2px 8px; border-radius: 999px; margin-right: 4px;
+  }
+  footer { margin-top: 48px; padding-top: 18px; border-top: 1px solid var(--line); color: var(--muted); font-size: 13px; }
+  a { color: var(--accent); }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <p class="eyebrow">Command Reference</p>
+    <h1>Tailscale Funnel</h1>
+    <p class="lead">Expose a local server to the public internet over HTTPS — no public IP, no port-forwarding, no firewall changes.</p>
+  </header>
+
+  <h2>Prerequisites (one-time)</h2>
+  <ul>
+    <li>Tailscale installed on the device and logged into your tailnet (<code>tailscale status</code> shows it connected).</li>
+    <li><strong>MagicDNS</strong> and <strong>HTTPS Certificates</strong> enabled — Admin console → DNS page.</li>
+    <li><strong>Funnel</strong> enabled for your tailnet. The first funnel command prints a link to enable it; opening and approving that link is enough.</li>
+  </ul>
+
+  <h2>Expose a port</h2>
+  <p class="step-label">Serve a local server (here, port 8000) publicly. <code>--bg</code> runs it in the background and the config survives reboots.</p>
+  <pre>sudo tailscale funnel --bg 8000</pre>
+  <p class="step-label">On the first run, it prints an enable link — open it and approve:</p>
+  <pre><span class="cmt">Funnel is not enabled on your tailnet. To enable, visit:</span>
+<span class="url">https://login.tailscale.com/f/funnel?node=...</span></pre>
+
+  <h2>Get your URL</h2>
+  <pre>tailscale funnel status</pre>
+  <p>The public URL has the form <code>https://&lt;machine-name&gt;.&lt;tailnet-name&gt;.ts.net/</code>. The default public port is <strong>443</strong>, so it has no port suffix.</p>
+
+  <div class="note">
+    <p><strong>This setup</strong></p>
+    <p>Machine <code>yash-ubuntu</code> · tailnet <code>tail3210fb.ts.net</code></p>
+    <p>Port 8000 → <code>https://yash-ubuntu.tail3210fb.ts.net/</code></p>
+  </div>
+
+  <h2>Add more apps — by port</h2>
+  <p>Funnel allows only three public ports: <span class="pill">443</span><span class="pill">8443</span><span class="pill">10000</span>. Each app on a distinct port gets its own root URL. Max three apps this way.</p>
+  <pre>sudo tailscale funnel --bg --https=8443 8080</pre>
+  <p>Port 8080 → <code>https://yash-ubuntu.tail3210fb.ts.net:8443/</code> &nbsp;(note the <code>:8443</code> in the URL).</p>
+
+  <h2>Add more apps — by path</h2>
+  <p>Keep everything on 443 and split by URL path with <code>--set-path</code>. No three-app limit here — add as many as you want.</p>
+  <pre>sudo tailscale funnel --bg --set-path=/app2 8080
+sudo tailscale funnel --bg --set-path=/app3 9000
+sudo tailscale funnel --bg --set-path=/app4 5000</pre>
+  <p>
+    <code>/app2</code> → port 8080 &nbsp;·&nbsp;
+    <code>/app3</code> → port 9000 &nbsp;·&nbsp;
+    <code>/app4</code> → port 5000
+  </p>
+  <div class="note">
+    <p><strong>Caveat:</strong> each app must work under its sub-path. Apps that load assets from <em>absolute</em> URLs (e.g. <code>/static/main.js</code>) render broken under <code>/app3</code>. Fix by setting the app's base-path / root-URL config, or put that app on a separate port instead.</p>
+  </div>
+
+  <h2>Stop / disable</h2>
+  <p class="step-label">Turn off a specific funnel:</p>
+  <pre>sudo tailscale funnel --https=443 off</pre>
+  <p class="step-label">Clear everything:</p>
+  <pre>tailscale funnel reset</pre>
+
+  <h2>Notes &amp; limits</h2>
+  <ul>
+    <li><strong>Public ports:</strong> only 443, 8443, 10000. Three apps max by distinct port; unlimited by path on 443.</li>
+    <li><strong>Adding more:</strong> no need to stop Funnel or re-visit the enable link — each command adds a mount alongside the others. Paths must be unique; <code>/</code> stays with the first app.</li>
+    <li><strong>URL stability:</strong> the URL stays the same across reboots and reconnects. It changes only if you rename the machine, rename the tailnet, or delete and re-add the device (which can append <code>-1</code>).</li>
+    <li><strong>Security:</strong> Funnel is fully public — Tailscale adds no auth. Your app's own login is the only thing protecting it, so keep that strong and rate-limited.</li>
+    <li><strong>Verify anytime:</strong> <code>tailscale funnel status</code> lists every active mount and its URL.</li>
+  </ul>
+
+  <footer>
+    Tailscale Funnel command reference · personal setup notes
+  </footer>
+
+</div>
+</body>
+</html>
