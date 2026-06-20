@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Docker Commands — Trinetra DeepStream 7.1</title>
+<script>
+  // Set theme before paint to avoid a flash; follows the OS setting by default.
+  (function () {
+    try {
+      var dark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
+    } catch (e) {}
+  })();
+</script>
+<style>
+  :root {
+    --bg: #f5f6f7;
+    --surface: #ffffff;
+    --console: #f0f2f4;
+    --text: #1b1f24;
+    --muted: #5b6573;
+    --border: #e2e6ea;
+    --accent: #4a8a00;
+    --accent-soft: rgba(118, 185, 0, 0.12);
+    --t-sub: #4a8a00;   /* subcommands: run, start, ps ... */
+    --t-flag: #2563a8;  /* flags: -it, --runtime ...      */
+    --t-arg: #1b1f24;   /* image names, bash ...          */
+    --t-ph: #9a5b00;    /* placeholders you replace       */
+    --shadow: 0 1px 2px rgba(20, 23, 28, 0.04), 0 8px 24px rgba(20, 23, 28, 0.05);
+  }
+  [data-theme="dark"] {
+    --bg: #15171c;
+    --surface: #1d2027;
+    --console: #111317;
+    --text: #e7e9ed;
+    --muted: #8d95a3;
+    --border: #2a2e37;
+    --accent: #88c821;
+    --accent-soft: rgba(118, 185, 0, 0.14);
+    --t-sub: #88c821;
+    --t-flag: #6fb3e0;
+    --t-arg: #c8cdd6;
+    --t-ph: #f0b35e;
+    --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 10px 30px rgba(0, 0, 0, 0.35);
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .wrap {
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 48px 20px 80px;
+  }
+
+  /* Header */
+  header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 28px;
+  }
+  .eyebrow {
+    font-size: 0.72rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin: 0 0 6px;
+    font-weight: 600;
+  }
+  h1 {
+    font-size: 1.65rem;
+    line-height: 1.15;
+    margin: 0;
+    font-weight: 680;
+    letter-spacing: -0.01em;
+  }
+
+  .toggle {
+    flex: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    background: var(--surface);
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: 8px 14px;
+    font-size: 0.82rem;
+    font-weight: 500;
+    cursor: pointer;
+    font-family: inherit;
+    box-shadow: var(--shadow);
+    transition: border-color 0.15s ease, transform 0.05s ease;
+  }
+  .toggle:hover { border-color: var(--accent); }
+  .toggle:active { transform: translateY(1px); }
+  .toggle:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .toggle svg { width: 15px; height: 15px; display: block; }
+  .icon-sun { display: none; }
+  [data-theme="dark"] .icon-sun { display: block; }
+  [data-theme="dark"] .icon-moon { display: none; }
+  .toggle .label-light { display: none; }
+  [data-theme="dark"] .toggle .label-light { display: inline; }
+  [data-theme="dark"] .toggle .label-dark { display: none; }
+
+  /* Key note */
+  .note {
+    background: var(--accent-soft);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--accent);
+    border-radius: 10px;
+    padding: 14px 16px;
+    margin-bottom: 36px;
+    font-size: 0.9rem;
+  }
+  .note strong { font-weight: 650; }
+  .note code {
+    font-family: "SF Mono", "JetBrains Mono", "Fira Code", Consolas, "Courier New", monospace;
+    background: var(--console);
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    padding: 1px 6px;
+    font-size: 0.85em;
+    color: var(--accent);
+    white-space: nowrap;
+  }
+
+  /* Phase */
+  .phase { margin-bottom: 36px; }
+  .phase-head {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 0 0 16px;
+  }
+  .phase-num {
+    flex: none;
+    width: 26px;
+    height: 26px;
+    border-radius: 7px;
+    background: var(--accent);
+    color: #0b1003;
+    font-size: 0.82rem;
+    font-weight: 700;
+    display: grid;
+    place-items: center;
+  }
+  .phase-title {
+    font-size: 1.05rem;
+    font-weight: 620;
+    margin: 0;
+    letter-spacing: -0.005em;
+  }
+
+  /* Command card */
+  .cmd {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 14px 16px;
+    margin-bottom: 12px;
+    box-shadow: var(--shadow);
+  }
+  .cmd.key { border-left: 3px solid var(--accent); }
+  .cmd-line {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  .cmd-code {
+    flex: 1 1 auto;
+    min-width: 0;
+    font-family: "SF Mono", "JetBrains Mono", "Fira Code", Consolas, "Courier New", monospace;
+    font-size: 0.9rem;
+    line-height: 1.55;
+    background: var(--console);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 12px;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+  .prompt { color: var(--accent); font-weight: 600; user-select: none; margin-right: 4px; }
+  .t-base { color: var(--text); font-weight: 600; }
+  .t-sub  { color: var(--t-sub); font-weight: 600; }
+  .t-flag { color: var(--t-flag); }
+  .t-arg  { color: var(--t-arg); }
+  .t-ph   { color: var(--t-ph); border-bottom: 1px dashed var(--t-ph); }
+
+  .copy {
+    flex: none;
+    align-self: stretch;
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--muted);
+    font-size: 0.76rem;
+    font-weight: 600;
+    padding: 0 12px;
+    cursor: pointer;
+    font-family: inherit;
+    transition: border-color 0.15s ease, color 0.15s ease, background 0.15s ease;
+  }
+  .copy:hover { border-color: var(--accent); color: var(--accent); }
+  .copy:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .copy.done { color: var(--accent); border-color: var(--accent); background: var(--accent-soft); }
+
+  .cmd-desc {
+    margin: 10px 2px 0;
+    font-size: 0.875rem;
+    color: var(--muted);
+  }
+  .cmd-desc .pill {
+    display: inline-block;
+    background: var(--accent-soft);
+    color: var(--accent);
+    border-radius: 5px;
+    padding: 0 6px;
+    font-size: 0.78em;
+    font-weight: 650;
+    margin-right: 6px;
+    vertical-align: 1px;
+  }
+
+  .subtip {
+    margin: 10px 2px 0;
+    font-size: 0.82rem;
+    color: var(--muted);
+    padding-left: 12px;
+    border-left: 2px solid var(--border);
+  }
+  .subtip code {
+    font-family: "SF Mono", "JetBrains Mono", "Fira Code", Consolas, "Courier New", monospace;
+    color: var(--t-flag);
+    font-size: 0.92em;
+  }
+
+  footer {
+    margin-top: 44px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border);
+    font-size: 0.8rem;
+    color: var(--muted);
+  }
+
+  @media (max-width: 480px) {
+    .wrap { padding: 32px 14px 60px; }
+    h1 { font-size: 1.4rem; }
+    .cmd-line { flex-direction: column; gap: 8px; }
+    .copy { align-self: flex-start; padding: 6px 14px; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div>
+      <p class="eyebrow">Trinetra DeepStream 7.1 · Jetson</p>
+      <h1>Docker command reference</h1>
+    </div>
+    <button class="toggle" id="themeBtn" aria-label="Switch colour theme">
+      <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
+      <span class="label-dark">Dark</span><span class="label-light">Light</span>
+    </button>
+  </header>
+
+  <div class="note">
+    <strong>After a PC restart</strong>, your container still exists — it's just stopped. Get back in with
+    <code>docker start -ai</code>, <em>not</em> <code>docker run</code>. Running <code>docker run</code> again builds a
+    brand-new container and loses everything you did inside the old one.
+  </div>
+
+  <!-- Phase 1 -->
+  <section class="phase">
+    <div class="phase-head">
+      <span class="phase-num">1</span>
+      <h2 class="phase-title">Set up (once)</h2>
+    </div>
+
+    <div class="cmd">
+      <div class="cmd-line">
+        <code class="cmd-code"><span class="prompt">$</span><span class="t-base">docker</span> <span class="t-sub">load</span> <span class="t-flag">-i</span> <span class="t-arg">trinetra-ds-7.1-arm64.tar</span></code>
+        <button class="copy" data-cmd="docker load -i trinetra-ds-7.1-arm64.tar" aria-label="Copy command">Copy</button>
+      </div>
+      <p class="cmd-desc">Load the DeepStream image into Docker from the <code style="font-family:monospace;font-size:0.9em">.tar</code> file. Run once, right after you copy the tar onto the device.</p>
+    </div>
+
+    <div class="cmd">
+      <div class="cmd-line">
+        <code class="cmd-code"><span class="prompt">$</span><span class="t-base">docker</span> <span class="t-sub">run</span> <span class="t-flag">-it</span> <span class="t-flag">--runtime</span> <span class="t-arg">nvidia</span> <span class="t-flag">--net=host</span> <span class="t-arg">trinetra-ds:7.1</span> <span class="t-arg">bash</span></code>
+        <button class="copy" data-cmd="docker run -it --runtime nvidia --net=host trinetra-ds:7.1 bash" aria-label="Copy command">Copy</button>
+      </div>
+      <p class="cmd-desc">Create and start a <strong>new</strong> container from the image — GPU access, host networking — and drop into a bash shell. Each run makes a fresh container, so use it only when you want a new one.</p>
+      <p class="subtip">Tip: add <code>--name trinetra</code> here, then you can use the name instead of the container ID in every command below.</p>
+    </div>
+  </section>
+
+  <!-- Phase 2 -->
+  <section class="phase">
+    <div class="phase-head">
+      <span class="phase-num">2</span>
+      <h2 class="phase-title">Each session</h2>
+    </div>
+
+    <div class="cmd">
+      <div class="cmd-line">
+        <code class="cmd-code"><span class="prompt">$</span><span class="t-base">sudo</span> <span class="t-base">docker</span> <span class="t-sub">ps</span> <span class="t-flag">-a</span></code>
+        <button class="copy" data-cmd="sudo docker ps -a" aria-label="Copy command">Copy</button>
+      </div>
+      <p class="cmd-desc">List all containers — running and stopped — to find your container's ID or name.</p>
+    </div>
+
+    <div class="cmd key">
+      <div class="cmd-line">
+        <code class="cmd-code"><span class="prompt">$</span><span class="t-base">sudo</span> <span class="t-base">docker</span> <span class="t-sub">start</span> <span class="t-flag">-ai</span> <span class="t-ph">&lt;container id&gt;</span></code>
+        <button class="copy" data-cmd="sudo docker start -ai <container id>" aria-label="Copy command">Copy</button>
+      </div>
+      <p class="cmd-desc"><span class="pill">Resume</span>Restart an existing stopped container, attached and interactive — the same one with all your changes intact. This is how you get back in, including after a reboot.</p>
+    </div>
+
+    <div class="cmd">
+      <div class="cmd-line">
+        <code class="cmd-code"><span class="prompt">$</span><span class="t-sub">exit</span></code>
+        <button class="copy" data-cmd="exit" aria-label="Copy command">Copy</button>
+      </div>
+      <p class="cmd-desc">Leave the container's shell. The container stops, since bash was its main process. Your data inside is kept.</p>
+    </div>
+  </section>
+
+  <!-- Phase 3 -->
+  <section class="phase">
+    <div class="phase-head">
+      <span class="phase-num">3</span>
+      <h2 class="phase-title">Stop &amp; remove</h2>
+    </div>
+
+    <div class="cmd">
+      <div class="cmd-line">
+        <code class="cmd-code"><span class="prompt">$</span><span class="t-base">sudo</span> <span class="t-base">docker</span> <span class="t-sub">stop</span> <span class="t-ph">&lt;container id&gt;</span></code>
+        <button class="copy" data-cmd="sudo docker stop <container id>" aria-label="Copy command">Copy</button>
+      </div>
+      <p class="cmd-desc">Cleanly stop a running container from another shell. Everything inside stays intact — you can resume it later with <code style="font-family:monospace;font-size:0.9em">start -ai</code>.</p>
+    </div>
+
+    <div class="cmd">
+      <div class="cmd-line">
+        <code class="cmd-code"><span class="prompt">$</span><span class="t-base">sudo</span> <span class="t-base">docker</span> <span class="t-sub">rm</span> <span class="t-ph">&lt;container id&gt;</span></code>
+        <button class="copy" data-cmd="sudo docker rm <container id>" aria-label="Copy command">Copy</button>
+      </div>
+      <p class="cmd-desc">Delete a container permanently. Everything inside it is lost — only do this when you're truly done with it. The image stays, so you can always <code style="font-family:monospace;font-size:0.9em">run</code> a new one.</p>
+    </div>
+  </section>
+
+  <footer>
+    Replace <span style="font-family:monospace;color:var(--t-ph)">&lt;container id&gt;</span> with your ID from <span style="font-family:monospace">docker ps -a</span> (or a name set with <span style="font-family:monospace">--name</span>). If <span style="font-family:monospace">docker ps -a</span> errors after a reboot, start the daemon with <span style="font-family:monospace">sudo systemctl start docker</span>.
+  </footer>
+
+</div>
+
+<script>
+  // Theme toggle (in-memory only; resets on reload, follows OS by default)
+  var root = document.documentElement;
+  document.getElementById('themeBtn').addEventListener('click', function () {
+    var next = root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+    root.setAttribute('data-theme', next);
+  });
+
+  // Copy buttons with clipboard API + fallback
+  function flash(btn) {
+    var original = btn.textContent;
+    btn.textContent = 'Copied';
+    btn.classList.add('done');
+    setTimeout(function () {
+      btn.textContent = original;
+      btn.classList.remove('done');
+    }, 1400);
+  }
+  document.querySelectorAll('.copy').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var text = btn.getAttribute('data-cmd');
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(function () { flash(btn); }).catch(function () { fallback(text, btn); });
+      } else {
+        fallback(text, btn);
+      }
+    });
+  });
+  function fallback(text, btn) {
+    var ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.position = 'fixed';
+    ta.style.opacity = '0';
+    document.body.appendChild(ta);
+    ta.focus();
+    ta.select();
+    try { document.execCommand('copy'); flash(btn); } catch (e) {}
+    document.body.removeChild(ta);
+  }
+</script>
+</body>
+</html>
