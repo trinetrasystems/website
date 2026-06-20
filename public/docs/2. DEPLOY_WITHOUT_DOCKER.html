@@ -1,601 +1,754 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Jetson · YOLO26 + DeepStream 7.1 · Reference</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-<style>
-  :root {
-    --bg: #0a0d10;
-    --bg-elev: #11161b;
-    --bg-code: #0d1216;
-    --border: #1f2730;
-    --border-strong: #2a3442;
-    --text: #d8dde3;
-    --text-dim: #8a94a0;
-    --text-faint: #5a6470;
-    --accent: #76b900;          /* NVIDIA green */
-    --accent-dim: #4a7400;
-    --accent-glow: rgba(118, 185, 0, 0.15);
-    --warn: #ffb454;
-    --comment: #5a6470;
-    --keyword: #ff8c66;
-    --string: #b8d68c;
-    --number: #f9c859;
-    --kv-key: #84d2ff;
-    --section: #c9a0ff;
-  }
-
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-
-  html { scroll-behavior: smooth; scroll-padding-top: 80px; }
-
-  body {
-    background: var(--bg);
-    color: var(--text);
-    font-family: 'IBM Plex Sans', -apple-system, sans-serif;
-    line-height: 1.6;
-    font-size: 15px;
-    min-height: 100vh;
-    background-image:
-      radial-gradient(circle at 15% 0%, rgba(118, 185, 0, 0.06), transparent 40%),
-      radial-gradient(circle at 85% 100%, rgba(118, 185, 0, 0.04), transparent 40%);
-  }
-
-  /* Top bar */
-  header {
-    position: sticky;
-    top: 0;
-    z-index: 50;
-    background: rgba(10, 13, 16, 0.85);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    border-bottom: 1px solid var(--border);
-  }
-  .topbar {
-    max-width: 1280px;
-    margin: 0 auto;
-    padding: 14px 32px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 24px;
-  }
-  .brand {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    font-family: 'IBM Plex Mono', monospace;
-    font-weight: 600;
-    font-size: 13px;
-    letter-spacing: 0.02em;
-  }
-  .brand-dot {
-    width: 8px; height: 8px;
-    background: var(--accent);
-    border-radius: 50%;
-    box-shadow: 0 0 12px var(--accent);
-    animation: pulse 2.4s ease-in-out infinite;
-  }
-  @keyframes pulse {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.4; }
-  }
-  .brand-path { color: var(--text-dim); }
-  .brand-path .accent { color: var(--accent); }
-
-  .badges { display: flex; gap: 8px; flex-wrap: wrap; }
-  .badge {
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 11px;
-    padding: 4px 10px;
-    border-radius: 4px;
-    background: var(--bg-elev);
-    border: 1px solid var(--border-strong);
-    color: var(--text-dim);
-    white-space: nowrap;
-  }
-  .badge.tested {
-    color: var(--accent);
-    border-color: rgba(118, 185, 0, 0.3);
-    background: var(--accent-glow);
-  }
-
-  /* Layout */
-  .layout {
-    max-width: 1280px;
-    margin: 0 auto;
-    padding: 48px 32px 96px;
-    display: grid;
-    grid-template-columns: 240px 1fr;
-    gap: 64px;
-  }
-
-  /* Sidebar TOC */
-  aside {
-    position: sticky;
-    top: 96px;
-    align-self: start;
-    max-height: calc(100vh - 120px);
-    overflow-y: auto;
-  }
-  aside h3 {
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 11px;
-    font-weight: 500;
-    color: var(--text-faint);
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-    margin-bottom: 16px;
-    padding-bottom: 12px;
-    border-bottom: 1px solid var(--border);
-  }
-  aside ol {
-    list-style: none;
-    counter-reset: toc;
-  }
-  aside ol li {
-    counter-increment: toc;
-    margin-bottom: 2px;
-  }
-  aside ol li a {
-    display: block;
-    padding: 6px 0 6px 28px;
-    color: var(--text-dim);
-    text-decoration: none;
-    font-size: 13px;
-    position: relative;
-    transition: color 0.15s ease;
-    border-left: 1px solid transparent;
-    margin-left: -1px;
-    padding-left: 16px;
-  }
-  aside ol li a::before {
-    content: counter(toc, decimal-leading-zero);
-    position: absolute;
-    left: -28px;
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 10px;
-    color: var(--text-faint);
-    top: 8px;
-  }
-  aside ol li a:hover {
-    color: var(--accent);
-    border-left-color: var(--accent);
-  }
-
-  /* Main */
-  main { min-width: 0; }
-
-  /* Hero */
-  .hero {
-    margin-bottom: 64px;
-    padding-bottom: 40px;
-    border-bottom: 1px solid var(--border);
-  }
-  .eyebrow {
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 11px;
-    color: var(--accent);
-    letter-spacing: 0.18em;
-    text-transform: uppercase;
-    margin-bottom: 16px;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-  }
-  .eyebrow::before {
-    content: "";
-    width: 24px; height: 1px;
-    background: var(--accent);
-  }
-  h1 {
-    font-size: 44px;
-    font-weight: 700;
-    letter-spacing: -0.02em;
-    line-height: 1.1;
-    margin-bottom: 20px;
-  }
-  h1 .accent { color: var(--accent); }
-  .lede {
-    color: var(--text-dim);
-    font-size: 17px;
-    max-width: 640px;
-    line-height: 1.55;
-  }
-
-  /* Prereq panel */
-  .prereq {
-    margin-top: 32px;
-    background: var(--bg-elev);
-    border: 1px solid var(--border-strong);
-    border-radius: 8px;
-    padding: 20px 24px;
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-    gap: 20px;
-  }
-  .prereq-item {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-  }
-  .prereq-label {
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 10px;
-    text-transform: uppercase;
-    letter-spacing: 0.12em;
-    color: var(--text-faint);
-  }
-  .prereq-value {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 14px;
-    font-weight: 500;
-    color: var(--text);
-  }
-
-  /* Sections */
-  section {
-    margin-bottom: 56px;
-    scroll-margin-top: 80px;
-  }
-  .sect-head {
-    display: flex;
-    align-items: baseline;
-    gap: 16px;
-    margin-bottom: 8px;
-  }
-  .sect-num {
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 13px;
-    color: var(--accent);
-    font-weight: 500;
-  }
-  h2 {
-    font-size: 26px;
-    font-weight: 600;
-    letter-spacing: -0.01em;
-    color: var(--text);
-  }
-  .sect-desc {
-    color: var(--text-dim);
-    margin-bottom: 24px;
-    font-size: 14px;
-    margin-left: 52px;
-  }
-
-  /* Code block */
-  .code-block {
-    background: var(--bg-code);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    overflow: hidden;
-    margin-bottom: 16px;
-    transition: border-color 0.2s ease;
-  }
-  .code-block:hover { border-color: var(--border-strong); }
-
-  .code-head {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 10px 14px 10px 16px;
-    background: var(--bg-elev);
-    border-bottom: 1px solid var(--border);
-    gap: 12px;
-  }
-  .code-label {
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 11px;
-    color: var(--text-dim);
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    min-width: 0;
-    flex: 1;
-  }
-  .code-label .tag {
-    padding: 2px 8px;
-    border-radius: 3px;
-    font-size: 10px;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-    font-weight: 500;
-    flex-shrink: 0;
-  }
-  .tag.bash {
-    background: rgba(118, 185, 0, 0.12);
-    color: var(--accent);
-  }
-  .tag.config {
-    background: rgba(132, 210, 255, 0.1);
-    color: var(--kv-key);
-  }
-  .code-label .filename {
-    font-family: 'JetBrains Mono', monospace;
-    color: var(--text);
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-
-  .copy-btn {
-    background: transparent;
-    border: 1px solid var(--border-strong);
-    color: var(--text-dim);
-    padding: 5px 12px;
-    border-radius: 4px;
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 11px;
-    cursor: pointer;
-    transition: all 0.15s ease;
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    white-space: nowrap;
-    flex-shrink: 0;
-  }
-  .copy-btn:hover {
-    color: var(--accent);
-    border-color: var(--accent);
-    background: var(--accent-glow);
-  }
-  .copy-btn.copied {
-    color: var(--accent);
-    border-color: var(--accent);
-  }
-  .copy-btn svg {
-    width: 12px;
-    height: 12px;
-    stroke: currentColor;
-    fill: none;
-    stroke-width: 2;
-  }
-
-  pre {
-    margin: 0;
-    padding: 16px 20px;
-    overflow-x: auto;
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 13.5px;
-    line-height: 1.65;
-    color: var(--text);
-  }
-  pre code { font-family: inherit; }
-
-  /* Custom scrollbars */
-  pre::-webkit-scrollbar, aside::-webkit-scrollbar { height: 8px; width: 6px; }
-  pre::-webkit-scrollbar-track, aside::-webkit-scrollbar-track { background: transparent; }
-  pre::-webkit-scrollbar-thumb, aside::-webkit-scrollbar-thumb {
-    background: var(--border-strong);
-    border-radius: 4px;
-  }
-  pre::-webkit-scrollbar-thumb:hover, aside::-webkit-scrollbar-thumb:hover {
-    background: var(--text-faint);
-  }
-
-  /* Syntax highlighting */
-  .cmt { color: var(--comment); font-style: italic; }
-  .kw { color: var(--keyword); }
-  .str { color: var(--string); }
-  .num { color: var(--number); }
-  .key { color: var(--kv-key); }
-  .sect { color: var(--section); font-weight: 500; }
-  .url { color: var(--kv-key); text-decoration: underline; text-decoration-color: rgba(132, 210, 255, 0.3); }
-
-  /* Note callout */
-  .note {
-    background: rgba(255, 180, 84, 0.06);
-    border-left: 3px solid var(--warn);
-    padding: 14px 18px;
-    border-radius: 4px;
-    margin-bottom: 16px;
-    font-size: 13.5px;
-    color: var(--text-dim);
-  }
-  .note strong { color: var(--warn); font-weight: 600; }
-
-  /* Footer */
-  footer {
-    max-width: 1280px;
-    margin: 0 auto;
-    padding: 32px;
-    border-top: 1px solid var(--border);
-    color: var(--text-faint);
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 11px;
-    display: flex;
-    justify-content: space-between;
-    flex-wrap: wrap;
-    gap: 16px;
-  }
-
-  /* Run section emphasis */
-  .run-emphasis {
-    background: linear-gradient(135deg, rgba(118, 185, 0, 0.08), rgba(118, 185, 0, 0.02));
-    border: 1px solid rgba(118, 185, 0, 0.25);
-    border-radius: 8px;
-    padding: 4px;
-  }
-  .run-emphasis .code-block {
-    border: none;
-    background: transparent;
-    margin: 0;
-  }
-  .run-emphasis .code-head {
-    background: rgba(118, 185, 0, 0.06);
-    border-bottom-color: rgba(118, 185, 0, 0.2);
-  }
-
-  /* Mobile */
-  @media (max-width: 900px) {
-    .layout {
-      grid-template-columns: 1fr;
-      gap: 40px;
-      padding: 32px 20px 64px;
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Jetson · YOLO26 + DeepStream 7.1 · Reference</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap"
+    rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0a0d10;
+      --bg-elev: #11161b;
+      --bg-code: #0d1216;
+      --border: #1f2730;
+      --border-strong: #2a3442;
+      --text: #d8dde3;
+      --text-dim: #8a94a0;
+      --text-faint: #5a6470;
+      --accent: #76b900;
+      /* NVIDIA green */
+      --accent-dim: #4a7400;
+      --accent-glow: rgba(118, 185, 0, 0.15);
+      --warn: #ffb454;
+      --comment: #5a6470;
+      --keyword: #ff8c66;
+      --string: #b8d68c;
+      --number: #f9c859;
+      --kv-key: #84d2ff;
+      --section: #c9a0ff;
     }
-    aside { position: static; max-height: none; }
-    .topbar { padding: 12px 20px; }
-    h1 { font-size: 32px; }
-    .lede { font-size: 15px; }
-    h2 { font-size: 22px; }
-    .sect-desc { margin-left: 0; }
-    .badges { display: none; }
-    pre { font-size: 12.5px; padding: 14px; }
-  }
-</style>
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html {
+      scroll-behavior: smooth;
+      scroll-padding-top: 80px;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'IBM Plex Sans', -apple-system, sans-serif;
+      line-height: 1.6;
+      font-size: 15px;
+      min-height: 100vh;
+      background-image:
+        radial-gradient(circle at 15% 0%, rgba(118, 185, 0, 0.06), transparent 40%),
+        radial-gradient(circle at 85% 100%, rgba(118, 185, 0, 0.04), transparent 40%);
+    }
+
+    /* Top bar */
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      background: rgba(10, 13, 16, 0.85);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .topbar {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 14px 32px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 24px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-family: 'IBM Plex Mono', monospace;
+      font-weight: 600;
+      font-size: 13px;
+      letter-spacing: 0.02em;
+    }
+
+    .brand-dot {
+      width: 8px;
+      height: 8px;
+      background: var(--accent);
+      border-radius: 50%;
+      box-shadow: 0 0 12px var(--accent);
+      animation: pulse 2.4s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+
+      0%,
+      100% {
+        opacity: 1;
+      }
+
+      50% {
+        opacity: 0.4;
+      }
+    }
+
+    .brand-path {
+      color: var(--text-dim);
+    }
+
+    .brand-path .accent {
+      color: var(--accent);
+    }
+
+    .badges {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .badge {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 11px;
+      padding: 4px 10px;
+      border-radius: 4px;
+      background: var(--bg-elev);
+      border: 1px solid var(--border-strong);
+      color: var(--text-dim);
+      white-space: nowrap;
+    }
+
+    .badge.tested {
+      color: var(--accent);
+      border-color: rgba(118, 185, 0, 0.3);
+      background: var(--accent-glow);
+    }
+
+    /* Layout */
+    .layout {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 48px 32px 96px;
+      display: grid;
+      grid-template-columns: 240px 1fr;
+      gap: 64px;
+    }
+
+    /* Sidebar TOC */
+    aside {
+      position: sticky;
+      top: 96px;
+      align-self: start;
+      max-height: calc(100vh - 120px);
+      overflow-y: auto;
+    }
+
+    aside h3 {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--text-faint);
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      margin-bottom: 16px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    aside ol {
+      list-style: none;
+      counter-reset: toc;
+    }
+
+    aside ol li {
+      counter-increment: toc;
+      margin-bottom: 2px;
+    }
+
+    aside ol li a {
+      display: block;
+      padding: 6px 0 6px 28px;
+      color: var(--text-dim);
+      text-decoration: none;
+      font-size: 13px;
+      position: relative;
+      transition: color 0.15s ease;
+      border-left: 1px solid transparent;
+      margin-left: -1px;
+      padding-left: 16px;
+    }
+
+    aside ol li a::before {
+      content: counter(toc, decimal-leading-zero);
+      position: absolute;
+      left: -28px;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 10px;
+      color: var(--text-faint);
+      top: 8px;
+    }
+
+    aside ol li a:hover {
+      color: var(--accent);
+      border-left-color: var(--accent);
+    }
+
+    /* Main */
+    main {
+      min-width: 0;
+    }
+
+    /* Hero */
+    .hero {
+      margin-bottom: 64px;
+      padding-bottom: 40px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .eyebrow {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 11px;
+      color: var(--accent);
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .eyebrow::before {
+      content: "";
+      width: 24px;
+      height: 1px;
+      background: var(--accent);
+    }
+
+    h1 {
+      font-size: 44px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      line-height: 1.1;
+      margin-bottom: 20px;
+    }
+
+    h1 .accent {
+      color: var(--accent);
+    }
+
+    .lede {
+      color: var(--text-dim);
+      font-size: 17px;
+      max-width: 640px;
+      line-height: 1.55;
+    }
+
+    /* Prereq panel */
+    .prereq {
+      margin-top: 32px;
+      background: var(--bg-elev);
+      border: 1px solid var(--border-strong);
+      border-radius: 8px;
+      padding: 20px 24px;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 20px;
+    }
+
+    .prereq-item {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .prereq-label {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--text-faint);
+    }
+
+    .prereq-value {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--text);
+    }
+
+    /* Sections */
+    section {
+      margin-bottom: 56px;
+      scroll-margin-top: 80px;
+    }
+
+    .sect-head {
+      display: flex;
+      align-items: baseline;
+      gap: 16px;
+      margin-bottom: 8px;
+    }
+
+    .sect-num {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 13px;
+      color: var(--accent);
+      font-weight: 500;
+    }
+
+    h2 {
+      font-size: 26px;
+      font-weight: 600;
+      letter-spacing: -0.01em;
+      color: var(--text);
+    }
+
+    .sect-desc {
+      color: var(--text-dim);
+      margin-bottom: 24px;
+      font-size: 14px;
+      margin-left: 52px;
+    }
+
+    /* Code block */
+    .code-block {
+      background: var(--bg-code);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      overflow: hidden;
+      margin-bottom: 16px;
+      transition: border-color 0.2s ease;
+    }
+
+    .code-block:hover {
+      border-color: var(--border-strong);
+    }
+
+    .code-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 14px 10px 16px;
+      background: var(--bg-elev);
+      border-bottom: 1px solid var(--border);
+      gap: 12px;
+    }
+
+    .code-label {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 11px;
+      color: var(--text-dim);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 0;
+      flex: 1;
+    }
+
+    .code-label .tag {
+      padding: 2px 8px;
+      border-radius: 3px;
+      font-size: 10px;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      font-weight: 500;
+      flex-shrink: 0;
+    }
+
+    .tag.bash {
+      background: rgba(118, 185, 0, 0.12);
+      color: var(--accent);
+    }
+
+    .tag.config {
+      background: rgba(132, 210, 255, 0.1);
+      color: var(--kv-key);
+    }
+
+    .code-label .filename {
+      font-family: 'JetBrains Mono', monospace;
+      color: var(--text);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .copy-btn {
+      background: transparent;
+      border: 1px solid var(--border-strong);
+      color: var(--text-dim);
+      padding: 5px 12px;
+      border-radius: 4px;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 11px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .copy-btn:hover {
+      color: var(--accent);
+      border-color: var(--accent);
+      background: var(--accent-glow);
+    }
+
+    .copy-btn.copied {
+      color: var(--accent);
+      border-color: var(--accent);
+    }
+
+    .copy-btn svg {
+      width: 12px;
+      height: 12px;
+      stroke: currentColor;
+      fill: none;
+      stroke-width: 2;
+    }
+
+    pre {
+      margin: 0;
+      padding: 16px 20px;
+      overflow-x: auto;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13.5px;
+      line-height: 1.65;
+      color: var(--text);
+    }
+
+    pre code {
+      font-family: inherit;
+    }
+
+    /* Custom scrollbars */
+    pre::-webkit-scrollbar,
+    aside::-webkit-scrollbar {
+      height: 8px;
+      width: 6px;
+    }
+
+    pre::-webkit-scrollbar-track,
+    aside::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    pre::-webkit-scrollbar-thumb,
+    aside::-webkit-scrollbar-thumb {
+      background: var(--border-strong);
+      border-radius: 4px;
+    }
+
+    pre::-webkit-scrollbar-thumb:hover,
+    aside::-webkit-scrollbar-thumb:hover {
+      background: var(--text-faint);
+    }
+
+    /* Syntax highlighting */
+    .cmt {
+      color: var(--comment);
+      font-style: italic;
+    }
+
+    .kw {
+      color: var(--keyword);
+    }
+
+    .str {
+      color: var(--string);
+    }
+
+    .num {
+      color: var(--number);
+    }
+
+    .key {
+      color: var(--kv-key);
+    }
+
+    .sect {
+      color: var(--section);
+      font-weight: 500;
+    }
+
+    .url {
+      color: var(--kv-key);
+      text-decoration: underline;
+      text-decoration-color: rgba(132, 210, 255, 0.3);
+    }
+
+    /* Note callout */
+    .note {
+      background: rgba(255, 180, 84, 0.06);
+      border-left: 3px solid var(--warn);
+      padding: 14px 18px;
+      border-radius: 4px;
+      margin-bottom: 16px;
+      font-size: 13.5px;
+      color: var(--text-dim);
+    }
+
+    .note strong {
+      color: var(--warn);
+      font-weight: 600;
+    }
+
+    /* Footer */
+    footer {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 32px;
+      border-top: 1px solid var(--border);
+      color: var(--text-faint);
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 11px;
+      display: flex;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+
+    /* Run section emphasis */
+    .run-emphasis {
+      background: linear-gradient(135deg, rgba(118, 185, 0, 0.08), rgba(118, 185, 0, 0.02));
+      border: 1px solid rgba(118, 185, 0, 0.25);
+      border-radius: 8px;
+      padding: 4px;
+    }
+
+    .run-emphasis .code-block {
+      border: none;
+      background: transparent;
+      margin: 0;
+    }
+
+    .run-emphasis .code-head {
+      background: rgba(118, 185, 0, 0.06);
+      border-bottom-color: rgba(118, 185, 0, 0.2);
+    }
+
+    /* Mobile */
+    @media (max-width: 900px) {
+      .layout {
+        grid-template-columns: 1fr;
+        gap: 40px;
+        padding: 32px 20px 64px;
+      }
+
+      aside {
+        position: static;
+        max-height: none;
+      }
+
+      .topbar {
+        padding: 12px 20px;
+      }
+
+      h1 {
+        font-size: 32px;
+      }
+
+      .lede {
+        font-size: 15px;
+      }
+
+      h2 {
+        font-size: 22px;
+      }
+
+      .sect-desc {
+        margin-left: 0;
+      }
+
+      .badges {
+        display: none;
+      }
+
+      pre {
+        font-size: 12.5px;
+        padding: 14px;
+      }
+    }
+  </style>
 </head>
+
 <body>
 
-<header>
-  <div class="topbar">
-    <div class="brand">
-      <span class="brand-dot"></span>
-      <span class="brand-path">~/<span class="accent">jetson</span>/yolo26-deepstream</span>
-    </div>
-    <div class="badges">
-      <span class="badge">JetPack 6.1</span>
-      <span class="badge">DeepStream 7.1</span>
-      <span class="badge tested">✓ Tested</span>
-    </div>
-  </div>
-</header>
-
-<div class="layout">
-
-  <aside>
-    <h3>Contents</h3>
-    <ol>
-      <li><a href="#power">Power Mode</a></li>
-      <li><a href="#ultralytics">Ultralytics Setup</a></li>
-      <li><a href="#deepstream-yolo">DeepStream-Yolo Repo</a></li>
-      <li><a href="#export">Export Model</a></li>
-      <li><a href="#build">Build Custom Plugin</a></li>
-      <li><a href="#rtsp">RTSP Server Deps</a></li>
-      <li><a href="#infer-config">Inference Config</a></li>
-      <li><a href="#app-config">App Config</a></li>
-      <li><a href="#run">Run</a></li>
-    </ol>
-  </aside>
-
-  <main>
-    <div class="hero">
-      <div class="eyebrow">Personal Reference · Edge AI</div>
-      <h1>YOLO26 on Jetson with <span class="accent">DeepStream 7.1</span></h1>
-      <p class="lede">
-        End-to-end recipe to deploy YOLO26-S with TensorRT inference and RTSP streaming
-        on a Jetson device. Commands and configs preserved exactly as tested locally.
-      </p>
-
-      <div class="prereq">
-        <div class="prereq-item">
-          <span class="prereq-label">JetPack</span>
-          <span class="prereq-value">6.1</span>
-        </div>
-        <div class="prereq-item">
-          <span class="prereq-label">DeepStream</span>
-          <span class="prereq-value">7.1</span>
-        </div>
-        <div class="prereq-item">
-          <span class="prereq-label">Installer</span>
-          <span class="prereq-value">SDK Manager</span>
-        </div>
-        <div class="prereq-item">
-          <span class="prereq-label">Storage</span>
-          <span class="prereq-value">SD card</span>
-        </div>
+  <header>
+    <div class="topbar">
+      <div class="brand">
+        <span class="brand-dot"></span>
+        <span class="brand-path">~/<span class="accent">jetson</span>/yolo26-deepstream</span>
+      </div>
+      <div class="badges">
+        <span class="badge">JetPack 6.1</span>
+        <span class="badge">DeepStream 7.1</span>
+        <span class="badge tested">✓ Tested</span>
       </div>
     </div>
+  </header>
 
-    <!-- 1. POWER MODE -->
-    <section id="power">
-      <div class="sect-head">
-        <span class="sect-num">01 /</span>
-        <h2>Power Mode</h2>
-      </div>
-      <p class="sect-desc">Set the highest performance profile and lock clocks.</p>
+  <div class="layout">
 
-      <div class="code-block">
-        <div class="code-head">
-          <div class="code-label">
-            <span class="tag bash">bash</span>
-            <span class="filename">power-mode.sh</span>
+    <aside>
+      <h3>Contents</h3>
+      <ol>
+        <li><a href="#power">Power Mode</a></li>
+        <li><a href="#ultralytics">Ultralytics Setup</a></li>
+        <li><a href="#deepstream-yolo">DeepStream-Yolo Repo</a></li>
+        <li><a href="#export">Export Model</a></li>
+        <li><a href="#build">Build Custom Plugin</a></li>
+        <li><a href="#rtsp">RTSP Server Deps</a></li>
+        <li><a href="#infer-config">Inference Config</a></li>
+        <li><a href="#app-config">App Config</a></li>
+        <li><a href="#run">Run</a></li>
+      </ol>
+    </aside>
+
+    <main>
+      <div class="hero">
+        <div class="eyebrow">Personal Reference · Edge AI</div>
+        <h1>YOLO26 on Jetson with <span class="accent">DeepStream 7.1</span></h1>
+        <p class="lede">
+          End-to-end recipe to deploy YOLO26-S with TensorRT inference and RTSP streaming
+          on a Jetson device. Commands and configs preserved exactly as tested locally.
+        </p>
+
+        <div class="prereq">
+          <div class="prereq-item">
+            <span class="prereq-label">JetPack</span>
+            <span class="prereq-value">6.1</span>
           </div>
-          <button class="copy-btn" data-copy="power"><svg viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>Copy</button>
+          <div class="prereq-item">
+            <span class="prereq-label">DeepStream</span>
+            <span class="prereq-value">7.1</span>
+          </div>
+          <div class="prereq-item">
+            <span class="prereq-label">Installer</span>
+            <span class="prereq-value">SDK Manager</span>
+          </div>
+          <div class="prereq-item">
+            <span class="prereq-label">Storage</span>
+            <span class="prereq-value">SD card</span>
+          </div>
         </div>
-        <pre id="power"><code><span class="kw">sudo</span> nvpmodel -p --verbose
+      </div>
+
+      <!-- 1. POWER MODE -->
+      <section id="power">
+        <div class="sect-head">
+          <span class="sect-num">01 /</span>
+          <h2>Power Mode</h2>
+        </div>
+        <p class="sect-desc">Set the highest performance profile and lock clocks.</p>
+
+        <div class="code-block">
+          <div class="code-head">
+            <div class="code-label">
+              <span class="tag bash">bash</span>
+              <span class="filename">power-mode.sh</span>
+            </div>
+            <button class="copy-btn" data-copy="power"><svg viewBox="0 0 24 24">
+                <rect x="9" y="9" width="13" height="13" rx="2" />
+                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+              </svg>Copy</button>
+          </div>
+          <pre id="power"><code><span class="kw">sudo</span> nvpmodel -p --verbose
 <span class="kw">sudo</span> nvpmodel -m <span class="num">2</span>
 <span class="kw">sudo</span> nvpmodel -q
 <span class="kw">sudo</span> jetson_clocks</code></pre>
-      </div>
-    </section>
-
-    <!-- 2. ULTRALYTICS -->
-    <section id="ultralytics">
-      <div class="sect-head">
-        <span class="sect-num">02 /</span>
-        <h2>Ultralytics Setup</h2>
-      </div>
-      <p class="sect-desc">Clone Ultralytics and install with export extras.</p>
-
-      <div class="code-block">
-        <div class="code-head">
-          <div class="code-label">
-            <span class="tag bash">bash</span>
-            <span class="filename">setup-ultralytics.sh</span>
-          </div>
-          <button class="copy-btn" data-copy="ultra"><svg viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>Copy</button>
         </div>
-        <pre id="ultra"><code><span class="kw">cd</span> ~
+      </section>
+
+      <!-- 2. ULTRALYTICS -->
+      <section id="ultralytics">
+        <div class="sect-head">
+          <span class="sect-num">02 /</span>
+          <h2>Ultralytics Setup</h2>
+        </div>
+        <p class="sect-desc">Clone Ultralytics and install with export extras.</p>
+
+        <div class="code-block">
+          <div class="code-head">
+            <div class="code-label">
+              <span class="tag bash">bash</span>
+              <span class="filename">setup-ultralytics.sh</span>
+            </div>
+            <button class="copy-btn" data-copy="ultra"><svg viewBox="0 0 24 24">
+                <rect x="9" y="9" width="13" height="13" rx="2" />
+                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+              </svg>Copy</button>
+          </div>
+          <pre id="ultra"><code><span class="kw">cd</span> ~
 pip install -U pip
 git clone <span class="url">https://github.com/ultralytics/ultralytics</span>
 <span class="kw">cd</span> ultralytics
 pip install -e <span class="str">".[export]"</span> onnxslim</code></pre>
-      </div>
-    </section>
-
-    <!-- 3. DEEPSTREAM-YOLO -->
-    <section id="deepstream-yolo">
-      <div class="sect-head">
-        <span class="sect-num">03 /</span>
-        <h2>DeepStream-Yolo Repo</h2>
-      </div>
-      <p class="sect-desc">Clone marcoslucianops' DeepStream-Yolo and copy the export script.</p>
-
-      <div class="code-block">
-        <div class="code-head">
-          <div class="code-label">
-            <span class="tag bash">bash</span>
-            <span class="filename">setup-deepstream-yolo.sh</span>
-          </div>
-          <button class="copy-btn" data-copy="dsy"><svg viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>Copy</button>
         </div>
-        <pre id="dsy"><code><span class="kw">cd</span> ~
+      </section>
+
+      <!-- 3. DEEPSTREAM-YOLO -->
+      <section id="deepstream-yolo">
+        <div class="sect-head">
+          <span class="sect-num">03 /</span>
+          <h2>DeepStream-Yolo Repo</h2>
+        </div>
+        <p class="sect-desc">Clone marcoslucianops' DeepStream-Yolo and copy the export script.</p>
+
+        <div class="code-block">
+          <div class="code-head">
+            <div class="code-label">
+              <span class="tag bash">bash</span>
+              <span class="filename">setup-deepstream-yolo.sh</span>
+            </div>
+            <button class="copy-btn" data-copy="dsy"><svg viewBox="0 0 24 24">
+                <rect x="9" y="9" width="13" height="13" rx="2" />
+                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+              </svg>Copy</button>
+          </div>
+          <pre id="dsy"><code><span class="kw">cd</span> ~
 git clone <span class="url">https://github.com/marcoslucianops/DeepStream-Yolo</span>
 cp ~/DeepStream-Yolo/utils/export_yolo26.py ~/ultralytics</code></pre>
-      </div>
-    </section>
-
-    <!-- 4. EXPORT -->
-    <section id="export">
-      <div class="sect-head">
-        <span class="sect-num">04 /</span>
-        <h2>Export YOLO26 Model</h2>
-      </div>
-      <p class="sect-desc">Download weights, install ONNX tooling, and export to ONNX.</p>
-
-      <div class="code-block">
-        <div class="code-head">
-          <div class="code-label">
-            <span class="tag bash">bash</span>
-            <span class="filename">export-yolo26.sh</span>
-          </div>
-          <button class="copy-btn" data-copy="export"><svg viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>Copy</button>
         </div>
-        <pre id="export"><code><span class="kw">cd</span> ultralytics
+      </section>
+
+      <!-- 4. EXPORT -->
+      <section id="export">
+        <div class="sect-head">
+          <span class="sect-num">04 /</span>
+          <h2>Export YOLO26 Model</h2>
+        </div>
+        <p class="sect-desc">Download weights, install ONNX tooling, and export to ONNX.</p>
+
+        <div class="code-block">
+          <div class="code-head">
+            <div class="code-label">
+              <span class="tag bash">bash</span>
+              <span class="filename">export-yolo26.sh</span>
+            </div>
+            <button class="copy-btn" data-copy="export"><svg viewBox="0 0 24 24">
+                <rect x="9" y="9" width="13" height="13" rx="2" />
+                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+              </svg>Copy</button>
+          </div>
+          <pre id="export"><code><span class="kw">cd</span> ultralytics
 wget <span class="url">https://github.com/ultralytics/assets/releases/download/v8.4.0/yolo26s.pt</span>
 
 pip3 install --user onnxscript
@@ -604,80 +757,92 @@ pip3 install --user onnx onnxslim onnxscript
 python3 export_yolo26.py -w yolo26s.pt --simplify --batch <span class="num">1</span>
 
 cp yolo26s.onnx labels.txt ~/DeepStream-Yolo</code></pre>
-      </div>
-    </section>
-
-    <!-- 5. BUILD -->
-    <section id="build">
-      <div class="sect-head">
-        <span class="sect-num">05 /</span>
-        <h2>Build Custom Inference Plugin</h2>
-      </div>
-      <p class="sect-desc">Set CUDA version and compile the YOLO custom parser.</p>
-
-      <div class="code-block">
-        <div class="code-head">
-          <div class="code-label">
-            <span class="tag bash">bash</span>
-            <span class="filename">build-plugin.sh</span>
-          </div>
-          <button class="copy-btn" data-copy="build"><svg viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>Copy</button>
         </div>
-        <pre id="build"><code><span class="kw">cd</span> ~/DeepStream-Yolo
+      </section>
+
+      <!-- 5. BUILD -->
+      <section id="build">
+        <div class="sect-head">
+          <span class="sect-num">05 /</span>
+          <h2>Build Custom Inference Plugin</h2>
+        </div>
+        <p class="sect-desc">Set CUDA version and compile the YOLO custom parser.</p>
+
+        <div class="code-block">
+          <div class="code-head">
+            <div class="code-label">
+              <span class="tag bash">bash</span>
+              <span class="filename">build-plugin.sh</span>
+            </div>
+            <button class="copy-btn" data-copy="build"><svg viewBox="0 0 24 24">
+                <rect x="9" y="9" width="13" height="13" rx="2" />
+                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+              </svg>Copy</button>
+          </div>
+          <pre id="build"><code><span class="kw">cd</span> ~/DeepStream-Yolo
 <span class="kw">export</span> CUDA_VER=<span class="num">12.6</span>
 make -C nvdsinfer_custom_impl_Yolo clean &amp;&amp; make -C nvdsinfer_custom_impl_Yolo</code></pre>
-      </div>
-    </section>
-
-    <!-- 6. RTSP DEPS -->
-    <section id="rtsp">
-      <div class="sect-head">
-        <span class="sect-num">06 /</span>
-        <h2>RTSP Server Dependencies</h2>
-      </div>
-      <p class="sect-desc">Install GStreamer RTSP server libraries for streaming output.</p>
-
-      <div class="code-block">
-        <div class="code-head">
-          <div class="code-label">
-            <span class="tag bash">bash</span>
-            <span class="filename">install-rtsp.sh</span>
-          </div>
-          <button class="copy-btn" data-copy="rtsp"><svg viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>Copy</button>
         </div>
-        <pre id="rtsp"><code><span class="kw">sudo</span> apt update
+      </section>
+
+      <!-- 6. RTSP DEPS -->
+      <section id="rtsp">
+        <div class="sect-head">
+          <span class="sect-num">06 /</span>
+          <h2>RTSP Server Dependencies</h2>
+        </div>
+        <p class="sect-desc">Install GStreamer RTSP server libraries for streaming output.</p>
+
+        <div class="code-block">
+          <div class="code-head">
+            <div class="code-label">
+              <span class="tag bash">bash</span>
+              <span class="filename">install-rtsp.sh</span>
+            </div>
+            <button class="copy-btn" data-copy="rtsp"><svg viewBox="0 0 24 24">
+                <rect x="9" y="9" width="13" height="13" rx="2" />
+                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+              </svg>Copy</button>
+          </div>
+          <pre id="rtsp"><code><span class="kw">sudo</span> apt update
 <span class="kw">sudo</span> apt install -y libgstrtspserver-1.0-0 libgstrtspserver-1.0-dev</code></pre>
-      </div>
-    </section>
-
-    <!-- 7. INFER CONFIG -->
-    <section id="infer-config">
-      <div class="sect-head">
-        <span class="sect-num">07 /</span>
-        <h2>Inference Config</h2>
-      </div>
-      <p class="sect-desc">Open the file and paste the contents below.</p>
-
-      <div class="code-block">
-        <div class="code-head">
-          <div class="code-label">
-            <span class="tag bash">bash</span>
-            <span class="filename">open-editor.sh</span>
-          </div>
-          <button class="copy-btn" data-copy="nano1"><svg viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>Copy</button>
         </div>
-        <pre id="nano1"><code>nano config_infer_primary_yolo26.txt</code></pre>
-      </div>
+      </section>
 
-      <div class="code-block">
-        <div class="code-head">
-          <div class="code-label">
-            <span class="tag config">config</span>
-            <span class="filename">config_infer_primary_yolo26.txt</span>
-          </div>
-          <button class="copy-btn" data-copy="infer-cfg"><svg viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>Copy</button>
+      <!-- 7. INFER CONFIG -->
+      <section id="infer-config">
+        <div class="sect-head">
+          <span class="sect-num">07 /</span>
+          <h2>Inference Config</h2>
         </div>
-        <pre id="infer-cfg"><code><span class="sect">[property]</span>
+        <p class="sect-desc">Open the file and paste the contents below.</p>
+
+        <div class="code-block">
+          <div class="code-head">
+            <div class="code-label">
+              <span class="tag bash">bash</span>
+              <span class="filename">open-editor.sh</span>
+            </div>
+            <button class="copy-btn" data-copy="nano1"><svg viewBox="0 0 24 24">
+                <rect x="9" y="9" width="13" height="13" rx="2" />
+                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+              </svg>Copy</button>
+          </div>
+          <pre id="nano1"><code>nano config_infer_primary_yolo26.txt</code></pre>
+        </div>
+
+        <div class="code-block">
+          <div class="code-head">
+            <div class="code-label">
+              <span class="tag config">config</span>
+              <span class="filename">config_infer_primary_yolo26.txt</span>
+            </div>
+            <button class="copy-btn" data-copy="infer-cfg"><svg viewBox="0 0 24 24">
+                <rect x="9" y="9" width="13" height="13" rx="2" />
+                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+              </svg>Copy</button>
+          </div>
+          <pre id="infer-cfg"><code><span class="sect">[property]</span>
 <span class="cmt"># GPU device ID. On Jetson always 0 (single GPU)</span>
 <span class="key">gpu-id</span>=<span class="num">0</span>
 
@@ -762,37 +927,43 @@ make -C nvdsinfer_custom_impl_Yolo clean &amp;&amp; make -C nvdsinfer_custom_imp
 
 <span class="cmt"># Max detections kept after NMS/clustering (per frame)</span>
 <span class="key">topk</span>=<span class="num">300</span></code></pre>
-      </div>
-    </section>
-
-    <!-- 8. APP CONFIG -->
-    <section id="app-config">
-      <div class="sect-head">
-        <span class="sect-num">08 /</span>
-        <h2>DeepStream App Config</h2>
-      </div>
-      <p class="sect-desc">Pipeline definition: source, mux, GIE, OSD, RTSP sink.</p>
-
-      <div class="code-block">
-        <div class="code-head">
-          <div class="code-label">
-            <span class="tag bash">bash</span>
-            <span class="filename">open-editor.sh</span>
-          </div>
-          <button class="copy-btn" data-copy="nano2"><svg viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>Copy</button>
         </div>
-        <pre id="nano2"><code>nano deepstream_app_config.txt</code></pre>
-      </div>
+      </section>
 
-      <div class="code-block">
-        <div class="code-head">
-          <div class="code-label">
-            <span class="tag config">config</span>
-            <span class="filename">deepstream_app_config.txt</span>
-          </div>
-          <button class="copy-btn" data-copy="app-cfg"><svg viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>Copy</button>
+      <!-- 8. APP CONFIG -->
+      <section id="app-config">
+        <div class="sect-head">
+          <span class="sect-num">08 /</span>
+          <h2>DeepStream App Config</h2>
         </div>
-        <pre id="app-cfg"><code><span class="sect">[application]</span>
+        <p class="sect-desc">Pipeline definition: source, mux, GIE, OSD, RTSP sink.</p>
+
+        <div class="code-block">
+          <div class="code-head">
+            <div class="code-label">
+              <span class="tag bash">bash</span>
+              <span class="filename">open-editor.sh</span>
+            </div>
+            <button class="copy-btn" data-copy="nano2"><svg viewBox="0 0 24 24">
+                <rect x="9" y="9" width="13" height="13" rx="2" />
+                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+              </svg>Copy</button>
+          </div>
+          <pre id="nano2"><code>nano deepstream_app_config.txt</code></pre>
+        </div>
+
+        <div class="code-block">
+          <div class="code-head">
+            <div class="code-label">
+              <span class="tag config">config</span>
+              <span class="filename">deepstream_app_config.txt</span>
+            </div>
+            <button class="copy-btn" data-copy="app-cfg"><svg viewBox="0 0 24 24">
+                <rect x="9" y="9" width="13" height="13" rx="2" />
+                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+              </svg>Copy</button>
+          </div>
+          <pre id="app-cfg"><code><span class="sect">[application]</span>
 <span class="cmt"># Print FPS / latency stats to console</span>
 <span class="cmt"># 0=disabled  1=enabled</span>
 <span class="key">enable-perf-measurement</span>=<span class="num">1</span>
@@ -860,8 +1031,8 @@ make -C nvdsinfer_custom_impl_Yolo clean &amp;&amp; make -C nvdsinfer_custom_imp
 <span class="key">type</span>=<span class="num">4</span>
 <span class="cmt">#1=h264 2=h265</span>
 <span class="key">codec</span>=<span class="num">1</span>
-<span class="cmt">#0=CPU 1=GPU (Jetson uses hardware encoder via nvv4l2h264enc)</span>
-<span class="key">enc-type</span>=<span class="num">1</span>
+<span class="cmt">#1=CPU 0=GPU (Jetson uses hardware encoder via nvv4l2h264enc)</span>
+<span class="key">enc-type</span>=<span class="num">0</span>
 
 <span class="cmt"># 0=async  1=sync to clock</span>
 <span class="key">sync</span>=<span class="num">0</span>
@@ -951,97 +1122,102 @@ make -C nvdsinfer_custom_impl_Yolo clean &amp;&amp; make -C nvdsinfer_custom_imp
 <span class="cmt"># Loop file source forever - useful for demos and continuous testing</span>
 <span class="cmt"># 0=stop at EOS  1=loop</span>
 <span class="key">file-loop</span>=<span class="num">1</span></code></pre>
-      </div>
-    </section>
-
-    <!-- 9. RUN -->
-    <section id="run">
-      <div class="sect-head">
-        <span class="sect-num">09 /</span>
-        <h2>Run</h2>
-      </div>
-      <p class="sect-desc">Launch the DeepStream pipeline.</p>
-
-      <div class="run-emphasis">
-        <div class="code-block">
-          <div class="code-head">
-            <div class="code-label">
-              <span class="tag bash">bash</span>
-              <span class="filename">run.sh</span>
-            </div>
-            <button class="copy-btn" data-copy="run"><svg viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>Copy</button>
-          </div>
-          <pre id="run"><code>deepstream-app -c deepstream_app_config.txt</code></pre>
         </div>
-      </div>
+      </section>
 
-      <div class="note" style="margin-top: 16px;">
-        <strong>RTSP output</strong> &mdash; once running, the inferred stream is available at
-        <span style="font-family: 'JetBrains Mono', monospace; color: var(--text);">rtsp://&lt;jetson-ip&gt;:8554/ds-test</span>
-      </div>
-    </section>
+      <!-- 9. RUN -->
+      <section id="run">
+        <div class="sect-head">
+          <span class="sect-num">09 /</span>
+          <h2>Run</h2>
+        </div>
+        <p class="sect-desc">Launch the DeepStream pipeline.</p>
 
-  </main>
-</div>
+        <div class="run-emphasis">
+          <div class="code-block">
+            <div class="code-head">
+              <div class="code-label">
+                <span class="tag bash">bash</span>
+                <span class="filename">run.sh</span>
+              </div>
+              <button class="copy-btn" data-copy="run"><svg viewBox="0 0 24 24">
+                  <rect x="9" y="9" width="13" height="13" rx="2" />
+                  <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+                </svg>Copy</button>
+            </div>
+            <pre id="run"><code>deepstream-app -c deepstream_app_config.txt</code></pre>
+          </div>
+        </div>
 
-<footer>
-  <span>~/jetson/yolo26-deepstream · personal reference</span>
-  <span>JetPack 6.1 · DeepStream 7.1 · CUDA 12.6</span>
-</footer>
+        <div class="note" style="margin-top: 16px;">
+          <strong>RTSP output</strong> &mdash; once running, the inferred stream is available at
+          <span
+            style="font-family: 'JetBrains Mono', monospace; color: var(--text);">rtsp://&lt;jetson-ip&gt;:8554/ds-test</span>
+        </div>
+      </section>
 
-<script>
-  // Copy buttons
-  document.querySelectorAll('.copy-btn').forEach(btn => {
-    btn.addEventListener('click', async () => {
-      const targetId = btn.getAttribute('data-copy');
-      const target = document.getElementById(targetId);
-      if (!target) return;
+    </main>
+  </div>
 
-      // Get plain text without syntax highlighting spans
-      const text = target.innerText;
+  <footer>
+    <span>~/jetson/yolo26-deepstream · personal reference</span>
+    <span>JetPack 6.1 · DeepStream 7.1 · CUDA 12.6</span>
+  </footer>
 
-      try {
-        await navigator.clipboard.writeText(text);
-      } catch (e) {
-        // Fallback
-        const ta = document.createElement('textarea');
-        ta.value = text;
-        document.body.appendChild(ta);
-        ta.select();
-        document.execCommand('copy');
-        document.body.removeChild(ta);
-      }
+  <script>
+    // Copy buttons
+    document.querySelectorAll('.copy-btn').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const targetId = btn.getAttribute('data-copy');
+        const target = document.getElementById(targetId);
+        if (!target) return;
 
-      const originalHTML = btn.innerHTML;
-      btn.classList.add('copied');
-      btn.innerHTML = '<svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>Copied';
+        // Get plain text without syntax highlighting spans
+        const text = target.innerText;
 
-      setTimeout(() => {
-        btn.classList.remove('copied');
-        btn.innerHTML = originalHTML;
-      }, 1400);
+        try {
+          await navigator.clipboard.writeText(text);
+        } catch (e) {
+          // Fallback
+          const ta = document.createElement('textarea');
+          ta.value = text;
+          document.body.appendChild(ta);
+          ta.select();
+          document.execCommand('copy');
+          document.body.removeChild(ta);
+        }
+
+        const originalHTML = btn.innerHTML;
+        btn.classList.add('copied');
+        btn.innerHTML = '<svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>Copied';
+
+        setTimeout(() => {
+          btn.classList.remove('copied');
+          btn.innerHTML = originalHTML;
+        }, 1400);
+      });
     });
-  });
 
-  // Active TOC highlight on scroll
-  const sections = document.querySelectorAll('section[id]');
-  const tocLinks = document.querySelectorAll('aside ol li a');
+    // Active TOC highlight on scroll
+    const sections = document.querySelectorAll('section[id]');
+    const tocLinks = document.querySelectorAll('aside ol li a');
 
-  function updateActive() {
-    let current = '';
-    const scrollPos = window.scrollY + 120;
-    sections.forEach(sec => {
-      if (sec.offsetTop <= scrollPos) current = sec.id;
-    });
-    tocLinks.forEach(link => {
-      const isActive = link.getAttribute('href') === '#' + current;
-      link.style.color = isActive ? 'var(--accent)' : '';
-      link.style.borderLeftColor = isActive ? 'var(--accent)' : '';
-    });
-  }
-  window.addEventListener('scroll', updateActive);
-  updateActive();
-</script>
+    function updateActive() {
+      let current = '';
+      const scrollPos = window.scrollY + 120;
+      sections.forEach(sec => {
+        if (sec.offsetTop <= scrollPos) current = sec.id;
+      });
+      tocLinks.forEach(link => {
+        const isActive = link.getAttribute('href') === '#' + current;
+        link.style.color = isActive ? 'var(--accent)' : '';
+        link.style.borderLeftColor = isActive ? 'var(--accent)' : '';
+      });
+    }
+    window.addEventListener('scroll', updateActive);
+    updateActive();
+  </script>
 
 </body>
+
 </html>
