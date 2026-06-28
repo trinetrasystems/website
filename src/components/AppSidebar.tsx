@@ -1,6 +1,6 @@
 import { MouseEvent, useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Home, Sparkles, Grid3X3, Star, CircleDollarSign, Mail, Lock, Menu, X, Eye, Shield, BookOpen, BarChart3, Globe2, Building2 } from "lucide-react";
+import { Home, Sparkles, Grid3X3, Star, CircleDollarSign, Mail, Lock, Menu, X, Eye, Shield, BookOpen, Globe2 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { ThemeToggle } from "./ThemeToggle";
 import { auth, db } from "@/lib/firebase";
@@ -11,9 +11,7 @@ const navItems = [
   { title: "Home", href: "#home", icon: Home },
   { title: "Features", href: "#features", icon: Sparkles },
   { title: "Use Cases", href: "#usecases", icon: Grid3X3 },
-  { title: "Solutions", href: "/ai-surveillance", icon: Shield, isRoute: true },
-  { title: "Workplace", href: "/workplace-analytics", icon: BarChart3, isRoute: true },
-  { title: "Residential Security", href: "/residential-cctv-ai-surveillance", icon: Building2, isRoute: true },
+  { title: "Solutions", href: "#solutions", icon: Shield },
   { title: "Blog", href: "/blog", icon: BookOpen, isRoute: true },
   { title: "Pricing", href: "#pricing", icon: CircleDollarSign },
   { title: "Global Reach", href: "#global-reach", icon: Globe2, isHighlight: true },
@@ -177,7 +175,7 @@ const AppSidebar = () => {
               animate={{ x: 0 }}
               exit={{ x: "100%" }}
               transition={{ type: "spring", damping: 25, stiffness: 200 }}
-              className="fixed top-0 right-0 bottom-0 w-[80%] max-w-xs z-[70] bg-background border-l border-border/40 p-8 flex flex-col gap-6 lg:hidden"
+              className="fixed top-0 right-0 bottom-0 w-[80%] max-w-xs z-[70] bg-background border-l border-border/40 p-8 flex flex-col gap-6 lg:hidden overflow-y-auto overscroll-contain"
             >
               <div className="flex items-center justify-between mb-4">
                 <span className="text-xl font-black">Menu</span>

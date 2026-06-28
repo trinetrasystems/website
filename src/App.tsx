@@ -21,6 +21,7 @@ import Blog from "./pages/Blog.tsx";
 import BlogPost from "./pages/BlogPost.tsx";
 import ResidentialCCTV from "./pages/ResidentialCCTV.tsx";
 import WorkplaceAnalytics from "./pages/WorkplaceAnalytics.tsx";
+import BillboardAnalytics from "./pages/BillboardAnalytics.tsx";
 
 const queryClient = new QueryClient();
 
@@ -46,6 +47,7 @@ const App = () => (
             <Route path="/blog/:slug" element={<BlogPost />} />
             <Route path="/residential-cctv-ai-surveillance" element={<ResidentialCCTV />} />
             <Route path="/workplace-analytics" element={<WorkplaceAnalytics />} />
+            <Route path="/billboard-analytics" element={<BillboardAnalytics />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
