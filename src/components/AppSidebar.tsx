@@ -1,6 +1,6 @@
 import { MouseEvent, useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Home, Sparkles, Grid3X3, Star, CircleDollarSign, Mail, Lock, Menu, X, Eye, Shield, BookOpen, BarChart3, Globe2, Building2 } from "lucide-react";
+import { Home, Sparkles, Grid3X3, Star, CircleDollarSign, Mail, Lock, Menu, X, Eye, Shield, BookOpen, BarChart3, Globe2, Building2, Megaphone } from "lucide-react";
 import { Link } from "react-router-dom";
 import { ThemeToggle } from "./ThemeToggle";
 import { auth, db } from "@/lib/firebase";
@@ -13,6 +13,7 @@ const navItems = [
   { title: "Use Cases", href: "#usecases", icon: Grid3X3 },
   { title: "Solutions", href: "/ai-surveillance", icon: Shield, isRoute: true },
   { title: "Workplace", href: "/workplace-analytics", icon: BarChart3, isRoute: true },
+  { title: "Billboard", href: "/billboard-analytics", icon: Megaphone, isRoute: true },
   { title: "Residential Security", href: "/residential-cctv-ai-surveillance", icon: Building2, isRoute: true },
   { title: "Blog", href: "/blog", icon: BookOpen, isRoute: true },
   { title: "Pricing", href: "#pricing", icon: CircleDollarSign },
