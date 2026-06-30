@@ -83,7 +83,7 @@ const BillboardAnalytics = () => (
             </p>
           </motion.div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-16">
+          <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-16">
             <motion.div className="glass p-6 rounded-2xl" {...fadeUp(0.1)}>
               <BarChart3 className="w-10 h-10 text-red-400 mb-4" />
               <h3 className="text-xl font-bold mb-2">Impressions Are Estimated</h3>
@@ -249,7 +249,7 @@ const BillboardAnalytics = () => (
             </p>
           </motion.div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+          <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-8">
             {[
               { title: "On-Device AI", desc: "All detection & analytics run locally on the NVIDIA Jetson — not a remote server.", icon: Cpu },
               { title: "Video Stays On-Site", desc: "Raw camera streams are processed in place; footage never leaves the building.", icon: Server },
@@ -335,7 +335,7 @@ const BillboardAnalytics = () => (
               </p>
             </div>
 
-            <div className="flex flex-col lg:flex-row items-stretch justify-center gap-3 lg:gap-2">
+            <div className="grid grid-cols-2 lg:flex lg:flex-row items-stretch justify-center gap-3 lg:gap-2">
               {[
                 { icon: Users, name: "Traffic Count", desc: "How many people passed" },
                 { icon: Clock, name: "Dwell Time", desc: "How long they lingered" },
@@ -631,7 +631,7 @@ const BillboardAnalytics = () => (
             </h2>
           </motion.div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {[
               { icon: Cpu, title: "Edge AI", desc: "Runs on-site on NVIDIA Jetson GPUs — no constant cloud streaming." },
               { icon: Lock, title: "Privacy-First", desc: "Footage and data never leave your premises." },
