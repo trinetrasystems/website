@@ -28,9 +28,140 @@ interface UserDashboardProps {
   user: FirebaseUser;
   username: string;
   ipLink: string;
-  validUntil?: Date | null;
+  softwareValidUntil?: Date | null;
+  softwareLifetime?: boolean;
+  maintenanceValidUntil?: Date | null;
+  maintenanceLifetime?: boolean;
   onSignOut: () => void;
 }
+
+type ValidityInfo =
+  | { kind: "lifetime" }
+  | { kind: "expired"; expiryLabel: string }
+  | {
+      kind: "active";
+      days: number;
+      hours: number;
+      minutes: number;
+      seconds: number;
+      warning: boolean;
+      expiryLabel: string;
+    };
+
+// Turn a stored expiry (or lifetime flag) into display info, relative to `nowTick`.
+const computeValidity = (
+  validUntil: Date | null | undefined,
+  lifetime: boolean | undefined,
+  nowTick: number
+): ValidityInfo | null => {
+  if (lifetime) return { kind: "lifetime" };
+  if (!validUntil) return null;
+  const remaining = validUntil.getTime() - nowTick;
+  const expiryLabel = validUntil.toLocaleDateString("en-IN", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
+  if (remaining <= 0) return { kind: "expired", expiryLabel };
+  return {
+    kind: "active",
+    days: Math.floor(remaining / 86_400_000),
+    hours: Math.floor((remaining % 86_400_000) / 3_600_000),
+    minutes: Math.floor((remaining % 3_600_000) / 60_000),
+    seconds: Math.floor((remaining % 60_000) / 1_000),
+    warning: remaining < 30 * 86_400_000, // under 30 days left
+    expiryLabel,
+  };
+};
+
+const ValidityCard = ({
+  title,
+  info,
+  showCountdown = true,
+}: {
+  title: string;
+  info: ValidityInfo;
+  showCountdown?: boolean;
+}) => {
+  const expired = info.kind === "expired";
+  const warning = info.kind === "active" && info.warning;
+  const tone = expired
+    ? "border-red-500/30 bg-red-500/[0.06]"
+    : warning
+    ? "border-yellow-500/30 bg-yellow-500/[0.06]"
+    : "border-primary/20 bg-gradient-to-br from-primary/[0.06] via-card to-primary/[0.03]";
+  const iconTone = expired
+    ? "bg-red-500/15 text-red-500"
+    : warning
+    ? "bg-yellow-500/15 text-yellow-500"
+    : "bg-primary/15 text-primary";
+  const numberTone = warning ? "text-yellow-500" : "text-primary";
+  const unitBoxTone = warning
+    ? "border-yellow-500/20 bg-yellow-500/10"
+    : "border-primary/20 bg-primary/10";
+
+  const subtitle =
+    info.kind === "lifetime"
+      ? "Never expires"
+      : info.kind === "expired"
+      ? `Expired on ${info.expiryLabel}`
+      : `Expires on ${info.expiryLabel}`;
+
+  return (
+    <div className={`relative overflow-hidden rounded-2xl border p-6 shadow-lg ${tone}`}>
+      <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex items-center gap-3">
+          <div className={`flex h-11 w-11 items-center justify-center rounded-xl ${iconTone}`}>
+            {expired ? <AlertTriangle className="h-5 w-5" /> : <CalendarClock className="h-5 w-5" />}
+          </div>
+          <div>
+            <h3 className="text-lg font-bold">{title}</h3>
+            <p className="text-xs text-muted-foreground">{subtitle}</p>
+          </div>
+        </div>
+
+        {info.kind === "lifetime" ? (
+          <div className="rounded-xl border border-primary/30 bg-primary/10 px-4 py-2.5 text-center">
+            <p className="text-sm font-bold text-primary uppercase tracking-wider">Lifetime</p>
+          </div>
+        ) : info.kind === "expired" ? (
+          <div className="rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-2.5 text-center">
+            <p className="text-sm font-bold text-red-500 uppercase tracking-wider">Expired</p>
+            <p className="text-[11px] text-muted-foreground mt-0.5">Contact admin to renew</p>
+          </div>
+        ) : showCountdown ? (
+          <div className="flex items-center gap-2">
+            {[
+              { label: "Days", value: info.days },
+              { label: "Hrs", value: info.hours },
+              { label: "Min", value: info.minutes },
+              { label: "Sec", value: info.seconds },
+            ].map((unit) => (
+              <div
+                key={unit.label}
+                className={`min-w-[3.25rem] rounded-lg border px-2 py-2 text-center ${unitBoxTone}`}
+              >
+                <p className={`text-xl font-bold tabular-nums ${numberTone}`}>
+                  {String(unit.value).padStart(2, "0")}
+                </p>
+                <p className="text-[10px] font-semibold uppercase text-muted-foreground mt-0.5">
+                  {unit.label}
+                </p>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className={`rounded-xl border px-4 py-2.5 text-center ${unitBoxTone}`}>
+            <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+              Expires on
+            </p>
+            <p className={`text-sm font-bold ${numberTone}`}>{info.expiryLabel}</p>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
 
 const fadeUp = {
   hidden: { opacity: 0, y: 24 },
@@ -50,37 +181,37 @@ const scaleIn = {
   }),
 };
 
-const UserDashboard = ({ user, username, ipLink, validUntil, onSignOut }: UserDashboardProps) => {
+const UserDashboard = ({
+  user,
+  username,
+  ipLink,
+  softwareValidUntil,
+  softwareLifetime,
+  maintenanceValidUntil,
+  maintenanceLifetime,
+  onSignOut,
+}: UserDashboardProps) => {
   const [showPasswordForm, setShowPasswordForm] = useState(false);
   const [nowTick, setNowTick] = useState(() => Date.now());
 
+  // A dated (non-lifetime) validity needs the ticking clock to count down.
+  const needsTicker = (!softwareLifetime && !!softwareValidUntil) || (!maintenanceLifetime && !!maintenanceValidUntil);
+
   // Tick every second so the remaining validity visibly shrinks over time.
   useEffect(() => {
-    if (!validUntil) return;
+    if (!needsTicker) return;
     const id = setInterval(() => setNowTick(Date.now()), 1000);
     return () => clearInterval(id);
-  }, [validUntil]);
+  }, [needsTicker]);
 
-  const validity = useMemo(() => {
-    if (!validUntil) return null;
-    const remaining = validUntil.getTime() - nowTick;
-    const expired = remaining <= 0;
-    const clamped = Math.max(0, remaining);
-    return {
-      expired,
-      days: Math.floor(clamped / 86_400_000),
-      hours: Math.floor((clamped % 86_400_000) / 3_600_000),
-      minutes: Math.floor((clamped % 3_600_000) / 60_000),
-      seconds: Math.floor((clamped % 60_000) / 1_000),
-      // "Attention" once under 30 days remain.
-      warning: !expired && remaining < 30 * 86_400_000,
-      expiryLabel: validUntil.toLocaleDateString("en-IN", {
-        year: "numeric",
-        month: "long",
-        day: "numeric",
-      }),
-    };
-  }, [validUntil, nowTick]);
+  const softwareValidity = useMemo(
+    () => computeValidity(softwareValidUntil, softwareLifetime, nowTick),
+    [softwareValidUntil, softwareLifetime, nowTick]
+  );
+  const maintenanceValidity = useMemo(
+    () => computeValidity(maintenanceValidUntil, maintenanceLifetime, nowTick),
+    [maintenanceValidUntil, maintenanceLifetime, nowTick]
+  );
 
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -294,87 +425,19 @@ const UserDashboard = ({ user, username, ipLink, validUntil, onSignOut }: UserDa
             </div>
           </motion.div>
 
-          {/* Software Validity */}
-          {validity && (
+          {/* Software & Maintenance Validity */}
+          {(softwareValidity || maintenanceValidity) && (
             <motion.div
               variants={scaleIn}
               initial="hidden"
               animate="visible"
               custom={2}
+              className="grid gap-4 md:grid-cols-2"
             >
-              <div
-                className={`relative overflow-hidden rounded-2xl border p-6 shadow-lg ${
-                  validity.expired
-                    ? "border-red-500/30 bg-red-500/[0.06]"
-                    : validity.warning
-                    ? "border-yellow-500/30 bg-yellow-500/[0.06]"
-                    : "border-primary/20 bg-gradient-to-br from-primary/[0.06] via-card to-primary/[0.03]"
-                }`}
-              >
-                <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
-                  <div className="flex items-center gap-3">
-                    <div
-                      className={`flex h-11 w-11 items-center justify-center rounded-xl ${
-                        validity.expired
-                          ? "bg-red-500/15 text-red-500"
-                          : validity.warning
-                          ? "bg-yellow-500/15 text-yellow-500"
-                          : "bg-primary/15 text-primary"
-                      }`}
-                    >
-                      {validity.expired ? (
-                        <AlertTriangle className="h-5 w-5" />
-                      ) : (
-                        <CalendarClock className="h-5 w-5" />
-                      )}
-                    </div>
-                    <div>
-                      <h3 className="text-lg font-bold">Software Validity</h3>
-                      <p className="text-xs text-muted-foreground">
-                        {validity.expired
-                          ? `Expired on ${validity.expiryLabel}`
-                          : `Maintenance & license valid until ${validity.expiryLabel}`}
-                      </p>
-                    </div>
-                  </div>
-
-                  {validity.expired ? (
-                    <div className="rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-2.5 text-center">
-                      <p className="text-sm font-bold text-red-500 uppercase tracking-wider">Expired</p>
-                      <p className="text-[11px] text-muted-foreground mt-0.5">Contact admin to renew</p>
-                    </div>
-                  ) : (
-                    <div className="flex items-center gap-2">
-                      {[
-                        { label: "Days", value: validity.days },
-                        { label: "Hrs", value: validity.hours },
-                        { label: "Min", value: validity.minutes },
-                        { label: "Sec", value: validity.seconds },
-                      ].map((unit) => (
-                        <div
-                          key={unit.label}
-                          className={`min-w-[3.25rem] rounded-lg border px-2 py-2 text-center ${
-                            validity.warning
-                              ? "border-yellow-500/20 bg-yellow-500/10"
-                              : "border-primary/20 bg-primary/10"
-                          }`}
-                        >
-                          <p
-                            className={`text-xl font-bold tabular-nums ${
-                              validity.warning ? "text-yellow-500" : "text-primary"
-                            }`}
-                          >
-                            {String(unit.value).padStart(2, "0")}
-                          </p>
-                          <p className="text-[10px] font-semibold uppercase text-muted-foreground mt-0.5">
-                            {unit.label}
-                          </p>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              </div>
+              {softwareValidity && <ValidityCard title="Software Validity" info={softwareValidity} />}
+              {maintenanceValidity && (
+                <ValidityCard title="Maintenance Validity" info={maintenanceValidity} showCountdown={false} />
+              )}
             </motion.div>
           )}
 
