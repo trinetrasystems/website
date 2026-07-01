@@ -275,7 +275,7 @@ const UserDashboard = ({
       </div>
 
       <div className="relative z-10 px-4 pt-24 lg:pt-28 pb-12 md:px-8">
-        <div className="mx-auto max-w-5xl space-y-6">
+        <div className="mx-auto max-w-screen-2xl space-y-6">
 
           {/* Top Bar */}
           <motion.div
@@ -442,15 +442,15 @@ const UserDashboard = ({
           )}
 
           {/* Main Layout Area */}
-          <div className="flex flex-col gap-6 w-full">
+          <div className="grid gap-6 w-full lg:grid-cols-3 items-start">
 
-            {/* Live Dashboard Card - Takes full row */}
+            {/* Live Dashboard Card */}
             <motion.div
               variants={scaleIn}
               initial="hidden"
               animate="visible"
               custom={3}
-              className="md:col-span-2"
+              className="lg:col-span-2"
             >
               <div className={`group relative overflow-hidden rounded-2xl border p-6 shadow-lg transition-all duration-500 ${dashboardUrl
                 ? "border-primary/20 bg-gradient-to-br from-primary/[0.06] via-card to-primary/[0.03] hover:border-primary/40 hover:shadow-primary/10"

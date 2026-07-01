@@ -14,6 +14,27 @@ const BlogPost = () => {
     return <Navigate to="/blog" replace />;
   }
 
+  const postUrl = `https://www.trinetrasystems.com/blog/${post.slug}`;
+  const blogPostingSchema = {
+    "@context": "https://schema.org",
+    "@type": "BlogPosting",
+    headline: post.title,
+    description: post.metaDescription,
+    keywords: post.keywords,
+    datePublished: post.date,
+    dateModified: post.date,
+    inLanguage: "en",
+    mainEntityOfPage: { "@type": "WebPage", "@id": postUrl },
+    url: postUrl,
+    image: "https://www.trinetrasystems.com/og-image.png",
+    author: { "@type": "Organization", name: post.author, url: "https://www.trinetrasystems.com" },
+    publisher: {
+      "@type": "Organization",
+      name: "Trinetra Systems",
+      logo: { "@type": "ImageObject", url: "https://www.trinetrasystems.com/trinetra-icon.svg" },
+    },
+  };
+
   return (
     <div className="min-h-screen">
       <SEOHead
@@ -21,6 +42,7 @@ const BlogPost = () => {
         description={post.metaDescription}
         keywords={post.keywords}
         canonicalPath={`/blog/${post.slug}`}
+        jsonLd={blogPostingSchema}
       />
       <AppSidebar />
       <main className="pt-16 lg:pt-20">

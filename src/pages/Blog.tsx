@@ -26,7 +26,7 @@ const Blog = () => {
               transition={{ duration: 0.8 }}
             >
               <h1 className="text-4xl md:text-6xl font-bold mb-6">
-                Insights & <span className="text-gradient">Guides</span>
+                AI Surveillance <span className="text-gradient">Insights &amp; Guides</span>
               </h1>
               <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
                 Expert articles on AI surveillance, smart camera detection systems, and security technology trends.
