@@ -5,9 +5,10 @@ interface SEOHeadProps {
   description: string;
   keywords?: string;
   canonicalPath?: string;
+  noindex?: boolean;
 }
 
-const SEOHead = ({ title, description, keywords, canonicalPath }: SEOHeadProps) => {
+const SEOHead = ({ title, description, keywords, canonicalPath, noindex }: SEOHeadProps) => {
   useEffect(() => {
     const prevTitle = document.title;
     document.title = title;
@@ -27,6 +28,22 @@ const SEOHead = ({ title, description, keywords, canonicalPath }: SEOHeadProps) 
     setMeta("og:title", title, true);
     setMeta("og:description", description, true);
     if (keywords) setMeta("keywords", keywords);
+
+    // Robots: mark private/error pages noindex. Managed on every mount so that
+    // navigating from a noindex page to an indexable one clears the tag (SPA).
+    const robotsEl = document.querySelector('meta[name="robots"]') as HTMLMetaElement | null;
+    if (noindex) {
+      if (robotsEl) {
+        robotsEl.setAttribute("content", "noindex, nofollow");
+      } else {
+        const el = document.createElement("meta");
+        el.setAttribute("name", "robots");
+        el.setAttribute("content", "noindex, nofollow");
+        document.head.appendChild(el);
+      }
+    } else if (robotsEl) {
+      robotsEl.remove();
+    }
 
     let canonicalEl = document.querySelector("link[rel='canonical']") as HTMLLinkElement | null;
     if (canonicalPath) {

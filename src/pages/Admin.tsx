@@ -352,6 +352,20 @@ const Admin = () => {
 
   const canShowDashboard = useMemo(() => Boolean(user && (isAdmin || userRole === "member")), [user, isAdmin, userRole]);
   const selectedUser = users.find((profile) => profile.id === selectedUserId) || null;
+
+  // The admin/user console is private — keep the whole /admin route out of search indexes.
+  useEffect(() => {
+    const prevTitle = document.title;
+    document.title = "Admin Console | Trinetra Systems";
+    const robots = document.createElement("meta");
+    robots.setAttribute("name", "robots");
+    robots.setAttribute("content", "noindex, nofollow");
+    document.head.appendChild(robots);
+    return () => {
+      document.title = prevTitle;
+      robots.remove();
+    };
+  }, []);
   const pageTitle = (isAdmin || userRole === "member") ? "Admin Console" : userRole === "user" ? "User Dashboard" : "Access Portal";
   const pageSubtitle = (isAdmin || userRole === "member")
     ? "User Management"

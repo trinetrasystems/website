@@ -42,7 +42,7 @@ const Index = () => {
         <SEOHead
           title="AI Surveillance & Camera Detection Solutions | Smart CCTV Analytics | Trinetra Systems"
           description="Trinetra Systems provides AI-powered surveillance, smart camera detection, person tracking, vehicle analytics, real-time monitoring, and security solutions for societies, industries, and enterprises in India."
-          keywords="AI surveillance solutions, camera detection system, AI camera analytics, smart surveillance, person detection, vehicle detection, society security AI, real-time monitoring, AI-powered CCTV analytics"
+          keywords="AI surveillance solutions, camera detection system, AI camera analytics, smart surveillance, person detection, vehicle detection, society security AI, real-time monitoring, AI-powered CCTV analytics, smart CCTV, AI detection India, Trinetra Systems"
           canonicalPath="/"
         />
         <Hero />
