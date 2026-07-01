@@ -1,4 +1,4 @@
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import {
   Eye,
@@ -14,6 +14,8 @@ import {
   Zap,
   Camera,
   Shield,
+  CalendarClock,
+  AlertTriangle,
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { updatePassword, type User as FirebaseUser } from "firebase/auth";
@@ -26,6 +28,7 @@ interface UserDashboardProps {
   user: FirebaseUser;
   username: string;
   ipLink: string;
+  validUntil?: Date | null;
   onSignOut: () => void;
 }
 
@@ -47,8 +50,38 @@ const scaleIn = {
   }),
 };
 
-const UserDashboard = ({ user, username, ipLink, onSignOut }: UserDashboardProps) => {
+const UserDashboard = ({ user, username, ipLink, validUntil, onSignOut }: UserDashboardProps) => {
   const [showPasswordForm, setShowPasswordForm] = useState(false);
+  const [nowTick, setNowTick] = useState(() => Date.now());
+
+  // Tick every second so the remaining validity visibly shrinks over time.
+  useEffect(() => {
+    if (!validUntil) return;
+    const id = setInterval(() => setNowTick(Date.now()), 1000);
+    return () => clearInterval(id);
+  }, [validUntil]);
+
+  const validity = useMemo(() => {
+    if (!validUntil) return null;
+    const remaining = validUntil.getTime() - nowTick;
+    const expired = remaining <= 0;
+    const clamped = Math.max(0, remaining);
+    return {
+      expired,
+      days: Math.floor(clamped / 86_400_000),
+      hours: Math.floor((clamped % 86_400_000) / 3_600_000),
+      minutes: Math.floor((clamped % 3_600_000) / 60_000),
+      seconds: Math.floor((clamped % 60_000) / 1_000),
+      // "Attention" once under 30 days remain.
+      warning: !expired && remaining < 30 * 86_400_000,
+      expiryLabel: validUntil.toLocaleDateString("en-IN", {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+      }),
+    };
+  }, [validUntil, nowTick]);
+
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [updatingPassword, setUpdatingPassword] = useState(false);
@@ -260,6 +293,90 @@ const UserDashboard = ({ user, username, ipLink, onSignOut }: UserDashboardProps
               </motion.div>
             </div>
           </motion.div>
+
+          {/* Software Validity */}
+          {validity && (
+            <motion.div
+              variants={scaleIn}
+              initial="hidden"
+              animate="visible"
+              custom={2}
+            >
+              <div
+                className={`relative overflow-hidden rounded-2xl border p-6 shadow-lg ${
+                  validity.expired
+                    ? "border-red-500/30 bg-red-500/[0.06]"
+                    : validity.warning
+                    ? "border-yellow-500/30 bg-yellow-500/[0.06]"
+                    : "border-primary/20 bg-gradient-to-br from-primary/[0.06] via-card to-primary/[0.03]"
+                }`}
+              >
+                <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="flex items-center gap-3">
+                    <div
+                      className={`flex h-11 w-11 items-center justify-center rounded-xl ${
+                        validity.expired
+                          ? "bg-red-500/15 text-red-500"
+                          : validity.warning
+                          ? "bg-yellow-500/15 text-yellow-500"
+                          : "bg-primary/15 text-primary"
+                      }`}
+                    >
+                      {validity.expired ? (
+                        <AlertTriangle className="h-5 w-5" />
+                      ) : (
+                        <CalendarClock className="h-5 w-5" />
+                      )}
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-bold">Software Validity</h3>
+                      <p className="text-xs text-muted-foreground">
+                        {validity.expired
+                          ? `Expired on ${validity.expiryLabel}`
+                          : `Maintenance & license valid until ${validity.expiryLabel}`}
+                      </p>
+                    </div>
+                  </div>
+
+                  {validity.expired ? (
+                    <div className="rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-2.5 text-center">
+                      <p className="text-sm font-bold text-red-500 uppercase tracking-wider">Expired</p>
+                      <p className="text-[11px] text-muted-foreground mt-0.5">Contact admin to renew</p>
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-2">
+                      {[
+                        { label: "Days", value: validity.days },
+                        { label: "Hrs", value: validity.hours },
+                        { label: "Min", value: validity.minutes },
+                        { label: "Sec", value: validity.seconds },
+                      ].map((unit) => (
+                        <div
+                          key={unit.label}
+                          className={`min-w-[3.25rem] rounded-lg border px-2 py-2 text-center ${
+                            validity.warning
+                              ? "border-yellow-500/20 bg-yellow-500/10"
+                              : "border-primary/20 bg-primary/10"
+                          }`}
+                        >
+                          <p
+                            className={`text-xl font-bold tabular-nums ${
+                              validity.warning ? "text-yellow-500" : "text-primary"
+                            }`}
+                          >
+                            {String(unit.value).padStart(2, "0")}
+                          </p>
+                          <p className="text-[10px] font-semibold uppercase text-muted-foreground mt-0.5">
+                            {unit.label}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </motion.div>
+          )}
 
           {/* Main Layout Area */}
           <div className="flex flex-col gap-6 w-full">

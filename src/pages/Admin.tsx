@@ -20,7 +20,7 @@ import {
   query,
   serverTimestamp,
   setDoc,
-  type Timestamp,
+  Timestamp,
   updateDoc,
   addDoc,
   where,
@@ -65,6 +65,7 @@ type UserProfile = {
   isMember?: boolean;
   permissions?: string[];
   ipLink: string;
+  validUntil?: Date | null;
   createdAtLabel: string;
   updatedAtLabel: string;
 };
@@ -102,6 +103,17 @@ const formatTimestamp = (value: unknown) => {
 };
 
 const normalizeUsername = (value: string) => value.trim().toLowerCase();
+
+// Compute an absolute expiry date from a validity period entered by the admin.
+const computeValidUntil = (value: number, unit: "months" | "years") => {
+  const date = new Date();
+  if (unit === "years") {
+    date.setFullYear(date.getFullYear() + value);
+  } else {
+    date.setMonth(date.getMonth() + value);
+  }
+  return date;
+};
 
 const createAuthEmail = (value: string) => {
   const normalizedUsername = normalizeUsername(value);
@@ -179,6 +191,8 @@ const Admin = () => {
   const [newUserRole, setNewUserRole] = useState<"admin" | "member" | "user">("user");
   const [newUserPermissions, setNewUserPermissions] = useState<string[]>([]);
   const [newUserIpLink, setNewUserIpLink] = useState("");
+  const [newUserValidityValue, setNewUserValidityValue] = useState("");
+  const [newUserValidityUnit, setNewUserValidityUnit] = useState<"months" | "years">("months");
   const [creatingUser, setCreatingUser] = useState(false);
 
   const [deleteRequests, setDeleteRequests] = useState<DeleteRequest[]>([]);
@@ -197,6 +211,9 @@ const Admin = () => {
   const [selectedUserRole, setSelectedUserRole] = useState<"admin" | "member" | "user">("user");
   const [selectedUserPermissions, setSelectedUserPermissions] = useState<string[]>([]);
   const [selectedUserIpLink, setSelectedUserIpLink] = useState("");
+  const [selectedUserValidityValue, setSelectedUserValidityValue] = useState("");
+  const [selectedUserValidityUnit, setSelectedUserValidityUnit] = useState<"months" | "years">("months");
+  const [selectedUserValidUntil, setSelectedUserValidUntil] = useState<Date | null>(null);
   const [updatingUser, setUpdatingUser] = useState(false);
   const [deletingUser, setDeletingUser] = useState(false);
   const [activeSection, setActiveSection] = useState<"create" | "edit" | "forms" | "tickets" | "contacts" | "docs" | "invoice" | "requests">("tickets");
@@ -212,6 +229,7 @@ const Admin = () => {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [updatingPassword, setUpdatingPassword] = useState(false);
   const [loggedInUsername, setLoggedInUsername] = useState("");
+  const [userValidUntil, setUserValidUntil] = useState<Date | null>(null);
   const [showPasswordFields, setShowPasswordFields] = useState(false);
 
   const [passwordRecords, setPasswordRecords] = useState<PasswordRecord[]>([]);
@@ -388,6 +406,7 @@ const Admin = () => {
             setStatus(`${role === "admin" ? "Admin" : "Member"} access confirmed.`);
           } else {
             setIpLink(data.ip_link || "");
+            setUserValidUntil(data.validUntil?.toDate?.() ?? null);
             setStatus("User logged in successfully.");
           }
         } else {
@@ -425,6 +444,7 @@ const Admin = () => {
             isMember: data.isMember || data.role === "member",
             permissions: data.permissions || [],
             ipLink: data.ip_link || "",
+            validUntil: data.validUntil?.toDate?.() ?? null,
             createdAtLabel: formatTimestamp(data.createdAt),
             updatedAtLabel: formatTimestamp(data.updatedAt),
           };
@@ -441,6 +461,7 @@ const Admin = () => {
             setSelectedUserRole(selected.role);
             setSelectedUserPermissions(selected.permissions || []);
             setSelectedUserIpLink(selected.ipLink);
+            setSelectedUserValidUntil(selected.validUntil ?? null);
           }
         }
       },
@@ -660,6 +681,10 @@ const Admin = () => {
           isMember: newUserRole === "member",
           permissions: newUserRole === "member" ? newUserPermissions : [],
           ip_link: newUserRole === "user" ? newUserIpLink : "",
+          validUntil:
+            newUserRole === "user" && Number(newUserValidityValue) > 0
+              ? Timestamp.fromDate(computeValidUntil(Number(newUserValidityValue), newUserValidityUnit))
+              : null,
           createdAt: serverTimestamp(),
           updatedAt: serverTimestamp(),
         });
@@ -690,6 +715,8 @@ const Admin = () => {
       setNewUserContactMobile("");
       setNewUserRole("user");
       setNewUserIpLink("");
+      setNewUserValidityValue("");
+      setNewUserValidityUnit("months");
       setStatus("User created successfully.");
       toast.success("User created successfully");
     } catch (error) {
@@ -708,6 +735,8 @@ const Admin = () => {
     setSelectedUserContactMobile(profile.contactMobile || "");
     setSelectedUserRole(profile.role);
     setSelectedUserIpLink(profile.ipLink);
+    setSelectedUserValidUntil(profile.validUntil ?? null);
+    setSelectedUserValidityValue("");
     setStatus(`Selected ${profile.username}.`);
   };
 
@@ -768,6 +797,14 @@ const Admin = () => {
           isMember: selectedUserRole === "member",
           permissions: selectedUserRole === "member" ? selectedUserPermissions : [],
           ip_link: selectedUserRole === "user" ? selectedUserIpLink : "",
+          // Only reset validity when the admin enters a new period; otherwise keep the existing expiry.
+          ...(selectedUserRole === "user" && Number(selectedUserValidityValue) > 0
+            ? {
+                validUntil: Timestamp.fromDate(
+                  computeValidUntil(Number(selectedUserValidityValue), selectedUserValidityUnit)
+                ),
+              }
+            : {}),
           updatedAt: serverTimestamp(),
         },
         { merge: true }
@@ -779,6 +816,7 @@ const Admin = () => {
         usernameKey: normalizedUsername,
         updatedAt: serverTimestamp(),
       });
+      setSelectedUserValidityValue("");
       setStatus("User updated successfully.");
       toast.success("User updated successfully");
     } catch (error) {
@@ -961,6 +999,7 @@ const Admin = () => {
           user={user}
           username={loggedInUsername}
           ipLink={ipLink}
+          validUntil={userValidUntil}
           onSignOut={handleSignOut}
         />
       </>
@@ -1352,6 +1391,33 @@ const Admin = () => {
                       </div>
                     </div>
 
+                    {newUserRole === "user" && (
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium">Software Validity</label>
+                        <div className="flex gap-3">
+                          <input
+                            type="number"
+                            min={0}
+                            value={newUserValidityValue}
+                            onChange={(event) => setNewUserValidityValue(event.target.value)}
+                            className="w-full rounded-lg border border-border bg-background px-4 py-3 outline-none transition-all focus:ring-2 focus:ring-primary/40"
+                            placeholder="e.g. 6"
+                          />
+                          <select
+                            value={newUserValidityUnit}
+                            onChange={(event) => setNewUserValidityUnit(event.target.value as "months" | "years")}
+                            className="w-40 rounded-lg border border-border bg-background px-4 py-3 outline-none transition-all focus:ring-2 focus:ring-primary/40"
+                          >
+                            <option value="months">Months</option>
+                            <option value="years">Years</option>
+                          </select>
+                        </div>
+                        <p className="text-xs text-muted-foreground">
+                          Maintenance &amp; software validity. Leave empty for no expiry.
+                        </p>
+                      </div>
+                    )}
+
                     {newUserRole === "member" && (
                       <div className="space-y-3">
                         <label className="text-sm font-medium">Member Permissions</label>
@@ -1505,6 +1571,36 @@ const Admin = () => {
                             />
                           </div>
                         </div>
+
+                        {selectedUserRole === "user" && (
+                          <div className="space-y-2">
+                            <label className="text-sm font-medium">Software Validity</label>
+                            <div className="flex gap-3">
+                              <input
+                                type="number"
+                                min={0}
+                                value={selectedUserValidityValue}
+                                onChange={(event) => setSelectedUserValidityValue(event.target.value)}
+                                className="w-full rounded-lg border border-border bg-background px-4 py-3 outline-none transition-all focus:ring-2 focus:ring-primary/40"
+                                placeholder="Set new period"
+                              />
+                              <select
+                                value={selectedUserValidityUnit}
+                                onChange={(event) => setSelectedUserValidityUnit(event.target.value as "months" | "years")}
+                                className="w-40 rounded-lg border border-border bg-background px-4 py-3 outline-none transition-all focus:ring-2 focus:ring-primary/40"
+                              >
+                                <option value="months">Months</option>
+                                <option value="years">Years</option>
+                              </select>
+                            </div>
+                            <p className="text-xs text-muted-foreground">
+                              {selectedUserValidUntil
+                                ? `Current expiry: ${selectedUserValidUntil.toLocaleDateString("en-IN", { year: "numeric", month: "long", day: "numeric" })}`
+                                : "No expiry set."}{" "}
+                              Enter a new period to reset from today; leave empty to keep unchanged.
+                            </p>
+                          </div>
+                        )}
 
                         {selectedUserRole === "member" && (
                           <div className="space-y-3">
