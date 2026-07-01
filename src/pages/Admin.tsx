@@ -26,8 +26,12 @@ import {
   where,
 } from "firebase/firestore";
 import { adminAuth, auth, db } from "@/lib/firebase";
-import { Shield, LogIn, LogOut, RefreshCw, ArrowLeft, CheckCircle, Trash2, Eye, EyeOff, Key, Copy, Users, Phone, Mail, Search, FileText, Download, XCircle, MessageSquare, Sun, Moon } from "lucide-react";
+import { Shield, LogIn, LogOut, RefreshCw, ArrowLeft, CheckCircle, Trash2, Eye, EyeOff, Key, Copy, Users, Phone, Mail, Search, FileText, Download, XCircle, MessageSquare, Sun, Moon, Presentation, ExternalLink } from "lucide-react";
 import AppSidebar from "@/components/AppSidebar";
+// Auto-detected list of presentation decks in public/ppts (filenames only — the
+// binaries are served statically from that folder, never bundled). Drop any new
+// .ppt/.pptx into public/ppts and it shows up here on the next build.
+import pptFilenames from "virtual:ppt-manifest";
 import UserDashboard from "@/components/UserDashboard";
 import AdminTickets from "@/components/AdminTickets";
 import { toast } from "sonner";
@@ -197,6 +201,42 @@ const ADMIN_DOCS = Object.keys(docModules).map((filePath) => {
 });
 
 
+// Metadata overrides for known decks — add entries here for custom titles/descriptions.
+// Any .ppt/.pptx in public/ppts not listed here falls back to an auto-generated title.
+const PPT_METADATA: Record<string, { title: string; description: string }> = {
+  'Residential.pptx': {
+    title: 'Residential Security',
+    description: 'Trinetra AI CCTV surveillance deck for residential societies and gated communities.',
+  },
+  'Trinetra Workplace Analytics PPT.pptx': {
+    title: 'Workplace Analytics',
+    description: 'Trinetra workplace occupancy and utilization analytics presentation.',
+  },
+  'Trinetra Billboard Analytics.pptx': {
+    title: 'Billboard Analytics',
+    description: 'Trinetra dual-camera billboard measurement and attention analytics deck.',
+  },
+};
+
+const ADMIN_PPTS = pptFilenames.map((filename) => {
+  const meta = PPT_METADATA[filename];
+  const title = meta?.title ?? filename
+    .replace(/\.(pptx?|PPTX?)$/i, '')
+    .split(/[-_]+/)
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ');
+  const description = meta?.description ?? `Presentation deck: ${filename}`;
+
+  return {
+    id: filename,
+    title,
+    description,
+    // Files in public/ppts are served statically at /ppts/<filename>.
+    path: `/ppts/${filename}`,
+  };
+});
+
+
 const AVAILABLE_TABS = [
   { id: "create", label: "Create User" },
   { id: "edit", label: "Edit User" },
@@ -204,6 +244,7 @@ const AVAILABLE_TABS = [
   { id: "contacts", label: "Users & Passwords" },
   { id: "tickets", label: "Support Tickets" },
   { id: "docs", label: "Documentation" },
+  { id: "ppts", label: "Presentations" },
   { id: "invoice", label: "Invoice Generator" }
 ];
 
@@ -260,7 +301,7 @@ const Admin = () => {
   const [selectedUserMaintenanceLifetime, setSelectedUserMaintenanceLifetime] = useState(false);
   const [updatingUser, setUpdatingUser] = useState(false);
   const [deletingUser, setDeletingUser] = useState(false);
-  const [activeSection, setActiveSection] = useState<"create" | "edit" | "forms" | "tickets" | "contacts" | "docs" | "invoice" | "requests">("tickets");
+  const [activeSection, setActiveSection] = useState<"create" | "edit" | "forms" | "tickets" | "contacts" | "docs" | "ppts" | "invoice" | "requests">("tickets");
   const [selectedDoc, setSelectedDoc] = useState<{ id: string; title: string; description: string; path: string } | null>(null);
   const [docTheme, setDocTheme] = useState<"light" | "dark">("light");
   const [invoiceFullscreen, setInvoiceFullscreen] = useState(false);
@@ -1442,6 +1483,17 @@ const Admin = () => {
                   >
                     Documentation
                   </button>)}
+                  {hasPermission("ppts") && (<button
+                    type="button"
+                    onClick={() => setActiveSection("ppts")}
+                    className={`inline-flex items-center gap-1.5 rounded-lg px-4 py-2 text-sm font-medium transition ${activeSection === "ppts"
+                      ? "bg-primary text-primary-foreground"
+                      : "border border-border bg-background hover:bg-secondary/40"
+                      }`}
+                  >
+                    <Presentation className="h-3.5 w-3.5" />
+                    Presentations
+                  </button>)}
                   {hasPermission("invoice") && (<button
                     type="button"
                     onClick={() => setActiveSection("invoice")}
@@ -2286,6 +2338,71 @@ const Admin = () => {
                           title={selectedDoc.title}
                         />
                       </div>
+                    </div>
+                  )}
+                </section>
+              )}
+
+              {activeSection === "ppts" && hasPermission("ppts") && (
+                <section className="rounded-2xl border border-border bg-card p-6 shadow-lg">
+                  <div>
+                    <h2 className="text-2xl font-bold">Presentations</h2>
+                    <p className="mt-1 text-sm text-muted-foreground">
+                      Trinetra product decks. Download to view in PowerPoint, or open a quick online preview.
+                    </p>
+                  </div>
+
+                  {ADMIN_PPTS.length === 0 ? (
+                    <p className="mt-6 text-sm text-muted-foreground">
+                      No presentations found in the public folder.
+                    </p>
+                  ) : (
+                    <div className="mt-6 grid gap-4 md:grid-cols-2">
+                      {ADMIN_PPTS.map((ppt) => {
+                        // Encode each path segment so filenames with spaces resolve correctly.
+                        const encodedPath = ppt.path.split("/").map(encodeURIComponent).join("/");
+                        const previewUrl = `https://view.officeapps.live.com/op/view.aspx?src=${encodeURIComponent(
+                          `${window.location.origin}${encodedPath}`
+                        )}`;
+                        return (
+                          <div
+                            key={ppt.id}
+                            className="group relative flex flex-col items-start gap-2 rounded-xl border border-border bg-secondary/10 p-5 text-left transition-all hover:bg-secondary/30 hover:border-primary/30 hover:shadow-md"
+                          >
+                            <div className="flex w-full items-center justify-between gap-3">
+                              <div className="flex items-center gap-3">
+                                <div className="rounded-lg bg-primary/10 p-2 text-primary transition-all group-hover:bg-primary/20">
+                                  <Presentation className="h-5 w-5" />
+                                </div>
+                                <h3 className="font-semibold">{ppt.title}</h3>
+                              </div>
+                            </div>
+                            {ppt.description && (
+                              <p className="text-sm text-muted-foreground mt-1">{ppt.description}</p>
+                            )}
+                            <div className="mt-3 flex flex-wrap items-center gap-2">
+                              <a
+                                href={encodedPath}
+                                download={ppt.id}
+                                className="inline-flex items-center gap-2 rounded-lg border border-border bg-background px-3 py-2 text-sm font-medium transition hover:bg-primary/10 hover:text-primary"
+                              >
+                                <Download className="h-4 w-4" />
+                                Download
+                              </a>
+                              <a
+                                href={previewUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center gap-2 rounded-lg border border-border bg-background px-3 py-2 text-sm font-medium transition hover:bg-primary/10 hover:text-primary"
+                                title="Preview using the Microsoft Office online viewer (requires the site to be publicly reachable)"
+                              >
+                                <ExternalLink className="h-4 w-4" />
+                                Online Preview
+                              </a>
+                            </div>
+                          </div>
+                        );
+                      })}
                     </div>
                   )}
                 </section>
