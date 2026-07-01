@@ -1142,6 +1142,14 @@ const Admin = () => {
             <p className="mt-1 text-sm text-muted-foreground">{pageSubtitle}</p>
           </div>
           <div className="flex flex-wrap items-center gap-3">
+            {canShowDashboard && (
+              <div className="flex items-center gap-2 rounded-lg border border-border bg-secondary/30 px-3 py-2 text-sm">
+                <Shield className="h-4 w-4 text-primary" />
+                <span className="font-semibold text-primary">{isAdmin ? "System Admin" : "Team Member"}</span>
+                <span className="text-border">·</span>
+                <span className="max-w-[160px] truncate font-medium">{loggedInUsername || user?.email}</span>
+              </div>
+            )}
             <Link
               to="/"
               className="inline-flex items-center gap-2 rounded-lg border border-border px-4 py-2 text-sm font-medium text-muted-foreground transition hover:bg-secondary/40 hover:text-foreground"
@@ -1162,7 +1170,8 @@ const Admin = () => {
           </div>
         </div>
 
-        <div className={`grid gap-6 ${canShowDashboard ? "lg:grid-cols-[380px_minmax(0,1fr)]" : "max-w-md mx-auto"}`}>
+        <div className={`grid gap-6 ${canShowDashboard ? "grid-cols-1" : "max-w-md mx-auto"}`}>
+          {!canShowDashboard && (
           <section className="h-fit rounded-2xl border border-border bg-card p-6 shadow-lg">
             <h2 className="text-3xl font-bold">
               {user ? `Welcome, ${(loggedInUsername || 'User').replace(/\d+$/, '') || loggedInUsername || 'User'}` : "Login"}
@@ -1323,6 +1332,7 @@ const Admin = () => {
 
 
           </section>
+          )}
 
           {canShowDashboard && (
             <div className="space-y-6">
