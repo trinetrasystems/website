@@ -12,6 +12,176 @@ export interface BlogPost {
 
 export const blogPosts: BlogPost[] = [
   {
+    slug: "anpr-system-india-how-number-plate-recognition-works",
+    title: "ANPR System in India: How Automatic Number Plate Recognition Works",
+    metaDescription: "A complete guide to ANPR systems in India — how automatic number plate recognition works, its accuracy, use cases in parking, gates, and security, and deployment.",
+    keywords: "ANPR system India, automatic number plate recognition, ANPR camera, number plate detection AI, vehicle access control, ANPR parking management, ANPR gate automation, license plate reader India",
+    date: "2026-06-28",
+    author: "Trinetra Systems",
+    readTime: "6 min read",
+    excerpt: "Automatic Number Plate Recognition (ANPR) is transforming how societies, parking lots, and industrial gates control vehicle access. Here's how the technology works and where it delivers the most value.",
+    content: `
+      <h2>What Is an ANPR System?</h2>
+      <p>An <strong>ANPR system</strong> (Automatic Number Plate Recognition) uses AI-powered cameras and optical character recognition to automatically read vehicle number plates in real time. Instead of a guard manually noting down every registration number, the system detects, reads, and logs each plate within milliseconds — enabling fully automated, searchable vehicle access control.</p>
+      <p>In India, where gated societies, commercial complexes, and industrial facilities handle hundreds of vehicles daily, ANPR has become a core part of modern <a href="/vehicle-detection">vehicle detection and traffic analytics</a>.</p>
+
+      <h2>How Number Plate Recognition Works</h2>
+      <p>A complete ANPR pipeline runs through four AI stages:</p>
+      <ul>
+        <li><strong>Vehicle detection:</strong> The AI first locates moving vehicles in the camera frame, even in busy multi-lane scenes.</li>
+        <li><strong>Plate localization:</strong> It isolates the number plate region on each vehicle, regardless of size or angle.</li>
+        <li><strong>Character recognition (OCR):</strong> Deep-learning OCR reads the alphanumeric characters, handling India's many plate fonts and formats.</li>
+        <li><strong>Matching and logging:</strong> The read plate is time-stamped, logged, and cross-checked against whitelist/blacklist databases for instant access decisions.</li>
+      </ul>
+
+      <h2>Why Indian Number Plates Are Challenging</h2>
+      <p>Indian plates come in many formats, fonts, colours, and conditions — from clean commercial plates to faded, dented, or non-standard ones. A quality ANPR system must be trained specifically on <strong>Indian plate variations</strong> across all state formats to maintain accuracy. Trinetra Systems' ANPR is tuned for Indian conditions and reads plates at speeds up to 120 km/h with 98%+ accuracy, even in rain, fog, or direct sunlight.</p>
+
+      <h2>Top Use Cases for ANPR in India</h2>
+      <ul>
+        <li><strong>Gated societies:</strong> Automatic boom-barrier control for resident vehicles, with instant alerts for unregistered ones — a key part of <a href="/residential-cctv-ai-surveillance">residential society security</a>.</li>
+        <li><strong>Parking management:</strong> Ticketless entry/exit, occupancy tracking, and automated billing.</li>
+        <li><strong>Industrial and warehouse gates:</strong> Log every truck arrival and departure for security and logistics audit trails.</li>
+        <li><strong>Commercial complexes:</strong> Whitelist tenant vehicles and flag unknown ones automatically.</li>
+        <li><strong>Security and law enforcement:</strong> Cross-reference plates against blacklists or stolen-vehicle databases for real-time alerts.</li>
+      </ul>
+
+      <h2>On-Premise ANPR for Data Privacy</h2>
+      <p>Vehicle movement data is sensitive. Trinetra Systems processes all ANPR data <strong>on-premise</strong> — the footage and plate logs stay within your facility and never touch the cloud. This ensures complete privacy while still giving you a searchable, exportable log of every vehicle.</p>
+
+      <h2>Deployment and Integration</h2>
+      <p>A modern ANPR system works with your <strong>existing CCTV cameras</strong> and integrates directly with boom barriers, gates, and parking systems. Deployment typically takes just a few days, and the entire setup can scale from a single gate to a multi-location enterprise.</p>
+      <p>Want to automate your gate or parking access? Explore our <a href="/anpr-system">ANPR system</a> or <a href="/contact">book a free demo</a> with our team.</p>
+    `,
+  },
+  {
+    slug: "edge-ai-vs-cloud-surveillance-on-premise-video-analytics",
+    title: "Edge AI vs Cloud Surveillance: Why On-Premise Video Analytics Wins",
+    metaDescription: "Edge AI vs cloud video surveillance compared on privacy, latency, bandwidth, cost, and reliability. Learn why on-premise AI video analytics is the safer choice.",
+    keywords: "edge AI surveillance, on-premise video analytics, edge AI vs cloud, data privacy surveillance, edge computing CCTV, local AI processing, GDPR video analytics, private AI surveillance",
+    date: "2026-06-22",
+    author: "Trinetra Systems",
+    readTime: "6 min read",
+    excerpt: "Should your AI surveillance run in the cloud or on the edge? We compare the two approaches on privacy, speed, cost, and reliability — and explain why on-premise processing wins for most organizations.",
+    content: `
+      <h2>The Big Decision: Where Does Your Video Get Processed?</h2>
+      <p>When you deploy <a href="/ai-surveillance">AI surveillance</a>, one architectural choice matters more than almost any other: <strong>does your video get analyzed in the cloud, or locally on the edge?</strong> The answer affects your privacy, response speed, monthly bills, and even whether the system keeps working when your internet goes down.</p>
+
+      <h2>What Is Edge AI Surveillance?</h2>
+      <p><strong>Edge AI</strong> means the AI processing happens on a device located at your premises — right next to your cameras — rather than on remote servers. The video is analyzed locally, and only alerts and metadata leave the device (if you choose). <strong>Cloud surveillance</strong>, by contrast, streams your raw video to external data centers for processing.</p>
+
+      <h2>Edge AI vs Cloud: Head-to-Head</h2>
+      <h3>1. Data Privacy</h3>
+      <p>This is the decisive factor. With cloud systems, your raw footage — including faces, vehicles, and private spaces — is transmitted and stored on third-party servers. With <strong>on-premise edge AI</strong>, video never leaves your building. For sensitive environments and regions with strict data-protection rules (like GDPR), local processing is the only truly compliant option.</p>
+
+      <h3>2. Latency and Alert Speed</h3>
+      <p>Security events demand instant response. Edge processing analyzes frames locally and can fire an alert in <strong>under a second</strong>. Cloud systems add round-trip network delay, which slows detection when every second counts.</p>
+
+      <h3>3. Bandwidth and Cost</h3>
+      <p>Streaming high-resolution video to the cloud 24/7 consumes enormous bandwidth and racks up recurring data and storage fees. Edge AI processes video where it's captured, so your bandwidth stays free and your costs stay predictable.</p>
+
+      <h3>4. Reliability</h3>
+      <p>Cloud analytics stops working the moment your internet connection drops. Edge AI keeps monitoring and detecting <strong>even during internet outages</strong>, because it doesn't depend on an external connection to function.</p>
+
+      <h3>5. Scalability</h3>
+      <p>Adding more cameras to a cloud system means more upload bandwidth and higher fees. With edge processing, you scale by adding local compute — without flooding your network.</p>
+
+      <h2>When Does Cloud Make Sense?</h2>
+      <p>Cloud isn't always wrong — it can simplify multi-site dashboards and long-term archival. The best modern approach is <strong>hybrid</strong>: process video on the edge for privacy and speed, and sync only lightweight alerts, snapshots, and analytics to a central dashboard.</p>
+
+      <h2>The Trinetra Approach</h2>
+      <p>Trinetra Systems runs <strong>100% on-premise edge AI</strong> using efficient edge hardware, so your video data never leaves your facility. You get sub-second alerts, no bandwidth drain, and complete privacy — while still viewing everything from a unified dashboard.</p>
+      <p>Want surveillance that respects your data? <a href="/contact">Talk to our team</a> about an on-premise AI deployment.</p>
+    `,
+  },
+  {
+    slug: "ai-ppe-detection-workplace-safety-helmet-vest",
+    title: "AI PPE Detection: Improve Workplace Safety with Helmet & Vest Monitoring",
+    metaDescription: "Learn how AI PPE detection automatically monitors helmet, safety vest, and gear compliance in factories and construction sites — reducing accidents and violations.",
+    keywords: "AI PPE detection, helmet detection AI, safety vest detection, workplace safety AI, PPE compliance monitoring, construction site safety camera, industrial safety AI, factory safety monitoring",
+    date: "2026-06-16",
+    author: "Trinetra Systems",
+    readTime: "6 min read",
+    excerpt: "Every year, preventable accidents happen because workers skip safety gear. AI PPE detection turns your existing cameras into an automated safety supervisor that never blinks.",
+    content: `
+      <h2>The Hidden Cost of Missing Safety Gear</h2>
+      <p>In factories, construction sites, and warehouses, Personal Protective Equipment (PPE) is the difference between a normal shift and a serious accident. Yet manual enforcement is inconsistent — supervisors can't watch every worker at every moment. This gap leads to injuries, compliance penalties, and higher insurance costs.</p>
+      <p><strong>AI PPE detection</strong> closes that gap by turning your existing CCTV cameras into an automated, always-on safety monitor as part of your <a href="/workplace-analytics">workplace analytics</a> system.</p>
+
+      <h2>What AI PPE Detection Monitors</h2>
+      <p>Modern AI safety systems can automatically detect whether workers are wearing the right gear:</p>
+      <ul>
+        <li><strong>Helmets / hard hats:</strong> Flag anyone entering a hard-hat zone without a helmet.</li>
+        <li><strong>Safety vests:</strong> Detect high-visibility vest compliance in vehicle and machinery areas.</li>
+        <li><strong>Goggles and masks:</strong> Monitor eye and respiratory protection in hazardous zones.</li>
+        <li><strong>Gloves and safety shoes:</strong> Verify gear in handling and processing areas.</li>
+        <li><strong>Restricted safety zones:</strong> Alert when a person enters a danger zone near heavy machinery.</li>
+      </ul>
+
+      <h2>How It Works</h2>
+      <p>The AI continuously analyzes each camera feed, identifies people, and checks each person against your configured PPE rules for that zone. When it detects a violation — say, a worker without a helmet in a construction area — it instantly logs the event and sends an alert with a snapshot to supervisors via dashboard or WhatsApp. Every incident is recorded for compliance audits.</p>
+
+      <h2>Industries That Benefit Most</h2>
+      <ul>
+        <li><strong>Construction:</strong> Hard-hat and vest enforcement across large, changing sites.</li>
+        <li><strong>Manufacturing:</strong> Machine-zone safety and PPE compliance on the shop floor.</li>
+        <li><strong>Warehousing & logistics:</strong> Vest compliance around forklifts and loading bays.</li>
+        <li><strong>Oil, gas & chemicals:</strong> Strict multi-gear compliance in high-risk areas.</li>
+      </ul>
+
+      <h2>Beyond Compliance: Real Benefits</h2>
+      <p>AI PPE monitoring does more than tick a compliance box. It <strong>reduces workplace accidents</strong>, creates a documented safety audit trail for regulators and insurers, and builds a culture of accountability — workers follow the rules consistently when enforcement is automatic and fair.</p>
+
+      <h2>Private, On-Premise, and Easy to Deploy</h2>
+      <p>Trinetra Systems runs PPE detection <strong>on-premise</strong> using your existing cameras, so employee footage stays within your facility. There's no camera replacement, and the system deploys in days. Custom rules let you define exactly which gear is required in each zone.</p>
+      <p>Ready to make your site safer? <a href="/contact">Book a free safety demo</a> with Trinetra Systems.</p>
+    `,
+  },
+  {
+    slug: "cross-camera-person-tracking-without-facial-recognition",
+    title: "Cross-Camera Person Tracking Without Facial Recognition — Explained",
+    metaDescription: "How AI tracks people across multiple cameras using person re-identification — no facial recognition needed. A privacy-compliant approach to multi-camera tracking.",
+    keywords: "cross camera tracking, person re-identification, multi-camera tracking AI, tracking without facial recognition, privacy compliant surveillance, appearance-based tracking, person tracking India",
+    date: "2026-06-10",
+    author: "Trinetra Systems",
+    readTime: "5 min read",
+    excerpt: "Following a person across dozens of cameras usually means facial recognition — and a privacy minefield. Person re-identification offers a smarter, privacy-first alternative.",
+    content: `
+      <h2>The Multi-Camera Tracking Problem</h2>
+      <p>In a large facility — a mall, airport, hospital, or campus — a single person may pass through dozens of cameras in minutes. Security teams often need to answer one question: <em>where did this person go?</em> Doing that manually means scrubbing through footage from every camera, one by one. It's slow, and it rarely works in real time.</p>
+      <p><a href="/cross-camera-tracking">Cross-camera person tracking</a> solves this automatically — and it can do so <strong>without facial recognition</strong>.</p>
+
+      <h2>What Is Person Re-Identification?</h2>
+      <p><strong>Person re-identification</strong> (re-ID) is an AI technique that recognizes the same individual across different cameras by their overall visual appearance — not their face. Instead of storing biometric identity, the AI builds an anonymous "appearance signature" for each person and matches it as they move between camera views.</p>
+
+      <h2>How Appearance Matching Works</h2>
+      <p>Rather than reading facial features, re-ID analyzes cues such as:</p>
+      <ul>
+        <li><strong>Clothing:</strong> Colors, patterns, and combinations of upper and lower garments.</li>
+        <li><strong>Body shape and build:</strong> General proportions and posture.</li>
+        <li><strong>Gait:</strong> The distinctive way a person walks and moves.</li>
+        <li><strong>Accessories:</strong> Bags, hats, or other visible items.</li>
+      </ul>
+      <p>The AI turns these into a numerical signature and matches it across cameras in real time, building a complete movement trail for that person.</p>
+
+      <h2>Why "No Facial Recognition" Matters</h2>
+      <p>Facial recognition raises serious privacy and legal concerns because it stores identifiable biometric data. Re-ID sidesteps this entirely: it uses <strong>temporary, non-biometric appearance features</strong> that cannot be used to personally identify anyone and aren't stored as identity records. You get the operational benefit of tracking movement without the privacy liability — a crucial distinction for compliance.</p>
+
+      <h2>Real-World Use Cases</h2>
+      <ul>
+        <li><strong>Retail & malls:</strong> Understand shopper journeys and dwell patterns across the store.</li>
+        <li><strong>Airports & transit:</strong> Trace a person of interest across terminals instantly.</li>
+        <li><strong>Hospitals & campuses:</strong> Locate individuals across large multi-building sites.</li>
+        <li><strong>Security investigations:</strong> Search historical footage to reconstruct someone's full path from a single reference image.</li>
+      </ul>
+      <p>Cross-camera tracking pairs naturally with <a href="/person-detection">AI person detection and counting</a> for a complete picture of movement across your site.</p>
+
+      <h2>Privacy-First, On-Premise by Design</h2>
+      <p>Trinetra Systems runs re-identification <strong>entirely on-premise</strong>, storing no biometric data and keeping all video within your facility. It works across dozens of cameras using your existing CCTV infrastructure.</p>
+      <p>Want privacy-compliant tracking across your site? <a href="/contact">Request a demo</a> today.</p>
+    `,
+  },
+  {
     slug: "how-ai-surveillance-improves-society-security",
     title: "How AI Surveillance Improves Society Security in 2025",
     metaDescription: "Learn how AI-powered surveillance systems enhance residential society security with automated outsider detection, intrusion prevention, and real-time alerts.",
