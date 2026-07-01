@@ -6,9 +6,13 @@ interface SEOHeadProps {
   keywords?: string;
   canonicalPath?: string;
   noindex?: boolean;
+  // Optional page-specific JSON-LD structured data (e.g. BlogPosting).
+  jsonLd?: Record<string, unknown>;
 }
 
-const SEOHead = ({ title, description, keywords, canonicalPath, noindex }: SEOHeadProps) => {
+const SEOHead = ({ title, description, keywords, canonicalPath, noindex, jsonLd }: SEOHeadProps) => {
+  const jsonLdString = jsonLd ? JSON.stringify(jsonLd) : "";
+
   useEffect(() => {
     const prevTitle = document.title;
     document.title = title;
@@ -55,10 +59,26 @@ const SEOHead = ({ title, description, keywords, canonicalPath, noindex }: SEOHe
       canonicalEl.setAttribute("href", `https://www.trinetrasystems.com${canonicalPath}`);
     }
 
+    // Page-specific JSON-LD (kept separate from the site-wide schema in index.html).
+    let jsonLdEl = document.querySelector("script[data-seo-jsonld]") as HTMLScriptElement | null;
+    if (jsonLdString) {
+      if (!jsonLdEl) {
+        jsonLdEl = document.createElement("script");
+        jsonLdEl.setAttribute("type", "application/ld+json");
+        jsonLdEl.setAttribute("data-seo-jsonld", "");
+        document.head.appendChild(jsonLdEl);
+      }
+      jsonLdEl.textContent = jsonLdString;
+    } else if (jsonLdEl) {
+      jsonLdEl.remove();
+    }
+
     return () => {
       document.title = prevTitle;
+      const staleJsonLd = document.querySelector("script[data-seo-jsonld]");
+      if (staleJsonLd) staleJsonLd.remove();
     };
-  }, [title, description, keywords, canonicalPath]);
+  }, [title, description, keywords, canonicalPath, noindex, jsonLdString]);
 
   return null;
 };

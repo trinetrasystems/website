@@ -12,6 +12,87 @@ export interface BlogPost {
 
 export const blogPosts: BlogPost[] = [
   {
+    slug: "ai-retail-analytics-people-counting-heatmaps-theft-detection",
+    title: "AI Retail Analytics: People Counting, Heatmaps & Theft Detection",
+    metaDescription: "How AI retail analytics turns existing CCTV into store intelligence — people counting, footfall heatmaps, queue management, and theft detection for retailers.",
+    keywords: "AI retail analytics, people counting retail, retail footfall analytics, store heatmap analysis, queue management AI, retail theft detection, shopper analytics India, retail CCTV analytics",
+    date: "2026-06-30",
+    author: "Trinetra Systems",
+    readTime: "6 min read",
+    excerpt: "Your store cameras already see everything — AI retail analytics turns that footage into footfall counts, heatmaps, queue alerts, and loss prevention, without new hardware.",
+    content: `
+      <h2>Your CCTV Is a Goldmine of Retail Data</h2>
+      <p>Most retailers use CCTV only to review incidents after they happen. But the same cameras can reveal <strong>how customers actually behave</strong> — where they walk, what they browse, how long they wait, and where sales are lost. <strong>AI retail analytics</strong> unlocks this intelligence from your existing footage, no new hardware required.</p>
+
+      <h2>What AI Retail Analytics Measures</h2>
+      <h3>1. People Counting & Footfall</h3>
+      <p>Accurate, automated <a href="/person-detection">people counting</a> tells you exactly how many shoppers enter, by hour, day, and entrance. Compare footfall against sales to measure your true <strong>conversion rate</strong> — the metric that turns traffic into strategy.</p>
+
+      <h3>2. Store Heatmaps</h3>
+      <p>Heatmaps visualize where customers spend the most time. You can see which aisles and displays attract attention and which "cold zones" get ignored — powerful data for optimizing store layout and product placement.</p>
+
+      <h3>3. Queue & Checkout Management</h3>
+      <p>The AI detects growing queues at billing counters and alerts staff to open additional tills before customers abandon their carts. Long checkout waits are one of the top reasons shoppers leave without buying.</p>
+
+      <h3>4. Dwell Time & Zone Analytics</h3>
+      <p>Measure how long shoppers linger in specific sections. High dwell with low sales can signal pricing or stock issues; low dwell in premium zones can reveal poor visibility or layout.</p>
+
+      <h3>5. Theft & Shrinkage Detection</h3>
+      <p>AI flags suspicious behavior — concealment gestures, loitering near high-value shelves, or unusual movement patterns — helping loss-prevention teams act in real time instead of reviewing footage after the loss.</p>
+
+      <h2>Turning Data Into Decisions</h2>
+      <ul>
+        <li><strong>Optimize layout:</strong> Place high-margin products in high-traffic zones revealed by heatmaps.</li>
+        <li><strong>Staff smartly:</strong> Align staffing with real footfall peaks, not guesswork.</li>
+        <li><strong>Boost conversion:</strong> Fix bottlenecks and cold zones that quietly cost sales.</li>
+        <li><strong>Cut shrinkage:</strong> Deter and catch theft with real-time alerts.</li>
+      </ul>
+
+      <h2>Privacy-First and On-Premise</h2>
+      <p>Trinetra Systems runs retail analytics <strong>on-premise</strong> using anonymous detection — no facial recognition and no cloud upload. You get actionable insights while customer footage stays private within your store. It works with your existing cameras and deploys in days as part of a broader <a href="/ai-surveillance">AI surveillance</a> setup.</p>
+      <p>Want to see what your store data is hiding? <a href="/contact">Book a free retail analytics demo</a>.</p>
+    `,
+  },
+  {
+    slug: "billboard-analytics-measuring-out-of-home-advertising-attention",
+    title: "Billboard Analytics: How AI Measures Out-of-Home Advertising Attention",
+    metaDescription: "Learn how AI billboard analytics measures real audience attention for out-of-home (OOH) advertising — impressions, dwell, anonymous demographics, and proof-of-play.",
+    keywords: "billboard analytics, out-of-home advertising measurement, OOH audience analytics, billboard impression measurement, proof of play, DOOH analytics, ad attention measurement, OOH ROI",
+    date: "2026-06-29",
+    author: "Trinetra Systems",
+    readTime: "6 min read",
+    excerpt: "Out-of-home advertising has always been sold on estimates and guesswork. AI billboard analytics replaces that with real, measurable proof of who actually sees your ad.",
+    content: `
+      <h2>The Oldest Problem in Out-of-Home Advertising</h2>
+      <p>Billboards are everywhere, but proving their value has always been hard. Traditional out-of-home (OOH) advertising is priced on rough traffic estimates and footfall surveys — not real evidence of who saw the ad or paid attention. Advertisers are effectively buying on faith.</p>
+      <p><strong>AI billboard analytics</strong> changes that by measuring real audience attention, turning OOH into an accountable, data-driven medium. Explore our full <a href="/billboard-analytics">billboard analytics</a> platform for the complete picture.</p>
+
+      <h2>What AI Billboard Analytics Measures</h2>
+      <ul>
+        <li><strong>Opportunity-to-see (OTS):</strong> How many people and vehicles actually passed the billboard.</li>
+        <li><strong>Real attention:</strong> Not just passers-by, but how many genuinely looked toward the ad — the difference between an impression and real attention.</li>
+        <li><strong>Dwell time:</strong> How long viewers were exposed to the creative.</li>
+        <li><strong>Anonymous demographics:</strong> Aggregate age-range and gender distribution of the audience — with no personal identification.</li>
+        <li><strong>Proof-of-play:</strong> For digital OOH, verified logs that each ad actually displayed as scheduled.</li>
+      </ul>
+
+      <h2>How It Works</h2>
+      <p>Edge-AI cameras mounted at the billboard analyze the scene locally in real time. Advanced systems use a <strong>dual-camera</strong> setup — one to observe the audience and one to verify the creative on screen — so you can correlate exactly which ad earned which attention. All processing happens on the device, and only anonymous aggregate metrics are produced.</p>
+
+      <h2>Why It Matters for Advertisers and Media Owners</h2>
+      <ul>
+        <li><strong>Evidence-based pricing:</strong> Price inventory on real attention, not estimates — premium sites can finally prove their premium.</li>
+        <li><strong>Advertiser trust:</strong> Give brands measurable ROI, the way digital advertising does.</li>
+        <li><strong>Campaign optimization:</strong> Compare creatives and locations by actual performance.</li>
+        <li><strong>Accountability:</strong> Proof-of-play removes disputes over whether ads ran.</li>
+      </ul>
+
+      <h2>Privacy by Design</h2>
+      <p>A common worry with camera-based measurement is privacy. Trinetra Systems' billboard analytics is <strong>anonymous and on-premise</strong> — it counts and characterizes audiences in aggregate without identifying individuals, and no video leaves the device. You get census-grade measurement that respects public privacy.</p>
+      <p>Ready to make your OOH inventory measurable? <a href="/contact">Talk to our team</a> about billboard analytics.</p>
+    `,
+  },
+  {
     slug: "anpr-system-india-how-number-plate-recognition-works",
     title: "ANPR System in India: How Automatic Number Plate Recognition Works",
     metaDescription: "A complete guide to ANPR systems in India — how automatic number plate recognition works, its accuracy, use cases in parking, gates, and security, and deployment.",
