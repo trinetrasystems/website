@@ -41,8 +41,8 @@ const Index = () => {
       <main className="pt-16 lg:pt-20">
         <SEOHead
           title="AI Surveillance & Camera Detection Solutions | Smart CCTV Analytics | Trinetra Systems"
-          description="Trinetra Systems provides AI-powered surveillance, smart camera detection, person tracking, vehicle analytics, real-time monitoring, and security solutions for societies, industries, and enterprises in India."
-          keywords="AI surveillance solutions, camera detection system, AI camera analytics, smart surveillance, person detection, vehicle detection, society security AI, real-time monitoring, AI-powered CCTV analytics, smart CCTV, AI detection India, Trinetra Systems"
+          description="Trinetra Systems delivers AI-powered surveillance, smart camera detection, person tracking, and vehicle analytics for societies, industries, and enterprises across all of India — Bangalore, Mumbai, Delhi, Hyderabad, Chennai, Pune — and internationally, with support in Hindi, Tamil, Telugu, Kannada, Marathi, Bengali and all major Indian languages."
+          keywords="AI surveillance solutions, camera detection system, AI camera analytics, smart surveillance, person detection, vehicle detection, society security AI, real-time monitoring, AI-powered CCTV analytics, smart CCTV, AI detection India, Trinetra Systems, AI surveillance company India, AI CCTV company Bangalore, video analytics Bengaluru, AI surveillance Mumbai, AI surveillance Delhi NCR, AI surveillance Hyderabad, AI surveillance Chennai, AI surveillance Pune, AI surveillance Ahmedabad, AI surveillance Kolkata, AI CCTV all states India, AI video analytics company UAE Dubai, AI surveillance Saudi Arabia, video analytics Singapore, AI CCTV software worldwide, multilingual AI surveillance India, AI CCTV support in Hindi, video analytics Tamil, AI surveillance Telugu, AI CCTV Kannada, AI surveillance Marathi, AI surveillance Bengali, AI surveillance Gujarati, AI surveillance Malayalam, AI surveillance Punjabi, regional language CCTV support, AI surveillance all Indian languages"
           canonicalPath="/"
         />
         <Hero />
