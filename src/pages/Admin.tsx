@@ -20,7 +20,7 @@ import {
   query,
   serverTimestamp,
   setDoc,
-  type Timestamp,
+  Timestamp,
   updateDoc,
   addDoc,
   where,
@@ -65,6 +65,14 @@ type UserProfile = {
   isMember?: boolean;
   permissions?: string[];
   ipLink: string;
+  softwareValidUntil?: Date | null;
+  softwareLifetime?: boolean;
+  softwareValidityValue?: number;
+  softwareValidityUnit?: string;
+  maintenanceValidUntil?: Date | null;
+  maintenanceLifetime?: boolean;
+  maintenanceValidityValue?: number;
+  maintenanceValidityUnit?: string;
   createdAtLabel: string;
   updatedAtLabel: string;
 };
@@ -102,6 +110,47 @@ const formatTimestamp = (value: unknown) => {
 };
 
 const normalizeUsername = (value: string) => value.trim().toLowerCase();
+
+type ValidityUnit = "months" | "years" | "lifetime";
+
+// Compute an absolute expiry date from a validity period entered by the admin.
+const computeValidUntil = (value: number, unit: "months" | "years") => {
+  const date = new Date();
+  if (unit === "years") {
+    date.setFullYear(date.getFullYear() + value);
+  } else {
+    date.setMonth(date.getMonth() + value);
+  }
+  return date;
+};
+
+// Translate an admin validity input into the Firestore fields to store.
+// Returns null when nothing was entered (so an edit can leave the field untouched).
+const buildValidityFields = (value: string, unit: ValidityUnit) => {
+  if (unit === "lifetime") {
+    return { validUntil: null as Timestamp | null, lifetime: true, value: 0, unit: "lifetime" as ValidityUnit };
+  }
+  if (Number(value) > 0) {
+    return {
+      validUntil: Timestamp.fromDate(computeValidUntil(Number(value), unit)),
+      lifetime: false,
+      value: Number(value),
+      unit,
+    };
+  }
+  return null;
+};
+
+// Turn stored validity fields back into the form inputs, so Edit User prefills them.
+const validityToInput = (
+  lifetime?: boolean,
+  value?: number,
+  unit?: string
+): { value: string; unit: ValidityUnit } => {
+  if (lifetime) return { value: "", unit: "lifetime" };
+  if (value && value > 0) return { value: String(value), unit: (unit as ValidityUnit) || "months" };
+  return { value: "", unit: "months" };
+};
 
 const createAuthEmail = (value: string) => {
   const normalizedUsername = normalizeUsername(value);
@@ -179,6 +228,10 @@ const Admin = () => {
   const [newUserRole, setNewUserRole] = useState<"admin" | "member" | "user">("user");
   const [newUserPermissions, setNewUserPermissions] = useState<string[]>([]);
   const [newUserIpLink, setNewUserIpLink] = useState("");
+  const [newUserSoftwareValidityValue, setNewUserSoftwareValidityValue] = useState("");
+  const [newUserSoftwareValidityUnit, setNewUserSoftwareValidityUnit] = useState<ValidityUnit>("months");
+  const [newUserMaintenanceValidityValue, setNewUserMaintenanceValidityValue] = useState("");
+  const [newUserMaintenanceValidityUnit, setNewUserMaintenanceValidityUnit] = useState<ValidityUnit>("months");
   const [creatingUser, setCreatingUser] = useState(false);
 
   const [deleteRequests, setDeleteRequests] = useState<DeleteRequest[]>([]);
@@ -197,6 +250,14 @@ const Admin = () => {
   const [selectedUserRole, setSelectedUserRole] = useState<"admin" | "member" | "user">("user");
   const [selectedUserPermissions, setSelectedUserPermissions] = useState<string[]>([]);
   const [selectedUserIpLink, setSelectedUserIpLink] = useState("");
+  const [selectedUserSoftwareValidityValue, setSelectedUserSoftwareValidityValue] = useState("");
+  const [selectedUserSoftwareValidityUnit, setSelectedUserSoftwareValidityUnit] = useState<ValidityUnit>("months");
+  const [selectedUserSoftwareValidUntil, setSelectedUserSoftwareValidUntil] = useState<Date | null>(null);
+  const [selectedUserSoftwareLifetime, setSelectedUserSoftwareLifetime] = useState(false);
+  const [selectedUserMaintenanceValidityValue, setSelectedUserMaintenanceValidityValue] = useState("");
+  const [selectedUserMaintenanceValidityUnit, setSelectedUserMaintenanceValidityUnit] = useState<ValidityUnit>("months");
+  const [selectedUserMaintenanceValidUntil, setSelectedUserMaintenanceValidUntil] = useState<Date | null>(null);
+  const [selectedUserMaintenanceLifetime, setSelectedUserMaintenanceLifetime] = useState(false);
   const [updatingUser, setUpdatingUser] = useState(false);
   const [deletingUser, setDeletingUser] = useState(false);
   const [activeSection, setActiveSection] = useState<"create" | "edit" | "forms" | "tickets" | "contacts" | "docs" | "invoice" | "requests">("tickets");
@@ -212,6 +273,10 @@ const Admin = () => {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [updatingPassword, setUpdatingPassword] = useState(false);
   const [loggedInUsername, setLoggedInUsername] = useState("");
+  const [userSoftwareValidUntil, setUserSoftwareValidUntil] = useState<Date | null>(null);
+  const [userSoftwareLifetime, setUserSoftwareLifetime] = useState(false);
+  const [userMaintenanceValidUntil, setUserMaintenanceValidUntil] = useState<Date | null>(null);
+  const [userMaintenanceLifetime, setUserMaintenanceLifetime] = useState(false);
   const [showPasswordFields, setShowPasswordFields] = useState(false);
 
   const [passwordRecords, setPasswordRecords] = useState<PasswordRecord[]>([]);
@@ -388,6 +453,10 @@ const Admin = () => {
             setStatus(`${role === "admin" ? "Admin" : "Member"} access confirmed.`);
           } else {
             setIpLink(data.ip_link || "");
+            setUserSoftwareValidUntil((data.softwareValidUntil ?? data.validUntil)?.toDate?.() ?? null);
+            setUserSoftwareLifetime(data.softwareLifetime === true);
+            setUserMaintenanceValidUntil(data.maintenanceValidUntil?.toDate?.() ?? null);
+            setUserMaintenanceLifetime(data.maintenanceLifetime === true);
             setStatus("User logged in successfully.");
           }
         } else {
@@ -425,6 +494,14 @@ const Admin = () => {
             isMember: data.isMember || data.role === "member",
             permissions: data.permissions || [],
             ipLink: data.ip_link || "",
+            softwareValidUntil: (data.softwareValidUntil ?? data.validUntil)?.toDate?.() ?? null,
+            softwareLifetime: data.softwareLifetime === true,
+            softwareValidityValue: data.softwareValidityValue ?? 0,
+            softwareValidityUnit: data.softwareValidityUnit ?? "",
+            maintenanceValidUntil: data.maintenanceValidUntil?.toDate?.() ?? null,
+            maintenanceLifetime: data.maintenanceLifetime === true,
+            maintenanceValidityValue: data.maintenanceValidityValue ?? 0,
+            maintenanceValidityUnit: data.maintenanceValidityUnit ?? "",
             createdAtLabel: formatTimestamp(data.createdAt),
             updatedAtLabel: formatTimestamp(data.updatedAt),
           };
@@ -441,6 +518,16 @@ const Admin = () => {
             setSelectedUserRole(selected.role);
             setSelectedUserPermissions(selected.permissions || []);
             setSelectedUserIpLink(selected.ipLink);
+            setSelectedUserSoftwareValidUntil(selected.softwareValidUntil ?? null);
+            setSelectedUserSoftwareLifetime(selected.softwareLifetime === true);
+            setSelectedUserMaintenanceValidUntil(selected.maintenanceValidUntil ?? null);
+            setSelectedUserMaintenanceLifetime(selected.maintenanceLifetime === true);
+            const swInput = validityToInput(selected.softwareLifetime, selected.softwareValidityValue, selected.softwareValidityUnit);
+            const mtInput = validityToInput(selected.maintenanceLifetime, selected.maintenanceValidityValue, selected.maintenanceValidityUnit);
+            setSelectedUserSoftwareValidityValue(swInput.value);
+            setSelectedUserSoftwareValidityUnit(swInput.unit);
+            setSelectedUserMaintenanceValidityValue(mtInput.value);
+            setSelectedUserMaintenanceValidityUnit(mtInput.unit);
           }
         }
       },
@@ -648,6 +735,11 @@ const Admin = () => {
       const authEmail = createAuthEmail(normalizedUsername);
       const credential = await createUserWithEmailAndPassword(adminAuth, authEmail, newUserPassword);
 
+      const swValidity =
+        newUserRole === "user" ? buildValidityFields(newUserSoftwareValidityValue, newUserSoftwareValidityUnit) : null;
+      const mtValidity =
+        newUserRole === "user" ? buildValidityFields(newUserMaintenanceValidityValue, newUserMaintenanceValidityUnit) : null;
+
       try {
         await setDoc(doc(db, "users", credential.user.uid), {
           username: newUserUsername.trim(),
@@ -660,6 +752,14 @@ const Admin = () => {
           isMember: newUserRole === "member",
           permissions: newUserRole === "member" ? newUserPermissions : [],
           ip_link: newUserRole === "user" ? newUserIpLink : "",
+          softwareValidUntil: swValidity?.validUntil ?? null,
+          softwareLifetime: swValidity?.lifetime ?? false,
+          softwareValidityValue: swValidity?.value ?? 0,
+          softwareValidityUnit: swValidity?.unit ?? "",
+          maintenanceValidUntil: mtValidity?.validUntil ?? null,
+          maintenanceLifetime: mtValidity?.lifetime ?? false,
+          maintenanceValidityValue: mtValidity?.value ?? 0,
+          maintenanceValidityUnit: mtValidity?.unit ?? "",
           createdAt: serverTimestamp(),
           updatedAt: serverTimestamp(),
         });
@@ -690,6 +790,10 @@ const Admin = () => {
       setNewUserContactMobile("");
       setNewUserRole("user");
       setNewUserIpLink("");
+      setNewUserSoftwareValidityValue("");
+      setNewUserSoftwareValidityUnit("months");
+      setNewUserMaintenanceValidityValue("");
+      setNewUserMaintenanceValidityUnit("months");
       setStatus("User created successfully.");
       toast.success("User created successfully");
     } catch (error) {
@@ -708,6 +812,16 @@ const Admin = () => {
     setSelectedUserContactMobile(profile.contactMobile || "");
     setSelectedUserRole(profile.role);
     setSelectedUserIpLink(profile.ipLink);
+    setSelectedUserSoftwareValidUntil(profile.softwareValidUntil ?? null);
+    setSelectedUserSoftwareLifetime(profile.softwareLifetime === true);
+    setSelectedUserMaintenanceValidUntil(profile.maintenanceValidUntil ?? null);
+    setSelectedUserMaintenanceLifetime(profile.maintenanceLifetime === true);
+    const swInput = validityToInput(profile.softwareLifetime, profile.softwareValidityValue, profile.softwareValidityUnit);
+    const mtInput = validityToInput(profile.maintenanceLifetime, profile.maintenanceValidityValue, profile.maintenanceValidityUnit);
+    setSelectedUserSoftwareValidityValue(swInput.value);
+    setSelectedUserSoftwareValidityUnit(swInput.unit);
+    setSelectedUserMaintenanceValidityValue(mtInput.value);
+    setSelectedUserMaintenanceValidityUnit(mtInput.unit);
     setStatus(`Selected ${profile.username}.`);
   };
 
@@ -755,6 +869,34 @@ const Admin = () => {
 
       const selectedUserAuthEmail = selectedUser?.authEmail || createAuthEmail(normalizedUsername);
 
+      // The validity fields are prefilled from the stored values. Only rewrite a validity
+      // when the admin actually changes it, so editing (e.g.) the IP link never resets an
+      // existing expiry from today.
+      const swStored = validityToInput(
+        selectedUser?.softwareLifetime,
+        selectedUser?.softwareValidityValue,
+        selectedUser?.softwareValidityUnit
+      );
+      const mtStored = validityToInput(
+        selectedUser?.maintenanceLifetime,
+        selectedUser?.maintenanceValidityValue,
+        selectedUser?.maintenanceValidityUnit
+      );
+      const swChanged =
+        selectedUserSoftwareValidityValue !== swStored.value ||
+        selectedUserSoftwareValidityUnit !== swStored.unit;
+      const mtChanged =
+        selectedUserMaintenanceValidityValue !== mtStored.value ||
+        selectedUserMaintenanceValidityUnit !== mtStored.unit;
+      const swValidity =
+        selectedUserRole === "user" && swChanged
+          ? buildValidityFields(selectedUserSoftwareValidityValue, selectedUserSoftwareValidityUnit)
+          : null;
+      const mtValidity =
+        selectedUserRole === "user" && mtChanged
+          ? buildValidityFields(selectedUserMaintenanceValidityValue, selectedUserMaintenanceValidityUnit)
+          : null;
+
       await setDoc(
         doc(db, "users", selectedUserId),
         {
@@ -768,6 +910,22 @@ const Admin = () => {
           isMember: selectedUserRole === "member",
           permissions: selectedUserRole === "member" ? selectedUserPermissions : [],
           ip_link: selectedUserRole === "user" ? selectedUserIpLink : "",
+          ...(swValidity
+            ? {
+                softwareValidUntil: swValidity.validUntil,
+                softwareLifetime: swValidity.lifetime,
+                softwareValidityValue: swValidity.value,
+                softwareValidityUnit: swValidity.unit,
+              }
+            : {}),
+          ...(mtValidity
+            ? {
+                maintenanceValidUntil: mtValidity.validUntil,
+                maintenanceLifetime: mtValidity.lifetime,
+                maintenanceValidityValue: mtValidity.value,
+                maintenanceValidityUnit: mtValidity.unit,
+              }
+            : {}),
           updatedAt: serverTimestamp(),
         },
         { merge: true }
@@ -961,6 +1119,10 @@ const Admin = () => {
           user={user}
           username={loggedInUsername}
           ipLink={ipLink}
+          softwareValidUntil={userSoftwareValidUntil}
+          softwareLifetime={userSoftwareLifetime}
+          maintenanceValidUntil={userMaintenanceValidUntil}
+          maintenanceLifetime={userMaintenanceLifetime}
           onSignOut={handleSignOut}
         />
       </>
@@ -1352,6 +1514,59 @@ const Admin = () => {
                       </div>
                     </div>
 
+                    {newUserRole === "user" && (
+                      <div className="grid gap-4 md:grid-cols-2">
+                        <div className="space-y-2">
+                          <label className="text-sm font-medium">Software Validity</label>
+                          <div className="flex gap-3">
+                            <input
+                              type="number"
+                              min={0}
+                              value={newUserSoftwareValidityValue}
+                              onChange={(event) => setNewUserSoftwareValidityValue(event.target.value)}
+                              disabled={newUserSoftwareValidityUnit === "lifetime"}
+                              className="w-full rounded-lg border border-border bg-background px-4 py-3 outline-none transition-all focus:ring-2 focus:ring-primary/40 disabled:cursor-not-allowed disabled:opacity-50"
+                              placeholder="e.g. 6"
+                            />
+                            <select
+                              value={newUserSoftwareValidityUnit}
+                              onChange={(event) => setNewUserSoftwareValidityUnit(event.target.value as ValidityUnit)}
+                              className="w-36 rounded-lg border border-border bg-background px-4 py-3 outline-none transition-all focus:ring-2 focus:ring-primary/40"
+                            >
+                              <option value="months">Months</option>
+                              <option value="years">Years</option>
+                              <option value="lifetime">Lifetime</option>
+                            </select>
+                          </div>
+                          <p className="text-xs text-muted-foreground">Leave empty for no expiry.</p>
+                        </div>
+                        <div className="space-y-2">
+                          <label className="text-sm font-medium">Maintenance Validity</label>
+                          <div className="flex gap-3">
+                            <input
+                              type="number"
+                              min={0}
+                              value={newUserMaintenanceValidityValue}
+                              onChange={(event) => setNewUserMaintenanceValidityValue(event.target.value)}
+                              disabled={newUserMaintenanceValidityUnit === "lifetime"}
+                              className="w-full rounded-lg border border-border bg-background px-4 py-3 outline-none transition-all focus:ring-2 focus:ring-primary/40 disabled:cursor-not-allowed disabled:opacity-50"
+                              placeholder="e.g. 12"
+                            />
+                            <select
+                              value={newUserMaintenanceValidityUnit}
+                              onChange={(event) => setNewUserMaintenanceValidityUnit(event.target.value as ValidityUnit)}
+                              className="w-36 rounded-lg border border-border bg-background px-4 py-3 outline-none transition-all focus:ring-2 focus:ring-primary/40"
+                            >
+                              <option value="months">Months</option>
+                              <option value="years">Years</option>
+                              <option value="lifetime">Lifetime</option>
+                            </select>
+                          </div>
+                          <p className="text-xs text-muted-foreground">Leave empty for no expiry.</p>
+                        </div>
+                      </div>
+                    )}
+
                     {newUserRole === "member" && (
                       <div className="space-y-3">
                         <label className="text-sm font-medium">Member Permissions</label>
@@ -1505,6 +1720,73 @@ const Admin = () => {
                             />
                           </div>
                         </div>
+
+                        {selectedUserRole === "user" && (
+                          <div className="grid gap-4 md:grid-cols-2">
+                            <div className="space-y-2">
+                              <label className="text-sm font-medium">Software Validity</label>
+                              <div className="flex gap-3">
+                                <input
+                                  type="number"
+                                  min={0}
+                                  value={selectedUserSoftwareValidityValue}
+                                  onChange={(event) => setSelectedUserSoftwareValidityValue(event.target.value)}
+                                  disabled={selectedUserSoftwareValidityUnit === "lifetime"}
+                                  className="w-full rounded-lg border border-border bg-background px-4 py-3 outline-none transition-all focus:ring-2 focus:ring-primary/40 disabled:cursor-not-allowed disabled:opacity-50"
+                                  placeholder="Set new period"
+                                />
+                                <select
+                                  value={selectedUserSoftwareValidityUnit}
+                                  onChange={(event) => setSelectedUserSoftwareValidityUnit(event.target.value as ValidityUnit)}
+                                  className="w-36 rounded-lg border border-border bg-background px-4 py-3 outline-none transition-all focus:ring-2 focus:ring-primary/40"
+                                >
+                                  <option value="months">Months</option>
+                                  <option value="years">Years</option>
+                                  <option value="lifetime">Lifetime</option>
+                                </select>
+                              </div>
+                              <p className="text-xs text-muted-foreground">
+                                {selectedUserSoftwareLifetime
+                                  ? "Currently: Lifetime."
+                                  : selectedUserSoftwareValidUntil
+                                  ? `Current expiry: ${selectedUserSoftwareValidUntil.toLocaleDateString("en-IN", { year: "numeric", month: "long", day: "numeric" })}.`
+                                  : "No expiry set."}{" "}
+                                Prefilled with the current setting — change it to update; leave it as-is to keep the current expiry.
+                              </p>
+                            </div>
+                            <div className="space-y-2">
+                              <label className="text-sm font-medium">Maintenance Validity</label>
+                              <div className="flex gap-3">
+                                <input
+                                  type="number"
+                                  min={0}
+                                  value={selectedUserMaintenanceValidityValue}
+                                  onChange={(event) => setSelectedUserMaintenanceValidityValue(event.target.value)}
+                                  disabled={selectedUserMaintenanceValidityUnit === "lifetime"}
+                                  className="w-full rounded-lg border border-border bg-background px-4 py-3 outline-none transition-all focus:ring-2 focus:ring-primary/40 disabled:cursor-not-allowed disabled:opacity-50"
+                                  placeholder="Set new period"
+                                />
+                                <select
+                                  value={selectedUserMaintenanceValidityUnit}
+                                  onChange={(event) => setSelectedUserMaintenanceValidityUnit(event.target.value as ValidityUnit)}
+                                  className="w-36 rounded-lg border border-border bg-background px-4 py-3 outline-none transition-all focus:ring-2 focus:ring-primary/40"
+                                >
+                                  <option value="months">Months</option>
+                                  <option value="years">Years</option>
+                                  <option value="lifetime">Lifetime</option>
+                                </select>
+                              </div>
+                              <p className="text-xs text-muted-foreground">
+                                {selectedUserMaintenanceLifetime
+                                  ? "Currently: Lifetime."
+                                  : selectedUserMaintenanceValidUntil
+                                  ? `Current expiry: ${selectedUserMaintenanceValidUntil.toLocaleDateString("en-IN", { year: "numeric", month: "long", day: "numeric" })}.`
+                                  : "No expiry set."}{" "}
+                                Prefilled with the current setting — change it to update; leave it as-is to keep the current expiry.
+                              </p>
+                            </div>
+                          </div>
+                        )}
 
                         {selectedUserRole === "member" && (
                           <div className="space-y-3">

@@ -71,7 +71,7 @@ const ResidentialCCTV = () => (
               Residential societies across India rely on outdated, manual security processes that leave serious gaps.
             </p>
           </motion.div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {[
               { icon: Database, title: "Paper Visitor Registers", desc: "Manual registers are easily lost, forged, or left incomplete — providing no real accountability or searchable history." },
               { icon: Car, title: "No Vehicle History", desc: "No way to track which vehicles entered, when they arrived, where they parked, or when they exited." },
@@ -347,7 +347,7 @@ const ResidentialCCTV = () => (
           </motion.div>
 
           {/* Feature cards */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+          <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
             {[
               { icon: Eye, title: "Live View", desc: "Real-time status of all cameras and active sessions across the entire society." },
               { icon: Database, title: "Logs & Audit", desc: "Searchable historical log of all visits and vehicles — find any event in seconds." },
