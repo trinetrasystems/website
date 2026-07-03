@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<meta name="design_doc_mode" content="canvas">
+<style>
+  *{box-sizing:border-box}
+  body{margin:0;background:#0b0c10;font-family:'Space Grotesk',system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+  @keyframes irisBreathe{0%,100%{transform:scale(1)}50%{transform:scale(1.05)}}
+  @keyframes scanH{0%{transform:translateX(-38px);opacity:0}20%{opacity:.42}80%{opacity:.42}100%{transform:translateX(38px);opacity:0}}
+  @keyframes scanV{0%{transform:translateY(-50px);opacity:0}20%{opacity:.42}80%{opacity:.42}100%{transform:translateY(50px);opacity:0}}
+  @keyframes apertureDilate{0%,100%{transform:scale(.86)}50%{transform:scale(1.12)}}
+  @keyframes apertureRock{0%,100%{transform:rotate(-10deg)}50%{transform:rotate(10deg)}}
+</style>
+</helmet>
+
+<div style="min-height:100%;padding-bottom:64px">
+
+  <div style="max-width:1180px;margin:0 auto;padding:54px 40px 20px">
+    <div style="font-family:'Space Mono',monospace;font-size:12px;letter-spacing:.34em;color:#5f6672">TRINETRA SYSTEMS · APERTURE WORDMARK</div>
+    <h1 style="font-size:42px;font-weight:700;color:#f3f5fa;margin:16px 0 0;letter-spacing:-.02em;line-height:1.1;max-width:760px">The aperture, built into the name.</h1>
+    <p style="font-size:15.5px;line-height:1.6;color:#8b919c;max-width:640px;margin:14px 0 0">The camera iris replaces the <strong style="color:#c5cbd6;font-weight:600">I</strong> — opening exactly where <em style="color:#c5cbd6">tri</em> (three) meets <em style="color:#c5cbd6">netra</em> (eye). One glyph carries the whole idea: the eye that never sleeps.</p>
+  </div>
+
+  <!-- HERO -->
+  <div style="max-width:1180px;margin:0 auto 40px;padding:0 40px">
+    <div style="position:relative;background:radial-gradient(120% 130% at 78% 12%,#132046 0%,#0A1533 60%,#081026 100%);border:1px solid #1b2444;border-radius:26px;padding:70px 40px 60px;overflow:hidden;display:flex;flex-direction:column;align-items:center;gap:24px;min-height:300px">
+      <div style="position:absolute;top:22px;left:28px;font-family:'Space Mono',monospace;font-size:11px;letter-spacing:.3em;color:#54607f">PRIMARY LOGO</div>
+
+      <sc-if value="{{ showConstruction }}">
+        <div style="position:absolute;inset:40px;pointer-events:none">
+          <div style="position:absolute;left:0;right:0;top:34%;border-top:1px dashed rgba(55,210,240,.30)"></div>
+          <div style="position:absolute;left:0;right:0;top:60%;border-top:1px dashed rgba(55,210,240,.30)"></div>
+          <div style="position:absolute;top:34%;left:8px;font-family:'Space Mono',monospace;font-size:9px;letter-spacing:.2em;color:rgba(55,210,240,.55);transform:translateY(-14px)">CAP</div>
+          <div style="position:absolute;top:60%;left:8px;font-family:'Space Mono',monospace;font-size:9px;letter-spacing:.2em;color:rgba(55,210,240,.55);transform:translateY(3px)">BASE</div>
+        </div>
+      </sc-if>
+
+      <div style="display:inline-flex;align-items:center;font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:104px;letter-spacing:.055em;color:#F4F7FF;line-height:1">
+        <span style="display:inline-block">T</span>
+        <span style="display:inline-block">R</span>
+        <span style="display:inline-flex;align-items:center;margin:0 7px">{{ heroAperture }}</span>
+        <span style="display:inline-block">N</span>
+        <span style="display:inline-block">E</span>
+        <span style="display:inline-block">T</span>
+        <span style="display:inline-block">R</span>
+        <span style="display:inline-block">A</span>
+      </div>
+
+      <div style="font-family:'Space Mono',monospace;font-size:18px;font-weight:400;letter-spacing:.52em;text-indent:.52em;color:#9BA6C4">SYSTEMS</div>
+      <sc-if value="{{ showTagline }}" hint-placeholder-val="{{ true }}">
+        <div style="font-family:'Space Mono',monospace;font-size:14px;letter-spacing:.14em;color:#37D2F0;margin-top:2px">The Eye That Never Sleeps</div>
+      </sc-if>
+    </div>
+  </div>
+
+  <!-- STANDALONE MARK -->
+  <div style="max-width:1180px;margin:0 auto 40px;padding:0 40px">
+    <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:16px;margin-bottom:20px;flex-wrap:wrap">
+      <div>
+        <div style="font-family:'Space Mono',monospace;font-size:12px;letter-spacing:.3em;color:#5f6672">STANDALONE MARK</div>
+        <div style="font-size:24px;font-weight:700;color:#eef1f7;margin-top:8px;letter-spacing:-.01em">The eye for apps · a TS monogram for the favicon</div>
+      </div>
+      <div style="font-family:'Space Mono',monospace;font-size:11px;letter-spacing:.18em;color:#565c67">NO WORDMARK · SCALES TO 16PX</div>
+    </div>
+
+    <div style="display:flex;flex-wrap:wrap;gap:20px;align-items:stretch">
+
+      <div style="display:flex;flex-direction:column;gap:12px;align-items:center">
+        <div style="width:140px;height:140px;border-radius:32px;background:radial-gradient(120% 120% at 30% 20%,#16294f 0%,#0A1533 70%);display:flex;align-items:center;justify-content:center;box-shadow:0 16px 40px rgba(0,0,0,.42)">{{ markAppDark }}</div>
+        <div style="font-family:'Space Mono',monospace;font-size:10px;letter-spacing:.14em;color:#7a808c">APP · DARK</div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:12px;align-items:center">
+        <div style="width:140px;height:140px;border-radius:32px;background:#EEF2FB;border:1px solid #e3e6ee;display:flex;align-items:center;justify-content:center;box-shadow:0 16px 40px rgba(0,0,0,.35)">{{ markAppLight }}</div>
+        <div style="font-family:'Space Mono',monospace;font-size:10px;letter-spacing:.14em;color:#7a808c">APP · LIGHT</div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:12px;align-items:center">
+        <div style="width:140px;height:140px;border-radius:999px;background:radial-gradient(120% 120% at 30% 20%,#16294f 0%,#0A1533 70%);display:flex;align-items:center;justify-content:center;box-shadow:0 16px 40px rgba(0,0,0,.42)">{{ markBadge }}</div>
+        <div style="font-family:'Space Mono',monospace;font-size:10px;letter-spacing:.14em;color:#7a808c">AVATAR</div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:12px;align-items:center">
+        <div style="width:140px;height:140px;border-radius:32px;background:radial-gradient(120% 120% at 30% 20%,#16294f 0%,#0A1533 70%);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:11px;box-shadow:0 16px 40px rgba(0,0,0,.42)">
+          <span style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:66px;letter-spacing:-.035em;line-height:1;color:#F4F7FF">T<span style="color:#37D2F0">S</span></span>
+          <div style="width:52px;height:4px;border-radius:2px;background:#37D2F0"></div>
+        </div>
+        <div style="font-family:'Space Mono',monospace;font-size:10px;letter-spacing:.14em;color:#7a808c">MONOGRAM · TS</div>
+      </div>
+
+      <div style="flex:1 1 330px;min-width:300px;background:#101118;border:1px solid #1d1f28;border-radius:20px;padding:26px 32px;display:flex;flex-direction:column;justify-content:center;gap:20px">
+        <div style="font-family:'Space Mono',monospace;font-size:10px;letter-spacing:.28em;color:#585e69">TS FAVICON · ACTUAL SIZE</div>
+        <div style="display:flex;align-items:flex-end;gap:26px">
+          <div style="display:flex;flex-direction:column;align-items:center;gap:12px">
+            <div style="width:64px;height:64px;border-radius:15px;background:radial-gradient(120% 120% at 30% 20%,#16294f 0%,#0A1533 72%);display:flex;align-items:center;justify-content:center"><span style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:31px;letter-spacing:-.035em;line-height:1;color:#F4F7FF">T<span style="color:#37D2F0">S</span></span></div>
+            <span style="font-family:'Space Mono',monospace;font-size:9px;color:#7a808c">64</span>
+          </div>
+          <div style="display:flex;flex-direction:column;align-items:center;gap:12px">
+            <div style="width:48px;height:48px;border-radius:12px;background:radial-gradient(120% 120% at 30% 20%,#16294f 0%,#0A1533 72%);display:flex;align-items:center;justify-content:center"><span style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:23px;letter-spacing:-.035em;line-height:1;color:#F4F7FF">T<span style="color:#37D2F0">S</span></span></div>
+            <span style="font-family:'Space Mono',monospace;font-size:9px;color:#7a808c">48</span>
+          </div>
+          <div style="display:flex;flex-direction:column;align-items:center;gap:12px">
+            <div style="width:32px;height:32px;border-radius:8px;background:radial-gradient(120% 120% at 30% 20%,#16294f 0%,#0A1533 72%);display:flex;align-items:center;justify-content:center"><span style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:15px;letter-spacing:-.035em;line-height:1;color:#F4F7FF">T<span style="color:#37D2F0">S</span></span></div>
+            <span style="font-family:'Space Mono',monospace;font-size:9px;color:#7a808c">32</span>
+          </div>
+          <div style="display:flex;flex-direction:column;align-items:center;gap:12px">
+            <div style="width:16px;height:16px;border-radius:4px;background:radial-gradient(120% 120% at 30% 20%,#16294f 0%,#0A1533 72%);display:flex;align-items:center;justify-content:center"><span style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:8px;letter-spacing:-.04em;line-height:1;color:#F4F7FF">T<span style="color:#37D2F0">S</span></span></div>
+            <span style="font-family:'Space Mono',monospace;font-size:9px;color:#7a808c">16</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- LOCKUPS -->
+  <div style="display:flex;flex-wrap:wrap;gap:24px;max-width:1180px;margin:0 auto;padding:0 40px">
+
+    <div style="flex:1 1 500px;background:#ffffff;border-radius:20px;border:1px solid #1c1e24;padding:40px 44px;display:flex;flex-direction:column;gap:20px;box-shadow:0 20px 50px rgba(0,0,0,.35)">
+      <div style="font-family:'Space Mono',monospace;font-size:10px;letter-spacing:.28em;color:#a9adb6">PRIMARY · ON LIGHT</div>
+      <div style="display:flex;flex-direction:column;align-items:flex-start;gap:12px">
+        <div style="display:flex">{{ lockOnLight }}</div>
+        <div style="font-family:'Space Mono',monospace;font-size:12px;letter-spacing:.5em;text-indent:.5em;color:#8a8f98">SYSTEMS</div>
+      </div>
+    </div>
+
+    <div style="flex:1 1 500px;background:#0A1533;border-radius:20px;border:1px solid #1c2444;padding:40px 44px;display:flex;flex-direction:column;gap:20px;box-shadow:0 20px 50px rgba(0,0,0,.4)">
+      <div style="font-family:'Space Mono',monospace;font-size:10px;letter-spacing:.28em;color:#5b678c">ON DARK</div>
+      <div style="display:flex;flex-direction:column;align-items:flex-start;gap:12px">
+        <div style="display:flex">{{ lockOnDark }}</div>
+        <div style="font-family:'Space Mono',monospace;font-size:12px;letter-spacing:.5em;text-indent:.5em;color:#9aa6c6">SYSTEMS</div>
+      </div>
+    </div>
+
+    <div style="flex:1 1 340px;background:#ffffff;border-radius:20px;border:1px solid #1c1e24;padding:36px;display:flex;flex-direction:column;gap:18px;box-shadow:0 20px 50px rgba(0,0,0,.35)">
+      <div style="font-family:'Space Mono',monospace;font-size:10px;letter-spacing:.28em;color:#a9adb6">STACKED</div>
+      <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px">
+        <div style="display:flex">{{ stacked }}</div>
+        <div style="font-family:'Space Mono',monospace;font-size:11px;letter-spacing:.46em;text-indent:.46em;color:#8a8f98">SYSTEMS</div>
+      </div>
+    </div>
+
+    <div style="flex:1 1 340px;border-radius:20px;border:1px solid #1c1e24;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 20px 50px rgba(0,0,0,.35)">
+      <div style="background:#ffffff;padding:28px 32px;display:flex;flex-direction:column;gap:14px;align-items:center;justify-content:center">
+        <div style="font-family:'Space Mono',monospace;font-size:9px;letter-spacing:.24em;color:#a9adb6;align-self:flex-start">MONO · INK</div>
+        <div style="display:flex">{{ lockMonoInk }}</div>
+      </div>
+      <div style="background:#0A1533;padding:28px 32px;display:flex;flex-direction:column;gap:14px;align-items:center;justify-content:center">
+        <div style="font-family:'Space Mono',monospace;font-size:9px;letter-spacing:.24em;color:#5b678c;align-self:flex-start">MONO · WHITE</div>
+        <div style="display:flex">{{ lockMonoWhite }}</div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- SYSTEM -->
+  <div style="max-width:1180px;margin:36px auto 0;padding:0 40px;display:flex;flex-wrap:wrap;gap:24px">
+    <div style="flex:1 1 520px;background:#101118;border:1px solid #1d1f28;border-radius:20px;padding:30px 34px">
+      <div style="font-family:'Space Mono',monospace;font-size:10px;letter-spacing:.28em;color:#585e69">PALETTE</div>
+      <div style="display:flex;gap:14px;margin-top:18px;flex-wrap:wrap">
+        <sc-for list="{{ palette }}" as="sw" hint-placeholder-count="5">
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <div style="width:64px;height:56px;border-radius:10px;border:1px solid rgba(255,255,255,.08);background:{{ sw.c }}"></div>
+            <span style="font-family:'Space Mono',monospace;font-size:9px;letter-spacing:.08em;color:#7a808c">{{ sw.c }}</span>
+            <span style="font-family:'Space Mono',monospace;font-size:9px;letter-spacing:.12em;color:#565c67">{{ sw.n }}</span>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+    <div style="flex:1 1 380px;background:#101118;border:1px solid #1d1f28;border-radius:20px;padding:30px 34px">
+      <div style="font-family:'Space Mono',monospace;font-size:10px;letter-spacing:.28em;color:#585e69">TYPE & MEANING</div>
+      <div style="font-family:'Space Grotesk';font-weight:700;font-size:26px;color:#eef1f7;margin-top:16px;letter-spacing:-.01em">Space Grotesk <span style="color:#5b6376;font-weight:400">700</span></div>
+      <div style="font-family:'Space Mono';font-size:13px;color:#aeb4c0;margin-top:6px;letter-spacing:.14em">Space Mono · systems / tagline</div>
+      <p style="font-size:13px;line-height:1.65;color:#7c828d;margin:18px 0 0"><span style="color:#aeb4c0">tri</span> = three · <span style="color:#aeb4c0">netra</span> = eye. Clear-space = one aperture height on every side.</p>
+    </div>
+  </div>
+
+  <div style="max-width:1180px;margin:26px auto 0;padding:0 40px">
+    <div style="font-family:'Space Mono',monospace;font-size:11px;letter-spacing:.16em;color:#585e69;line-height:1.9">
+      DELIVERABLES — app icon (eye) · TS monogram favicon (to 16px) · horizontal lockup (light / dark) · stacked · monochrome one-colour proof<br>
+      TWEAKS (top-right) — animate the aperture · toggle tagline · show construction guides
+    </div>
+  </div>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1260,&quot;height&quot;:1360},&quot;animated&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Logo&quot;},&quot;showTagline&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Logo&quot;},&quot;showConstruction&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Logo&quot;}}">
+class Component extends DCLogic {
+  componentDidMount() {
+    this._kickTimer = setInterval(() => {
+      try {
+        document.getAnimations().forEach(a => {
+          if (a.startTime === null && a.playState === 'running') {
+            a.startTime = document.timeline.currentTime;
+          }
+        });
+      } catch (e) {}
+    }, 500);
+  }
+  componentWillUnmount() {
+    clearInterval(this._kickTimer);
+  }
+
+  irisGroup(cx, cy, outerR, innerR, accent, sw, anim) {
+    const h = React.createElement;
+    const kids = [];
+    kids.push(h('circle', { key: 'ring', cx, cy, r: outerR, stroke: accent, strokeWidth: sw * 0.8, fill: 'none', opacity: 0.45 }));
+    const hex = [];
+    for (let i = 0; i < 6; i++) {
+      const a = i * 60 * Math.PI / 180;
+      hex.push([cx + innerR * Math.cos(a), cy + innerR * Math.sin(a)]);
+    }
+    for (let i = 0; i < 6; i++) {
+      const a2 = (i * 60 + 52) * Math.PI / 180;
+      kids.push(h('line', { key: 'b' + i, x1: hex[i][0], y1: hex[i][1], x2: cx + outerR * Math.cos(a2), y2: cy + outerR * Math.sin(a2), stroke: accent, strokeWidth: sw * 0.7, strokeLinecap: 'round' }));
+    }
+    kids.push(h('polygon', { key: 'hex', points: hex.map(p => p[0].toFixed(1) + ',' + p[1].toFixed(1)).join(' '), stroke: accent, strokeWidth: sw * 0.7, fill: 'none' }));
+    kids.push(h('circle', { key: 'pp', cx, cy, r: innerR * 0.52, fill: accent }));
+    const style = anim ? { transformBox: 'fill-box', transformOrigin: 'center', animation: 'irisBreathe 4s ease-in-out infinite' } : {};
+    return h('g', { key: 'iris', style }, kids);
+  }
+
+  apertureI(capPx, colors, anim, pre) {
+    const h = React.createElement;
+    const { stroke, accent } = colors;
+    const w = capPx * 0.58, ht = capPx * 1.16, clip = pre() + 'ci';
+    const cx = 50, cy = 116, R = 25, r = 12;
+    const P = [], H = [];
+    for (let i = 0; i < 6; i++) {
+      const a = (i * 60 - 90) * Math.PI / 180;
+      P.push([cx + R * Math.cos(a), cy + R * Math.sin(a)]);
+      H.push([cx + r * Math.cos(a), cy + r * Math.sin(a)]);
+    }
+    const parts = [];
+    for (let i = 0; i < 6; i++) {
+      const n = (i + 1) % 6;
+      parts.push(h('line', { key: 'bl' + i, x1: P[i][0], y1: P[i][1], x2: H[n][0], y2: H[n][1], stroke: accent, strokeWidth: 3.2, strokeLinecap: 'round' }));
+    }
+    parts.push(h('polygon', { key: 'hx', points: H.map(p => p[0].toFixed(1) + ',' + p[1].toFixed(1)).join(' '), stroke: accent, strokeWidth: 3.2, fill: 'none', strokeLinejoin: 'round' }));
+    parts.push(h('circle', { key: 'pp', cx, cy, r: 4, fill: accent }));
+    const diaStyle = anim ? { transformBox: 'fill-box', transformOrigin: 'center', animation: 'apertureDilate 3.8s ease-in-out infinite, apertureRock 9s ease-in-out infinite' } : {};
+    const scanStyle = anim ? { transformBox: 'fill-box', transformOrigin: 'center', animation: 'scanV 5s ease-in-out infinite' } : { opacity: 0 };
+    return h('svg', { viewBox: '0 0 100 232', width: w, height: ht, fill: 'none', style: { display: 'block', overflow: 'visible', verticalAlign: 'middle', marginTop: -(capPx * 0.05) + 'px' } }, [
+      h('defs', { key: 'd' }, h('clipPath', { id: clip }, h('path', { d: 'M 50 20 Q 80 116 50 212 Q 20 116 50 20 Z' }))),
+      h('path', { key: 'v', d: 'M 50 20 Q 80 116 50 212 Q 20 116 50 20 Z', stroke, strokeWidth: 6, fill: 'none' }),
+      h('g', { key: 'dia', style: diaStyle }, parts),
+      h('g', { key: 's', clipPath: `url(#${clip})` }, h('line', { x1: 50, y1: 70, x2: 50, y2: 162, stroke: accent, strokeWidth: 3, strokeLinecap: 'round', style: scanStyle }))
+    ]);
+  }
+
+  apertureEye(size, colors, anim, pre) {
+    const h = React.createElement;
+    const { stroke, accent } = colors;
+    const clip = pre() + 'ce';
+    const scan = anim ? { transformBox: 'fill-box', transformOrigin: 'center', animation: 'scanH 3.4s ease-in-out infinite' } : { opacity: 0 };
+    return h('svg', { viewBox: '0 0 200 200', width: size, height: size, fill: 'none', style: { display: 'block', overflow: 'visible' } }, [
+      h('defs', { key: 'd' }, h('clipPath', { id: clip }, h('path', { d: 'M 34 100 Q 100 46 166 100 Q 100 154 34 100 Z' }))),
+      h('path', { key: 'e', d: 'M 34 100 Q 100 46 166 100 Q 100 154 34 100 Z', stroke, strokeWidth: 6, fill: 'none' }),
+      this.irisGroup(100, 100, 33, 15, accent, 5, anim),
+      h('g', { key: 's', clipPath: `url(#${clip})` }, h('line', { x1: 100, y1: 58, x2: 100, y2: 142, stroke: accent, strokeWidth: 3, strokeLinecap: 'round', style: scan }))
+    ]);
+  }
+
+  markStd(size, colors, anim, pre) {
+    const h = React.createElement;
+    const { stroke, accent, bg } = colors;
+    const cx = 100, cy = 100, hexR = 30, clip = pre() + 'ms';
+    const hp = [];
+    for (let i = 0; i < 6; i++) { const a = (i * 60 - 90) * Math.PI / 180; hp.push([cx + hexR * Math.cos(a), cy + hexR * Math.sin(a)]); }
+    const blades = [];
+    for (let i = 0; i < 6; i++) { blades.push(h('line', { key: 'bl' + i, x1: hp[i][0], y1: hp[i][1], x2: cx, y2: cy, stroke: bg, strokeWidth: 2.6 })); }
+    const irisStyle = anim ? { transformBox: 'fill-box', transformOrigin: 'center', animation: 'irisBreathe 4s ease-in-out infinite' } : {};
+    const iris = h('g', { key: 'iris', style: irisStyle }, [
+      h('polygon', { key: 'hex', points: hp.map(p => p[0].toFixed(1) + ',' + p[1].toFixed(1)).join(' '), fill: accent }),
+      ...blades,
+      h('circle', { key: 'pp', cx, cy, r: 5.5, fill: bg }),
+    ]);
+    const kids = [
+      h('defs', { key: 'd' }, h('clipPath', { id: clip }, h('path', { d: 'M 30 100 Q 100 42 170 100 Q 100 158 30 100 Z' }))),
+      h('path', { key: 'eye', d: 'M 30 100 Q 100 42 170 100 Q 100 158 30 100 Z', stroke, strokeWidth: 8, fill: 'none', strokeLinejoin: 'round' }),
+      iris,
+    ];
+    if (anim) {
+      kids.push(h('g', { key: 's', clipPath: `url(#${clip})` }, h('line', { x1: 100, y1: 54, x2: 100, y2: 146, stroke: accent, strokeWidth: 3, strokeLinecap: 'round', style: { transformBox: 'fill-box', transformOrigin: 'center', animation: 'scanH 5s ease-in-out infinite' } })));
+    }
+    return h('svg', { viewBox: '0 0 200 200', width: size, height: size, fill: 'none', style: { display: 'block', overflow: 'visible' } }, kids);
+  }
+
+  wordmark(FS, letter, stroke, accent, pre) {
+    const h = React.createElement;
+    const capPx = FS * 0.76;
+    const word = 'TRINETRA';
+    const kids = [];
+    for (let i = 0; i < word.length; i++) {
+      if (i === 2) {
+        kids.push(h('span', { key: i, style: { display: 'inline-flex', alignItems: 'center', margin: '0 ' + (capPx * 0.09) + 'px' } }, this.apertureI(capPx, { stroke, accent }, false, pre)));
+      } else {
+        kids.push(h('span', { key: i, style: { display: 'inline-block' } }, word[i]));
+      }
+    }
+    return h('span', { style: { display: 'inline-flex', alignItems: 'center', fontFamily: "'Space Grotesk',sans-serif", fontWeight: 700, fontSize: FS + 'px', letterSpacing: '0.05em', color: letter, lineHeight: 1 } }, kids);
+  }
+
+  renderVals() {
+    let uid = 0;
+    const pre = () => 'ap' + (uid++) + '_';
+    const anim = this.props.animated ?? true;
+    const deep = { stroke: '#DCE6FF', accent: '#37D2F0', bg: '#0A1533' };
+    const light = { stroke: '#10203F', accent: '#1C46DA', bg: '#FFFFFF' };
+    return {
+      animated: anim,
+      showConstruction: this.props.showConstruction ?? false,
+      showTagline: this.props.showTagline ?? true,
+      heroAperture: this.apertureI(79, { stroke: '#DCE6FF', accent: '#37D2F0' }, anim, pre),
+      markAppDark: this.markStd(84, deep, anim, pre),
+      markAppLight: this.markStd(84, light, anim, pre),
+      markBadge: this.markStd(80, deep, anim, pre),
+      lockOnLight: this.wordmark(52, '#10203F', '#10203F', '#1C46DA', pre),
+      lockOnDark: this.wordmark(52, '#F4F7FF', '#DCE6FF', '#37D2F0', pre),
+      lockMonoInk: this.wordmark(40, '#14213B', '#14213B', '#14213B', pre),
+      lockMonoWhite: this.wordmark(40, '#F4F7FF', '#F4F7FF', '#F4F7FF', pre),
+      stacked: this.wordmark(42, '#10203F', '#10203F', '#1C46DA', pre),
+      palette: [
+        { c: '#0A1533', n: 'INK BLUE' },
+        { c: '#1C46DA', n: 'SIGNAL' },
+        { c: '#37D2F0', n: 'IRIS' },
+        { c: '#10203F', n: 'DEEP' },
+        { c: '#EEF2FB', n: 'PAPER' },
+      ],
+    };
+  }
+}
+</script>
+</body>
+</html>

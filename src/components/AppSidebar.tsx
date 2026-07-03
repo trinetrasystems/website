@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Home, Sparkles, Grid3X3, Star, CircleDollarSign, Mail, Lock, Menu, X, Eye, Shield, BookOpen, Globe2 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { ThemeToggle } from "./ThemeToggle";
+import TrinetraLogo from "./TrinetraLogo";
 import { auth, db } from "@/lib/firebase";
 import { onAuthStateChanged } from "firebase/auth";
 import { doc, getDoc } from "firebase/firestore";
@@ -76,20 +77,14 @@ const AppSidebar = () => {
   return (
     <>
       <header className="fixed top-0 left-0 right-0 z-[60] bg-background/80 backdrop-blur-xl border-b border-border/40 shadow-sm">
-        <div className="flex h-16 lg:h-20 w-full items-center justify-between px-6 md:px-10 lg:px-16 mx-auto">
+        <div className="flex h-20 lg:h-24 w-full items-center justify-between px-6 md:px-10 lg:px-16 mx-auto">
           {/* Logo Area */}
           <a
             href="#home"
             onClick={handleHashNavigation("#home")}
             className="flex items-center gap-3 group"
           >
-            <div className="relative">
-              <div className="absolute inset-0 bg-primary/20 blur-lg rounded-full group-hover:bg-primary/40 transition-all" />
-              <Eye className="w-8 h-8 lg:w-10 lg:h-10 text-primary relative z-10 drop-shadow-glow" />
-            </div>
-            <span className="text-xl sm:text-2xl lg:text-3xl font-black tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-primary via-blue-500 to-primary/80">
-              Trinetra Systems
-            </span>
+            <TrinetraLogo height={48} animated={true} showSystems={true} />
           </a>
 
           {/* Nav Items */}

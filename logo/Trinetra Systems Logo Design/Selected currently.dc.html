@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<meta name="design_doc_mode" content="canvas">
+<style>
+  *{box-sizing:border-box}
+  body{margin:0;background:#0A0908;font-family:'Rajdhani',system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+  @keyframes eyeOpenX{0%{transform:scaleX(.05);opacity:.15}55%{opacity:1}70%{transform:scaleX(1.05)}100%{transform:scaleX(1);opacity:1}}
+  @keyframes raysSpin{to{transform:rotate(360deg)}}
+  @keyframes arcSpinRev{to{transform:rotate(-360deg)}}
+  @keyframes irisGlanceY{0%,20%{transform:translateY(0)}34%,46%{transform:translateY(-11px)}60%,72%{transform:translateY(11px)}86%,100%{transform:translateY(0)}}
+  @keyframes glowPulse{0%,100%{opacity:.38}50%{opacity:.85}}
+  @keyframes pupilPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.13)}}
+  @keyframes scanY{0%{transform:translateY(-88px);opacity:0}12%{opacity:.5}88%{opacity:.5}100%{transform:translateY(88px);opacity:0}}
+  @keyframes ruleDraw{0%{transform:scaleX(0)}100%{transform:scaleX(1)}}
+  @keyframes letterIn{0%{opacity:0;transform:translateY(14px)}100%{opacity:1;transform:none}}
+  @keyframes blinkX{0%,80%{transform:scaleX(1)}85%,88%{transform:scaleX(.12)}93%,100%{transform:scaleX(1)}}
+  @keyframes stemFlash{0%,81%{opacity:0}85%,88%{opacity:1}92%,100%{opacity:0}}
+</style>
+</helmet>
+
+<div style="min-height:100%;padding-bottom:56px">
+
+  <div style="max-width:1180px;margin:0 auto;padding:50px 40px 18px">
+    <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:.32em;color:#6B6152">TRINETRA SYSTEMS · LOGO V3 · THE EYE IS THE I</div>
+    <h1 style="font-family:'Rajdhani',sans-serif;font-size:44px;font-weight:700;color:#F3ECDD;margin:12px 0 0;letter-spacing:.01em;line-height:1.08;max-width:820px">THE VERTICAL EYE, STANDING AS THE LETTER.</h1>
+  </div>
+
+  <!-- HERO -->
+  <div style="max-width:1180px;margin:0 auto;padding:0 40px">
+    <div style="position:relative;background:radial-gradient(130% 160% at 50% -25%,#2A1A0B 0%,#151009 50%,#0B0908 100%);border:1px solid #2B2115;border-radius:26px;padding:96px 40px 66px;overflow:hidden;display:flex;flex-direction:column;align-items:center;gap:26px">
+
+      <div style="position:absolute;inset:0;pointer-events:none;background:repeating-linear-gradient(0deg,rgba(255,184,77,.022) 0 1px,transparent 1px 4px)"></div>
+      <div style="position:absolute;top:20px;left:24px;width:26px;height:26px;border-left:2px solid rgba(245,155,45,.35);border-top:2px solid rgba(245,155,45,.35);border-radius:3px 0 0 0"></div>
+      <div style="position:absolute;top:20px;right:24px;width:26px;height:26px;border-right:2px solid rgba(245,155,45,.35);border-top:2px solid rgba(245,155,45,.35);border-radius:0 3px 0 0"></div>
+      <div style="position:absolute;bottom:20px;left:24px;width:26px;height:26px;border-left:2px solid rgba(245,155,45,.35);border-bottom:2px solid rgba(245,155,45,.35);border-radius:0 0 0 3px"></div>
+      <div style="position:absolute;bottom:20px;right:24px;width:26px;height:26px;border-right:2px solid rgba(245,155,45,.35);border-bottom:2px solid rgba(245,155,45,.35);border-radius:0 0 3px 0"></div>
+      <div style="position:absolute;top:22px;left:64px;font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.3em;color:#6B6152">PRIMARY LOGO</div>
+
+      <sc-if value="{{ animated }}" hint-placeholder-val="{{ true }}">
+        <div style="display:inline-flex;align-items:center;font-family:'Rajdhani',sans-serif;font-weight:700;font-size:118px;letter-spacing:.09em;color:#F3ECDD;line-height:1">
+          <span style="display:inline-block;animation:letterIn .6s .05s cubic-bezier(.2,.8,.2,1) both">T</span>
+          <span style="display:inline-block;animation:letterIn .6s .1s cubic-bezier(.2,.8,.2,1) both">R</span>
+          <span style="display:inline-flex;align-items:center">{{ heroEyeI }}</span>
+          <span style="display:inline-block;animation:letterIn .6s .2s cubic-bezier(.2,.8,.2,1) both">N</span>
+          <span style="display:inline-block;animation:letterIn .6s .25s cubic-bezier(.2,.8,.2,1) both">E</span>
+          <span style="display:inline-block;animation:letterIn .6s .3s cubic-bezier(.2,.8,.2,1) both">T</span>
+          <span style="display:inline-block;animation:letterIn .6s .35s cubic-bezier(.2,.8,.2,1) both">R</span>
+          <span style="display:inline-block;animation:letterIn .6s .4s cubic-bezier(.2,.8,.2,1) both">A</span>
+        </div>
+      </sc-if>
+      <sc-if value="{{ notAnimated }}">
+        <div style="display:inline-flex;align-items:center;font-family:'Rajdhani',sans-serif;font-weight:700;font-size:118px;letter-spacing:.09em;color:#F3ECDD;line-height:1">
+          <span style="display:inline-block">T</span>
+          <span style="display:inline-block">R</span>
+          <span style="display:inline-flex;align-items:center">{{ heroEyeIStatic }}</span>
+          <span style="display:inline-block">N</span>
+          <span style="display:inline-block">E</span>
+          <span style="display:inline-block">T</span>
+          <span style="display:inline-block">R</span>
+          <span style="display:inline-block">A</span>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ animated }}" hint-placeholder-val="{{ true }}">
+        <div style="width:300px;height:3px;border-radius:2px;background:linear-gradient(90deg,transparent,#E8720C 20%,#FFB84D 50%,#E8720C 80%,transparent);transform-origin:center;animation:ruleDraw 1.2s .8s cubic-bezier(.2,.8,.2,1) both"></div>
+      </sc-if>
+      <sc-if value="{{ notAnimated }}">
+        <div style="width:300px;height:3px;border-radius:2px;background:linear-gradient(90deg,transparent,#E8720C 20%,#FFB84D 50%,#E8720C 80%,transparent)"></div>
+      </sc-if>
+
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:17px;font-weight:500;letter-spacing:.58em;text-indent:.58em;color:#A99C82">SYSTEMS</div>
+      <sc-if value="{{ showTagline }}" hint-placeholder-val="{{ true }}">
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:13px;letter-spacing:.16em;color:#F59B2D">THE EYE THAT NEVER SLEEPS</div>
+      </sc-if>
+    </div>
+  </div>
+
+  <div style="max-width:1180px;margin:22px auto 0;padding:0 40px">
+    <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.16em;color:#6B6152;line-height:1.9">
+      THE I IS GONE — a vertical fire-eye stands in its place. It opens on load, rays rotate, a gyro ring counter-spins, the iris glances up and down, a scanner sweeps, the glow breathes.<br>
+      TWEAKS (top-right) — animate the eye · toggle tagline &nbsp;·&nbsp; V2 (eye above the I) and V1 remain in their own files.
+    </div>
+  </div>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1280,&quot;height&quot;:830},&quot;animated&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Logo&quot;},&quot;showTagline&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Logo&quot;}}">
+class Component extends DCLogic {
+  componentDidMount() {
+    this._kickTimer = setInterval(() => {
+      try {
+        document.getAnimations().forEach(a => {
+          if (a.startTime === null && a.playState === 'running') {
+            a.startTime = document.timeline.currentTime;
+          }
+        });
+      } catch (e) {}
+    }, 500);
+  }
+  componentWillUnmount() {
+    clearInterval(this._kickTimer);
+  }
+
+  eyeI(hp, ec, anim, pre) {
+    const h = React.createElement;
+    const w = hp * 0.46;
+    const id = pre();
+    const cx = 60, cy = 130;
+    const almond = 'M 60 26 Q 106 130 60 234 Q 14 130 60 26 Z';
+    const rayCount = 20, pupilR = 12, r1 = 16.5;
+    const rays = [];
+    for (let i = 0; i < rayCount; i++) {
+      const a = (i * 360 / rayCount) * Math.PI / 180;
+      const long = i % 2 === 0;
+      const r2 = long ? 34 : 27;
+      rays.push(h('line', {
+        key: 'r' + i,
+        x1: cx + r1 * Math.cos(a), y1: cy + r1 * Math.sin(a),
+        x2: cx + r2 * Math.cos(a), y2: cy + r2 * Math.sin(a),
+        stroke: long ? ec.rayA : ec.rayB,
+        strokeWidth: long ? 3.4 : 2.2,
+        strokeLinecap: 'round'
+      }));
+    }
+    const spinStyle = anim ? { transformBox: 'fill-box', transformOrigin: 'center', animation: 'raysSpin 24s linear infinite' } : {};
+    const arcStyle = anim ? { transformBox: 'fill-box', transformOrigin: 'center', animation: 'arcSpinRev 18s linear infinite' } : {};
+    const glanceStyle = anim ? { transformBox: 'fill-box', transformOrigin: 'center', animation: 'irisGlanceY 8s ease-in-out infinite' } : {};
+    const pupilStyle = anim ? { transformBox: 'fill-box', transformOrigin: 'center', animation: 'pupilPulse 3.6s ease-in-out infinite' } : {};
+    const glowStyle = anim ? { animation: 'glowPulse 4.5s ease-in-out infinite' } : { opacity: 0.5 };
+    const scanStyle = anim ? { transformBox: 'fill-box', transformOrigin: 'center', animation: 'scanY 3.4s 1.4s ease-in-out infinite' } : { opacity: 0 };
+    const openStyle = anim ? { transformBox: 'fill-box', transformOrigin: 'center', animation: 'eyeOpenX 1.2s .4s cubic-bezier(.22,.9,.28,1) both' } : {};
+    const blinkStyle = anim ? { transformBox: 'fill-box', transformOrigin: 'center', animation: 'blinkX 7s 2.4s ease-in-out infinite' } : {};
+    const flashStyle = anim ? { animation: 'stemFlash 7s 2.4s ease-in-out infinite', opacity: 0 } : { opacity: 0 };
+    const defs = [
+      h('clipPath', { key: 'c', id: id + 'c' }, h('path', { d: almond })),
+      h('radialGradient', { key: 'g', id: id + 'g' }, [
+        h('stop', { key: '0', offset: '0%', stopColor: ec.glow, stopOpacity: 0.55 }),
+        h('stop', { key: '1', offset: '100%', stopColor: ec.glow, stopOpacity: 0 })
+      ])
+    ];
+    const inner = [
+      h('circle', { key: 'gl', cx, cy, r: 54, fill: `url(#${id}g)`, style: glowStyle }),
+      h('g', { key: 'blink', style: blinkStyle }, [
+      h('g', { key: 'clip', clipPath: `url(#${id}c)` }, [
+        h('g', { key: 'glance', style: glanceStyle }, [
+          h('g', { key: 'spin', style: spinStyle }, rays),
+          h('circle', { key: 'arc', cx, cy, r: 42, stroke: ec.rayB, strokeWidth: 1.8, fill: 'none', opacity: 0.55, strokeDasharray: '12 16', strokeLinecap: 'round', style: arcStyle }),
+          h('g', { key: 'pu', style: pupilStyle }, [
+            h('circle', { key: 'p', cx, cy, r: pupilR, fill: ec.pupil }),
+            h('circle', { key: 'pr', cx, cy, r: pupilR + 1.8, stroke: ec.rayA, strokeWidth: 1.8, fill: 'none' }),
+            h('circle', { key: 'hl', cx: cx - 4.5, cy: cy - 5, r: 2.8, fill: ec.hl, opacity: 0.9 })
+          ])
+        ]),
+        h('g', { key: 'scan' }, h('line', { x1: 26, y1: cy, x2: 94, y2: cy, stroke: ec.rayA, strokeWidth: 2.6, strokeLinecap: 'round', style: scanStyle }))
+      ]),
+      h('path', { key: 'al', d: almond, stroke: ec.outline, strokeWidth: 7, fill: 'none', strokeLinejoin: 'round' })
+      ]),
+      h('rect', { key: 'fl', x: 38, y: 26, width: 44, height: 208, rx: 3, fill: ec.outline, style: flashStyle })
+    ];
+    return h('svg', { viewBox: '0 0 120 260', width: w, height: hp, fill: 'none', style: { display: 'block', overflow: 'visible' } },
+      [h('defs', { key: 'd' }, defs), h('g', { key: 'open', style: openStyle }, inner)]);
+  }
+
+  renderVals() {
+    let uid = 0;
+    const pre = () => 'v3' + (uid++) + '_';
+    const anim = this.props.animated ?? true;
+    const ember = { outline: '#F3ECDD', rayA: '#FFB84D', rayB: '#E8720C', pupil: '#0B0908', glow: '#F59B2D', hl: '#FFF3DC' };
+    return {
+      animated: anim,
+      notAnimated: !anim,
+      showTagline: this.props.showTagline ?? true,
+      heroEyeI: this.eyeI(103, ember, true, pre),
+      heroEyeIStatic: this.eyeI(103, ember, false, pre),
+    };
+  }
+}
+</script>
+</body>
+</html>

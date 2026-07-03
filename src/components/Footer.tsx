@@ -1,4 +1,5 @@
-import { Eye, Github, Twitter, Linkedin, Instagram } from "lucide-react";
+import { Github, Twitter, Linkedin, Instagram } from "lucide-react";
+import TrinetraLogo from "./TrinetraLogo";
 
 const Footer = () => {
   return (
@@ -7,8 +8,7 @@ const Footer = () => {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-10 mb-10">
           <div>
             <div className="flex items-center gap-2 mb-4">
-              <Eye className="w-6 h-6 text-primary" />
-              <span className="text-xl font-bold text-gradient">Trinetra Systems</span>
+              <TrinetraLogo height={44} animated={true} showSystems={true} />
             </div>
             <p className="text-sm text-muted-foreground leading-relaxed">
               AI-powered smart surveillance platform delivering real-time video analytics for security, safety, and automation.

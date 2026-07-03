@@ -51,6 +51,8 @@
     --gradient-start: 214 45% 95%;
     --gradient-mid: 203 56% 90%;
     --gradient-end: 220 43% 94%;
+
+    --trinetra-logo-color: #1A150E;
   }
 
   .dark {
@@ -96,6 +98,8 @@
     --gradient-start: 228 50% 5%;
     --gradient-mid: 250 40% 10%;
     --gradient-end: 228 50% 5%;
+
+    --trinetra-logo-color: #F3ECDD;
   }
 
   @media (prefers-color-scheme: dark) {
@@ -142,6 +146,8 @@
       --gradient-start: 228 50% 5%;
       --gradient-mid: 250 40% 10%;
       --gradient-end: 228 50% 5%;
+
+      --trinetra-logo-color: #F3ECDD;
     }
   }
 }
