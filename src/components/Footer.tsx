@@ -1,5 +1,4 @@
 import { Github, Twitter, Linkedin, Instagram } from "lucide-react";
-import TrinetraLogo from "./TrinetraLogo";
 
 const Footer = () => {
   return (
@@ -7,9 +6,19 @@ const Footer = () => {
       <div className="max-w-6xl mx-auto">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-10 mb-10">
           <div>
-            <div className="flex items-center gap-2 mb-4">
-              <TrinetraLogo height={44} animated={true} showSystems={true} />
-            </div>
+            <a href="#home" className="inline-flex items-center mb-4">
+              {/* Full brand logo — swaps with the theme, same as the header. */}
+              <img
+                src="/logo/logo-light.png"
+                alt="Trinetra Systems"
+                className="h-11 sm:h-12 w-auto block dark:hidden"
+              />
+              <img
+                src="/logo/logo-dark.png"
+                alt="Trinetra Systems"
+                className="h-11 sm:h-12 w-auto hidden dark:block"
+              />
+            </a>
             <p className="text-sm text-muted-foreground leading-relaxed">
               AI-powered smart surveillance platform delivering real-time video analytics for security, safety, and automation.
             </p>

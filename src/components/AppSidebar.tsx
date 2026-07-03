@@ -3,7 +3,6 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Home, Sparkles, Grid3X3, Star, CircleDollarSign, Mail, Lock, Menu, X, Eye, Shield, BookOpen, Globe2 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { ThemeToggle } from "./ThemeToggle";
-import TrinetraLogo from "./TrinetraLogo";
 import { auth, db } from "@/lib/firebase";
 import { onAuthStateChanged } from "firebase/auth";
 import { doc, getDoc } from "firebase/firestore";
@@ -84,7 +83,17 @@ const AppSidebar = () => {
             onClick={handleHashNavigation("#home")}
             className="flex items-center gap-3 group"
           >
-            <TrinetraLogo height={48} animated={true} showSystems={true} />
+            {/* Full brand logo — swaps with the theme (light artwork on light pages). */}
+            <img
+              src="/logo/logo-light.png"
+              alt="Trinetra Systems"
+              className="h-12 sm:h-14 lg:h-16 w-auto block dark:hidden transition-transform duration-300 group-hover:scale-[1.03]"
+            />
+            <img
+              src="/logo/logo-dark.png"
+              alt="Trinetra Systems"
+              className="h-12 sm:h-14 lg:h-16 w-auto hidden dark:block transition-transform duration-300 group-hover:scale-[1.03]"
+            />
           </a>
 
           {/* Nav Items */}
