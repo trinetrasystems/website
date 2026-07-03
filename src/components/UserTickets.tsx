@@ -75,7 +75,8 @@ export default function UserTickets({ user, username }: UserTicketsProps) {
     );
     
     const unsubscribe = onSnapshot(q, (snapshot) => {
-      let docs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Ticket));
+      // Set `id` from the doc id last so a persisted `id` field can't shadow it.
+      let docs = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id } as Ticket));
       // Client-side sort to avoid Firebase Composite Index requirement
       docs.sort((a, b) => {
         const timeA = a.createdAt?.toMillis?.() || 0;

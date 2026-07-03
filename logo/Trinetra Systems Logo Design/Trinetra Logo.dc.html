@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<meta name="design_doc_mode" content="canvas">
+<style>
+  *{box-sizing:border-box}
+  body{margin:0;background:#0b0c10;font-family:'Space Grotesk',system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+  @keyframes irisBreathe{0%,100%{transform:scale(1)}50%{transform:scale(1.09)}}
+  @keyframes scanSweep{0%{transform:translateX(-42px);opacity:0}15%{opacity:.75}85%{opacity:.75}100%{transform:translateX(42px);opacity:0}}
+  @keyframes ringPulse{0%{transform:scale(.4);opacity:0}45%{opacity:.9}100%{transform:scale(1.32);opacity:0}}
+  @keyframes heroLetter{0%{opacity:0;transform:translateY(18px)}7%{opacity:1;transform:none}82%{opacity:1;transform:none}92%{opacity:0;transform:translateY(-12px)}100%{opacity:0}}
+  @keyframes heroTag{0%,20%{opacity:0}32%{opacity:.9}82%{opacity:.9}92%,100%{opacity:0}}
+  @keyframes heroMarkIn{0%{opacity:0;transform:scale(.5) rotate(-28deg)}10%{opacity:1}17%{transform:scale(1) rotate(0)}82%{opacity:1;transform:scale(1) rotate(0)}93%{opacity:0;transform:scale(.65)}100%{opacity:0}}
+</style>
+</helmet>
+
+<div style="min-height:100%;padding-bottom:60px">
+
+  <div style="max-width:1200px;margin:0 auto;padding:56px 40px 26px">
+    <div style="font-family:'Space Mono',monospace;font-size:12px;letter-spacing:.34em;color:#5f6672">TRINETRA SYSTEMS · AI VISION SURVEILLANCE</div>
+    <h1 style="font-size:44px;font-weight:700;color:#f3f5fa;margin:16px 0 0;letter-spacing:-.02em;line-height:1.08;max-width:820px">Four logo directions for the eye that never sleeps.</h1>
+    <p style="font-size:16px;line-height:1.6;color:#8b919c;max-width:660px;margin:16px 0 0">Trinetra — Shiva’s third eye — as a mark for a system that watches. Each direction is a complete identity: icon, lockups, favicons, palette and type. Reference any option in chat by its badge (e.g. 1a).</p>
+  </div>
+
+  <!-- ANIMATED HERO -->
+  <div style="max-width:1200px;margin:0 auto 44px;padding:0 40px">
+    <div style="position:relative;background:radial-gradient(120% 140% at 82% 12%, #16171e 0%, #0e0f14 55%, #0c0d11 100%);border:1px solid #1d1f26;border-radius:26px;padding:52px 56px;display:flex;align-items:center;gap:60px;overflow:hidden;min-height:280px">
+      <div style="position:absolute;top:22px;left:28px;font-family:'Space Mono',monospace;font-size:11px;letter-spacing:.3em;color:#4d545f">SIGNATURE ANIMATION · LOOPS</div>
+
+      <div style="position:relative;width:230px;height:230px;flex:0 0 auto;display:flex;align-items:center;justify-content:center">
+        <sc-if value="{{ construction }}">
+          <svg viewBox="0 0 200 200" width="230" height="230" style="position:absolute;inset:0;opacity:.18" fill="none" stroke="{{ heroAccent }}" stroke-width="1">
+            <circle cx="100" cy="100" r="94"></circle>
+            <circle cx="100" cy="100" r="58"></circle>
+            <line x1="100" y1="2" x2="100" y2="198"></line>
+            <line x1="2" y1="100" x2="198" y2="100"></line>
+          </svg>
+        </sc-if>
+        <sc-if value="{{ animated }}" hint-placeholder-val="{{ true }}">
+          <div style="animation:heroMarkIn 7s ease-in-out infinite;transform-origin:center">{{ heroBig }}</div>
+        </sc-if>
+        <sc-if value="{{ notAnimated }}">
+          <div>{{ heroBig }}</div>
+        </sc-if>
+      </div>
+
+      <div style="flex:1;min-width:0">
+        <div style="font-family:'Space Mono',monospace;font-size:12px;letter-spacing:.3em;color:{{ heroAccent }}">{{ heroCode }} · {{ featTitle }}</div>
+
+        <sc-if value="{{ animated }}" hint-placeholder-val="{{ true }}">
+          <div style="display:flex;letter-spacing:.02em;font-size:62px;font-weight:700;color:#f5f8ff;margin-top:14px;line-height:1">
+            <span style="display:inline-block;animation:heroLetter 7s ease-in-out infinite;animation-delay:0s">T</span>
+            <span style="display:inline-block;animation:heroLetter 7s ease-in-out infinite;animation-delay:.05s">R</span>
+            <span style="display:inline-block;animation:heroLetter 7s ease-in-out infinite;animation-delay:.1s">I</span>
+            <span style="display:inline-block;animation:heroLetter 7s ease-in-out infinite;animation-delay:.15s">N</span>
+            <span style="display:inline-block;animation:heroLetter 7s ease-in-out infinite;animation-delay:.2s">E</span>
+            <span style="display:inline-block;animation:heroLetter 7s ease-in-out infinite;animation-delay:.25s">T</span>
+            <span style="display:inline-block;animation:heroLetter 7s ease-in-out infinite;animation-delay:.3s">R</span>
+            <span style="display:inline-block;animation:heroLetter 7s ease-in-out infinite;animation-delay:.35s">A</span>
+          </div>
+          <div style="font-family:'Space Mono',monospace;font-size:16px;letter-spacing:.54em;color:#c8cdd8;margin-top:12px;animation:heroLetter 7s ease-in-out infinite;animation-delay:.5s">SYSTEMS</div>
+          <div style="font-family:'Space Mono',monospace;font-size:13px;letter-spacing:.14em;margin-top:22px;color:{{ heroAccent }};animation:heroTag 7s ease-in-out infinite">The Eye That Never Sleeps</div>
+        </sc-if>
+        <sc-if value="{{ notAnimated }}">
+          <div style="font-size:62px;font-weight:700;letter-spacing:.02em;color:#f5f8ff;margin-top:14px;line-height:1">TRINETRA</div>
+          <div style="font-family:'Space Mono',monospace;font-size:16px;letter-spacing:.54em;color:#c8cdd8;margin-top:12px">SYSTEMS</div>
+          <div style="font-family:'Space Mono',monospace;font-size:13px;letter-spacing:.14em;margin-top:22px;color:{{ heroAccent }}">The Eye That Never Sleeps</div>
+        </sc-if>
+      </div>
+    </div>
+  </div>
+
+  <!-- FOUR DIRECTIONS -->
+  <div style="display:flex;flex-wrap:wrap;gap:30px;justify-content:center;max-width:1200px;margin:0 auto;padding:0 40px">
+    <sc-for list="{{ directions }}" as="dir" hint-placeholder-count="4">
+      <div id="{{ dir.optId }}" style="width:560px;background:#ffffff;border-radius:22px;overflow:hidden;border:1px solid #1c1e24;box-shadow:0 24px 60px rgba(0,0,0,.4)">
+
+        <div style="position:relative;background:{{ dir.darkBg }};padding:32px 34px;display:flex;align-items:center;gap:24px">
+          <div style="width:150px;height:150px;flex:0 0 auto;display:flex;align-items:center;justify-content:center">{{ dir.cardMark }}</div>
+          <div style="flex:1;min-width:0">
+            <div style="font-family:'Space Mono',monospace;font-size:12px;letter-spacing:.28em;color:{{ dir.accent }}">{{ dir.code }}</div>
+            <div style="font-size:28px;font-weight:700;color:{{ dir.strokeD }};margin-top:9px;letter-spacing:-.01em">{{ dir.title }}</div>
+            <div style="font-family:'Space Mono',monospace;font-size:11px;letter-spacing:.16em;color:{{ dir.accent }};opacity:.7;margin-top:8px">{{ dir.colorNote }}</div>
+          </div>
+          <div style="position:absolute;top:16px;right:18px;font-family:'Space Mono',monospace;font-size:12px;font-weight:700;letter-spacing:.12em;color:{{ dir.strokeD }};border:1px solid rgba(255,255,255,.24);border-radius:999px;padding:4px 11px">{{ dir.optId }}</div>
+        </div>
+
+        <div style="padding:26px 34px 30px">
+
+          <div style="font-family:'Space Mono',monospace;font-size:10px;letter-spacing:.28em;color:#a9adb6">HORIZONTAL LOCKUP</div>
+          <div style="display:flex;align-items:center;gap:16px;margin-top:16px">
+            <div style="flex:0 0 auto;display:flex">{{ dir.lockMark }}</div>
+            <div style="display:flex;flex-direction:column;line-height:1">
+              <span style="font-weight:700;font-size:27px;letter-spacing:.14em;color:{{ dir.ink }}">TRINETRA</span>
+              <span style="font-family:'Space Mono',monospace;font-size:11px;letter-spacing:.42em;color:#8a8f98;margin-top:6px">SYSTEMS</span>
+            </div>
+          </div>
+
+          <div style="height:1px;background:#ededed;margin:26px 0"></div>
+
+          <div style="display:flex;gap:26px;align-items:flex-start">
+            <div style="flex:1">
+              <div style="font-family:'Space Mono',monospace;font-size:10px;letter-spacing:.28em;color:#a9adb6">STACKED</div>
+              <div style="display:flex;flex-direction:column;align-items:center;gap:12px;margin-top:16px">
+                <div style="display:flex">{{ dir.stackMark }}</div>
+                <div style="text-align:center;line-height:1.05">
+                  <div style="font-weight:700;font-size:19px;letter-spacing:.16em;color:{{ dir.ink }}">TRINETRA</div>
+                  <div style="font-family:'Space Mono',monospace;font-size:9px;letter-spacing:.4em;color:#8a8f98;margin-top:5px">SYSTEMS</div>
+                </div>
+              </div>
+            </div>
+            <div style="width:1px;align-self:stretch;background:#ededed"></div>
+            <div style="flex:1">
+              <div style="font-family:'Space Mono',monospace;font-size:10px;letter-spacing:.28em;color:#a9adb6">APP / FAVICON</div>
+              <div style="display:flex;gap:12px;margin-top:16px">
+                <div style="width:60px;height:60px;border-radius:15px;background:{{ dir.darkBg }};display:flex;align-items:center;justify-content:center">{{ dir.favDark }}</div>
+                <div style="width:60px;height:60px;border-radius:15px;background:{{ dir.lightBg }};border:1px solid #e6e6e6;display:flex;align-items:center;justify-content:center">{{ dir.favLight }}</div>
+              </div>
+              <div style="font-family:'Space Mono',monospace;font-size:10px;letter-spacing:.14em;color:#b0b4bb;margin-top:12px">48 · 32 · 16 px</div>
+            </div>
+          </div>
+
+          <div style="height:1px;background:#ededed;margin:26px 0"></div>
+
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:16px">
+            <div style="display:flex;gap:8px">
+              <sc-for list="{{ dir.swatches }}" as="sw" hint-placeholder-count="4">
+                <div style="display:flex;flex-direction:column;align-items:center;gap:6px">
+                  <div style="width:34px;height:34px;border-radius:8px;border:1px solid rgba(0,0,0,.08);background:{{ sw.c }}"></div>
+                  <span style="font-family:'Space Mono',monospace;font-size:8px;letter-spacing:.1em;color:#aab">{{ sw.n }}</span>
+                </div>
+              </sc-for>
+            </div>
+            <div style="font-family:'Space Mono',monospace;font-size:10px;letter-spacing:.12em;color:#b0b4bb;text-align:right">{{ dir.fontNote }}</div>
+          </div>
+
+          <p style="font-size:13.5px;line-height:1.6;color:#6b7079;margin:22px 0 0">{{ dir.concept }}</p>
+        </div>
+      </div>
+    </sc-for>
+  </div>
+
+  <div style="max-width:1200px;margin:44px auto 0;padding:0 40px">
+    <div style="font-family:'Space Mono',monospace;font-size:11px;letter-spacing:.16em;color:#585e69;line-height:1.9">
+      DELIVERABLES PER DIRECTION — horizontal lockup · stacked lockup · standalone icon (app + favicon) · wordmark · animated intro<br>
+      TWEAKS (top-right panel) — swap the hero mark · toggle animation · show construction guides
+    </div>
+  </div>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1280,&quot;height&quot;:2280},&quot;hero&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;Aperture Eye&quot;,&quot;Sentinel T&quot;,&quot;Trishul Eye&quot;,&quot;Oracle&quot;],&quot;default&quot;:&quot;Aperture Eye&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Showcase&quot;},&quot;animated&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Showcase&quot;},&quot;showConstruction&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Showcase&quot;}}">
+class Component extends DCLogic {
+  buildChildren(kind, c, pre) {
+    const h = React.createElement;
+    const { stroke, accent, fill, sw, anim } = c;
+    const cx = 100, cy = 100;
+    const kids = [];
+    const clipId = pre + 'clip';
+    const breathe = anim ? { transformBox: 'fill-box', transformOrigin: 'center', animation: 'irisBreathe 3.6s ease-in-out infinite' } : {};
+    const scanStyle = anim ? { transformBox: 'fill-box', transformOrigin: 'center', animation: 'scanSweep 3.4s ease-in-out infinite' } : { opacity: 0 };
+
+    if (kind === 'aperture') {
+      kids.push(h('defs', { key: 'd' }, h('clipPath', { id: clipId }, h('path', { d: 'M 34 100 Q 100 46 166 100 Q 100 154 34 100 Z' }))));
+      kids.push(h('path', { key: 'eye', d: 'M 34 100 Q 100 46 166 100 Q 100 154 34 100 Z', stroke, strokeWidth: sw, fill: 'none' }));
+      const innerR = 15, outerR = 33;
+      const irisKids = [h('circle', { key: 'oc', cx, cy, r: outerR, stroke: accent, strokeWidth: sw * 0.5, fill: 'none', opacity: 0.5 })];
+      const inner = [];
+      for (let i = 0; i < 6; i++) {
+        const a = i * 60 * Math.PI / 180;
+        const px = cx + innerR * Math.cos(a), py = cy + innerR * Math.sin(a);
+        inner.push([px, py]);
+        const a2 = (i * 60 + 52) * Math.PI / 180;
+        const qx = cx + outerR * Math.cos(a2), qy = cy + outerR * Math.sin(a2);
+        irisKids.push(h('line', { key: 'bl' + i, x1: px, y1: py, x2: qx, y2: qy, stroke: accent, strokeWidth: sw * 0.6, strokeLinecap: 'round' }));
+      }
+      irisKids.push(h('polygon', { key: 'hex', points: inner.map(p => p[0].toFixed(1) + ',' + p[1].toFixed(1)).join(' '), stroke: accent, strokeWidth: sw * 0.6, fill }));
+      irisKids.push(h('circle', { key: 'pp', cx, cy, r: 5.5, fill: accent }));
+      kids.push(h('g', { key: 'iris', style: breathe }, irisKids));
+      kids.push(h('g', { key: 'scan', clipPath: `url(#${clipId})` }, h('line', { x1: 100, y1: 52, x2: 100, y2: 148, stroke: accent, strokeWidth: 2.5, style: scanStyle })));
+    } else if (kind === 'teye') {
+      kids.push(h('defs', { key: 'd' }, h('clipPath', { id: clipId }, h('path', { d: 'M 50 112 Q 100 80 150 112 Q 100 144 50 112 Z' }))));
+      kids.push(h('path', { key: 'brow', d: 'M 44 74 Q 100 44 156 74', stroke, strokeWidth: sw * 1.25, fill: 'none', strokeLinecap: 'round' }));
+      kids.push(h('line', { key: 'stem', x1: 100, y1: 58, x2: 100, y2: 150, stroke, strokeWidth: sw * 1.4, strokeLinecap: 'round' }));
+      kids.push(h('path', { key: 'eye', d: 'M 50 112 Q 100 80 150 112 Q 100 144 50 112 Z', stroke, strokeWidth: sw, fill: 'none' }));
+      kids.push(h('circle', { key: 'pp', cx: 100, cy: 112, r: 8, fill: accent, style: breathe }));
+      kids.push(h('g', { key: 'scan', clipPath: `url(#${clipId})` }, h('line', { x1: 100, y1: 88, x2: 100, y2: 136, stroke: accent, strokeWidth: 2.5, style: scanStyle })));
+    } else if (kind === 'trishul') {
+      kids.push(h('line', { key: 'sh', x1: 100, y1: 150, x2: 100, y2: 60, stroke, strokeWidth: sw * 1.2, strokeLinecap: 'round' }));
+      kids.push(h('line', { key: 'ct', x1: 100, y1: 60, x2: 100, y2: 32, stroke, strokeWidth: sw * 1.2, strokeLinecap: 'round' }));
+      kids.push(h('path', { key: 'lp', d: 'M 100 66 Q 72 64 72 42 L 72 33', stroke, strokeWidth: sw, fill: 'none', strokeLinecap: 'round' }));
+      kids.push(h('path', { key: 'rp', d: 'M 100 66 Q 128 64 128 42 L 128 33', stroke, strokeWidth: sw, fill: 'none', strokeLinecap: 'round' }));
+      kids.push(h('line', { key: 'cb', x1: 72, y1: 66, x2: 128, y2: 66, stroke, strokeWidth: sw, strokeLinecap: 'round' }));
+      kids.push(h('path', { key: 'eye', d: 'M 74 116 Q 100 98 126 116 Q 100 134 74 116 Z', stroke, strokeWidth: sw, fill: 'none' }));
+      kids.push(h('circle', { key: 'pp', cx: 100, cy: 116, r: 6, fill: accent, style: breathe }));
+    } else {
+      kids.push(h('path', { key: 'eye', d: 'M 100 30 Q 152 100 100 170 Q 48 100 100 30 Z', stroke, strokeWidth: sw, fill: 'none' }));
+      [28, 19, 10].forEach((r, i) => kids.push(h('circle', {
+        key: 'r' + i, cx, cy, r, stroke: accent, strokeWidth: sw * 0.5, fill: 'none',
+        style: anim ? { transformBox: 'fill-box', transformOrigin: 'center', animation: `ringPulse 3.2s ease-out ${i * 0.5}s infinite` } : { opacity: 0.6 }
+      })));
+      kids.push(h('circle', { key: 'pp', cx, cy, r: 6, fill: accent }));
+    }
+    return kids;
+  }
+
+  mark(kind, c, size, pre) {
+    return React.createElement('svg', { viewBox: '0 0 200 200', width: size, height: size, fill: 'none', style: { display: 'block', overflow: 'visible' } }, this.buildChildren(kind, c, pre));
+  }
+
+  renderVals() {
+    const anim = this.props.animated ?? true;
+    const construction = this.props.showConstruction ?? false;
+    const DIRS = [
+      { key: 'A', code: '01', kind: 'aperture', title: 'Aperture Eye',
+        concept: 'A camera iris fused into an open eye — the lens that sees everything. The most literal bridge between CCTV optics and Trinetra’s watching gaze.',
+        darkBg: '#0A1533', lightBg: '#EEF2FB', strokeD: '#DCE6FF', ink: '#12234E', accent: '#2FD0EE', accentInk: '#1A46D6',
+        colorNote: 'DEEP BLUE · CYAN', fontNote: 'SPACE GROTESK / MONO' },
+      { key: 'B', code: '02', kind: 'teye', title: 'Sentinel T',
+        concept: 'The letter T resolves into a watching eye — a tight, ownable monogram that scales cleanly to a 16px favicon and reads instantly in one colour.',
+        darkBg: '#0B0B0D', lightBg: '#F1F1EF', strokeD: '#EDEDEA', ink: '#111214', accent: '#10E7C7', accentInk: '#0BB79E',
+        colorNote: 'BLACK · ELECTRIC TEAL', fontNote: 'SPACE GROTESK / MONO' },
+      { key: 'C', code: '03', kind: 'trishul', title: 'Trishul Eye',
+        concept: 'Shiva’s trishul standing guard over a third eye — heritage and vigilance in one mark. The most narrative option, rooted in the name’s origin.',
+        darkBg: '#1A1411', lightBg: '#F7F1E7', strokeD: '#F5E3C6', ink: '#6E2A0E', accent: '#F49215', accentInk: '#C5610C',
+        colorNote: 'SAFFRON · CHARCOAL', fontNote: 'SPACE GROTESK / MONO' },
+      { key: 'D', code: '04', kind: 'thirdeye', title: 'Oracle',
+        concept: 'A vertical third eye scanning outward in concentric rings — pure signal, no ornament. The most abstract, futuristic and animation-friendly route.',
+        darkBg: '#241063', lightBg: '#EFEBFA', strokeD: '#E7DFFF', ink: '#3D1B95', accent: '#8A5BFF', accentInk: '#6A34E6',
+        colorNote: 'INDIGO · VIOLET', fontNote: 'SPACE GROTESK / MONO' },
+    ];
+    let uid = 0;
+    const pre = () => 'm' + (uid++) + '_';
+    const directions = DIRS.map((d, idx) => ({
+      optId: '1' + 'abcd'[idx],
+      code: d.code, kind: d.kind, title: d.title, concept: d.concept,
+      darkBg: d.darkBg, lightBg: d.lightBg, strokeD: d.strokeD, ink: d.ink,
+      accent: d.accent, colorNote: d.colorNote, fontNote: d.fontNote,
+      cardMark: this.mark(d.kind, { stroke: d.strokeD, accent: d.accent, fill: d.darkBg, sw: 5, anim }, 150, pre()),
+      lockMark: this.mark(d.kind, { stroke: d.ink, accent: d.accentInk, fill: d.lightBg, sw: 6, anim: false }, 58, pre()),
+      stackMark: this.mark(d.kind, { stroke: d.ink, accent: d.accentInk, fill: d.lightBg, sw: 6, anim: false }, 56, pre()),
+      favDark: this.mark(d.kind, { stroke: d.strokeD, accent: d.accent, fill: d.darkBg, sw: 7, anim: false }, 34, pre()),
+      favLight: this.mark(d.kind, { stroke: d.ink, accent: d.accentInk, fill: d.lightBg, sw: 7, anim: false }, 34, pre()),
+      swatches: [{ c: d.ink, n: 'PRIMARY' }, { c: d.accentInk, n: 'ACCENT' }, { c: d.darkBg, n: 'INK' }, { c: d.lightBg, n: 'PAPER' }],
+    }));
+    const names = ['Aperture Eye', 'Sentinel T', 'Trishul Eye', 'Oracle'];
+    let fi = names.indexOf(this.props.hero || 'Aperture Eye');
+    if (fi < 0) fi = 0;
+    const f = DIRS[fi];
+    return {
+      directions,
+      heroBig: this.mark(f.kind, { stroke: f.strokeD, accent: f.accent, fill: '#0c0d11', sw: 4.5, anim }, 192, pre()),
+      heroAccent: f.accent,
+      heroCode: f.code,
+      featTitle: f.title,
+      construction,
+      animated: anim,
+      notAnimated: !anim,
+    };
+  }
+}
+</script>
+</body>
+</html>

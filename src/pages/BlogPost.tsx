@@ -31,7 +31,7 @@ const BlogPost = () => {
     publisher: {
       "@type": "Organization",
       name: "Trinetra Systems",
-      logo: { "@type": "ImageObject", url: "https://www.trinetrasystems.com/trinetra-icon.svg" },
+      logo: { "@type": "ImageObject", url: "https://www.trinetrasystems.com/logo/mark-512.png" },
     },
   };
 

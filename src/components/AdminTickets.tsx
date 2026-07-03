@@ -44,7 +44,10 @@ export default function AdminTickets() {
   useEffect(() => {
     const q = query(collection(db, "tickets"));
     const unsubscribe = onSnapshot(q, (snapshot) => {
-      let docs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Ticket));
+      // Spread data first, then set `id` from the doc id so a stray `id` field on
+      // the document (e.g. app-created tickets) can't shadow the real Firestore id
+      // — updates/replies target doc(db,"tickets",ticket.id) and must hit the doc.
+      let docs = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id } as Ticket));
       // Client-side sort to avoid Firebase Index requirement
       docs.sort((a, b) => {
         const timeA = a.createdAt?.toMillis?.() || 0;
@@ -68,13 +71,15 @@ export default function AdminTickets() {
     if (filterSeverity !== "All" && (t.severity || "Medium") !== filterSeverity) return false;
     if (searchQuery) {
       const q = searchQuery.toLowerCase();
+      // Guard every field — app-created tickets may lack userId/userEmail, and an
+      // undefined .toLowerCase() would crash the whole list render.
       return (
-        t.id.toLowerCase().includes(q) ||
-        (t.ticketNumber && t.ticketNumber.toLowerCase().includes(q)) ||
-        t.userEmail.toLowerCase().includes(q) ||
-        t.userId.toLowerCase().includes(q) ||
-        t.title.toLowerCase().includes(q) ||
-        t.description.toLowerCase().includes(q)
+        (t.id || "").toLowerCase().includes(q) ||
+        (t.ticketNumber || "").toLowerCase().includes(q) ||
+        (t.userEmail || "").toLowerCase().includes(q) ||
+        (t.userId || "").toLowerCase().includes(q) ||
+        (t.title || "").toLowerCase().includes(q) ||
+        (t.description || "").toLowerCase().includes(q)
       );
     }
     return true;

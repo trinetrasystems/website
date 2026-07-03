@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<meta name="design_doc_mode" content="canvas">
+<style>
+  *{box-sizing:border-box}
+  body{margin:0;background:#0A0908;font-family:'Rajdhani',system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+  @keyframes eyeOpen{0%{transform:scaleY(.05);opacity:.2}45%{opacity:1}62%{transform:scaleY(1.05)}100%{transform:scaleY(1);opacity:1}}
+  @keyframes raysSpin{to{transform:rotate(360deg)}}
+  @keyframes irisPan{0%,16%{transform:translateX(0)}30%,44%{transform:translateX(-12px)}58%,72%{transform:translateX(12px)}86%,100%{transform:translateX(0)}}
+  @keyframes glowPulse{0%,100%{opacity:.38}50%{opacity:.85}}
+  @keyframes pupilPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.13)}}
+  @keyframes ruleDraw{0%{transform:scaleX(0)}100%{transform:scaleX(1)}}
+</style>
+</helmet>
+
+<div style="min-height:100%;padding-bottom:64px">
+
+  <div style="max-width:1180px;margin:0 auto;padding:52px 40px 20px">
+    <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:.32em;color:#6B6152">TRINETRA SYSTEMS · LOGO V2 · AGNI NETRA</div>
+    <h1 style="font-family:'Rajdhani',sans-serif;font-size:46px;font-weight:700;color:#F3ECDD;margin:14px 0 0;letter-spacing:.01em;line-height:1.08;max-width:800px">THE FIRE EYE, ABOVE THE NAME.</h1>
+    <p style="font-family:'IBM Plex Mono',monospace;font-size:13.5px;line-height:1.7;color:#96897A;max-width:660px;margin:14px 0 0">Shiva's third eye sits on the forehead — so the eye now sits above the I, and every letter stays clean. A radiant-ray iris in ember and amber: it opens, scans left and right, and never sleeps.</p>
+  </div>
+
+  <!-- HERO -->
+  <div style="max-width:1180px;margin:0 auto 40px;padding:0 40px">
+    <div style="position:relative;background:radial-gradient(130% 150% at 50% -20%,#2A1A0B 0%,#151009 48%,#0B0908 100%);border:1px solid #2B2115;border-radius:26px;padding:150px 40px 62px;overflow:hidden;display:flex;flex-direction:column;align-items:center;gap:24px">
+      <div style="position:absolute;top:22px;left:28px;font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.3em;color:#6B6152">PRIMARY LOGO</div>
+
+      <div style="display:inline-flex;align-items:center;font-family:'Rajdhani',sans-serif;font-weight:700;font-size:118px;letter-spacing:.09em;color:#F3ECDD;line-height:1">
+        <span style="display:inline-block">T</span>
+        <span style="display:inline-block">R</span>
+        <span style="display:inline-block;position:relative">I<span style="position:absolute;left:50%;bottom:92%;transform:translateX(-50%);display:flex">{{ heroEye }}</span></span>
+        <span style="display:inline-block">N</span>
+        <span style="display:inline-block">E</span>
+        <span style="display:inline-block">T</span>
+        <span style="display:inline-block">R</span>
+        <span style="display:inline-block">A</span>
+      </div>
+
+      <sc-if value="{{ animated }}" hint-placeholder-val="{{ true }}">
+        <div style="width:300px;height:3px;border-radius:2px;background:linear-gradient(90deg,transparent,#E8720C 20%,#FFB84D 50%,#E8720C 80%,transparent);transform-origin:center;animation:ruleDraw 1.2s .7s cubic-bezier(.2,.8,.2,1) both"></div>
+      </sc-if>
+      <sc-if value="{{ notAnimated }}">
+        <div style="width:300px;height:3px;border-radius:2px;background:linear-gradient(90deg,transparent,#E8720C 20%,#FFB84D 50%,#E8720C 80%,transparent)"></div>
+      </sc-if>
+
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:17px;font-weight:500;letter-spacing:.58em;text-indent:.58em;color:#A99C82">SYSTEMS</div>
+      <sc-if value="{{ showTagline }}" hint-placeholder-val="{{ true }}">
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:13px;letter-spacing:.16em;color:#F59B2D">THE EYE THAT NEVER SLEEPS</div>
+      </sc-if>
+    </div>
+  </div>
+
+  <!-- STANDALONE + FAVICON -->
+  <div style="max-width:1180px;margin:0 auto 40px;padding:0 40px">
+    <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:16px;margin-bottom:20px;flex-wrap:wrap">
+      <div>
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:.3em;color:#6B6152">STANDALONE MARK</div>
+        <div style="font-family:'Rajdhani',sans-serif;font-size:26px;font-weight:700;color:#F3ECDD;margin-top:6px;letter-spacing:.02em">THE RADIANT EYE — APP · AVATAR · FAVICON</div>
+      </div>
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.18em;color:#6B6152">READS AT 16 PX</div>
+    </div>
+
+    <div style="display:flex;flex-wrap:wrap;gap:20px;align-items:stretch">
+
+      <div style="display:flex;flex-direction:column;gap:12px;align-items:center">
+        <div style="width:140px;height:140px;border-radius:32px;background:radial-gradient(130% 130% at 50% 0%,#2A1A0B 0%,#0E0B08 75%);border:1px solid #2B2115;display:flex;align-items:center;justify-content:center;box-shadow:0 16px 40px rgba(0,0,0,.5)">{{ appDark }}</div>
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.14em;color:#8A7E6C">APP · DARK</div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:12px;align-items:center">
+        <div style="width:140px;height:140px;border-radius:32px;background:#F6F0E4;border:1px solid #E4DCCB;display:flex;align-items:center;justify-content:center;box-shadow:0 16px 40px rgba(0,0,0,.4)">{{ appLight }}</div>
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.14em;color:#8A7E6C">APP · LIGHT</div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:12px;align-items:center">
+        <div style="width:140px;height:140px;border-radius:999px;background:radial-gradient(130% 130% at 50% 0%,#2A1A0B 0%,#0E0B08 75%);border:1px solid #2B2115;display:flex;align-items:center;justify-content:center;box-shadow:0 16px 40px rgba(0,0,0,.5)">{{ avatar }}</div>
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.14em;color:#8A7E6C">AVATAR</div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:12px;align-items:center">
+        <div style="width:140px;height:140px;border-radius:32px;background:radial-gradient(130% 130% at 50% 0%,#2A1A0B 0%,#0E0B08 75%);border:1px solid #2B2115;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;box-shadow:0 16px 40px rgba(0,0,0,.5)">
+          <span style="font-family:'Rajdhani',sans-serif;font-weight:700;font-size:68px;letter-spacing:-.01em;line-height:1;color:#F3ECDD">T<span style="color:#F59B2D">S</span></span>
+          <div style="width:50px;height:4px;border-radius:2px;background:linear-gradient(90deg,#E8720C,#FFB84D)"></div>
+        </div>
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.14em;color:#8A7E6C">MONOGRAM · TS</div>
+      </div>
+
+      <div style="flex:1 1 330px;min-width:300px;background:#12100C;border:1px solid #241D12;border-radius:20px;padding:26px 32px;display:flex;flex-direction:column;justify-content:center;gap:20px">
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.28em;color:#6B6152">EYE FAVICON · ACTUAL SIZE</div>
+        <div style="display:flex;align-items:flex-end;gap:26px">
+          <div style="display:flex;flex-direction:column;align-items:center;gap:12px">
+            <div style="width:64px;height:64px;border-radius:15px;background:radial-gradient(130% 130% at 50% 0%,#241608 0%,#0D0A07 78%);border:1px solid #2B2115;display:flex;align-items:center;justify-content:center">{{ fav64 }}</div>
+            <span style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:#8A7E6C">64</span>
+          </div>
+          <div style="display:flex;flex-direction:column;align-items:center;gap:12px">
+            <div style="width:48px;height:48px;border-radius:12px;background:radial-gradient(130% 130% at 50% 0%,#241608 0%,#0D0A07 78%);border:1px solid #2B2115;display:flex;align-items:center;justify-content:center">{{ fav48 }}</div>
+            <span style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:#8A7E6C">48</span>
+          </div>
+          <div style="display:flex;flex-direction:column;align-items:center;gap:12px">
+            <div style="width:32px;height:32px;border-radius:8px;background:radial-gradient(130% 130% at 50% 0%,#241608 0%,#0D0A07 78%);border:1px solid #2B2115;display:flex;align-items:center;justify-content:center">{{ fav32 }}</div>
+            <span style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:#8A7E6C">32</span>
+          </div>
+          <div style="display:flex;flex-direction:column;align-items:center;gap:12px">
+            <div style="width:16px;height:16px;border-radius:4px;background:radial-gradient(130% 130% at 50% 0%,#241608 0%,#0D0A07 78%);display:flex;align-items:center;justify-content:center">{{ fav16 }}</div>
+            <span style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:#8A7E6C">16</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- COLORWAYS -->
+  <div style="max-width:1180px;margin:0 auto 40px;padding:0 40px">
+    <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:.3em;color:#6B6152;margin-bottom:18px">COLORWAYS — SAME LOGO, THREE MOODS</div>
+    <div style="display:flex;flex-wrap:wrap;gap:20px">
+      <div style="flex:1 1 300px;background:radial-gradient(130% 150% at 50% -20%,#2A1A0B 0%,#0C0A08 70%);border:1px solid #2B2115;border-radius:20px;padding:38px 24px 30px;display:flex;flex-direction:column;align-items:center;gap:16px">
+        <div style="display:flex">{{ cwEmber }}</div>
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.2em;color:#B08A54">EMBER · RECOMMENDED</div>
+      </div>
+      <div style="flex:1 1 300px;background:radial-gradient(130% 150% at 50% -20%,#12224E 0%,#0A1027 70%);border:1px solid #1D2A52;border-radius:20px;padding:38px 24px 30px;display:flex;flex-direction:column;align-items:center;gap:16px">
+        <div style="display:flex">{{ cwMidnight }}</div>
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.2em;color:#5F7BC2">MIDNIGHT CYAN</div>
+      </div>
+      <div style="flex:1 1 300px;background:radial-gradient(130% 150% at 50% -20%,#241748 0%,#120C24 70%);border:1px solid #2C2154;border-radius:20px;padding:38px 24px 30px;display:flex;flex-direction:column;align-items:center;gap:16px">
+        <div style="display:flex">{{ cwViolet }}</div>
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.2em;color:#8B76C9">MYSTIC VIOLET</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- LOCKUPS -->
+  <div style="display:flex;flex-wrap:wrap;gap:24px;max-width:1180px;margin:0 auto;padding:0 40px">
+
+    <div style="flex:1 1 500px;background:#F6F0E4;border-radius:20px;border:1px solid #241D12;padding:36px 44px 40px;display:flex;flex-direction:column;gap:18px;box-shadow:0 20px 50px rgba(0,0,0,.45)">
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.28em;color:#A39781">PRIMARY · ON LIGHT</div>
+      <div style="display:flex;flex-direction:column;align-items:flex-start;gap:10px">
+        <div style="display:flex">{{ lockLight }}</div>
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:.5em;text-indent:.5em;color:#8A7E6C">SYSTEMS</div>
+      </div>
+    </div>
+
+    <div style="flex:1 1 500px;background:radial-gradient(130% 150% at 50% -20%,#241608 0%,#0C0A08 70%);border-radius:20px;border:1px solid #2B2115;padding:36px 44px 40px;display:flex;flex-direction:column;gap:18px;box-shadow:0 20px 50px rgba(0,0,0,.5)">
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.28em;color:#6B6152">ON DARK</div>
+      <div style="display:flex;flex-direction:column;align-items:flex-start;gap:10px">
+        <div style="display:flex">{{ lockDark }}</div>
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:.5em;text-indent:.5em;color:#A99C82">SYSTEMS</div>
+      </div>
+    </div>
+
+    <div style="flex:1 1 340px;background:#F6F0E4;border-radius:20px;border:1px solid #241D12;padding:36px;display:flex;flex-direction:column;gap:18px;box-shadow:0 20px 50px rgba(0,0,0,.45)">
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.28em;color:#A39781">STACKED</div>
+      <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px">
+        <div style="display:flex">{{ stackEye }}</div>
+        <div style="text-align:center;line-height:1">
+          <div style="font-family:'Rajdhani',sans-serif;font-weight:700;font-size:42px;letter-spacing:.12em;text-indent:.12em;color:#221A10">TRINETRA</div>
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.44em;text-indent:.44em;color:#8A7E6C;margin-top:8px">SYSTEMS</div>
+        </div>
+      </div>
+    </div>
+
+    <div style="flex:1 1 340px;border-radius:20px;border:1px solid #241D12;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 20px 50px rgba(0,0,0,.45)">
+      <div style="background:#FFFFFF;padding:26px 30px;display:flex;flex-direction:column;gap:12px;align-items:center;justify-content:center">
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:.24em;color:#A39781;align-self:flex-start">MONO · INK</div>
+        <div style="display:flex">{{ monoInk }}</div>
+      </div>
+      <div style="background:#14100A;padding:26px 30px;display:flex;flex-direction:column;gap:12px;align-items:center;justify-content:center">
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:.24em;color:#6B6152;align-self:flex-start">MONO · IVORY</div>
+        <div style="display:flex">{{ monoWhite }}</div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- SYSTEM -->
+  <div style="max-width:1180px;margin:36px auto 0;padding:0 40px;display:flex;flex-wrap:wrap;gap:24px">
+    <div style="flex:1 1 520px;background:#12100C;border:1px solid #241D12;border-radius:20px;padding:30px 34px">
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.28em;color:#6B6152">PALETTE — EMBER ON OBSIDIAN</div>
+      <div style="display:flex;gap:14px;margin-top:18px;flex-wrap:wrap">
+        <sc-for list="{{ palette }}" as="sw" hint-placeholder-count="5">
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <div style="width:64px;height:56px;border-radius:10px;border:1px solid rgba(255,255,255,.09);background:{{ sw.c }}"></div>
+            <span style="font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:.08em;color:#8A7E6C">{{ sw.c }}</span>
+            <span style="font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:.12em;color:#6B6152">{{ sw.n }}</span>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+    <div style="flex:1 1 380px;background:#12100C;border:1px solid #241D12;border-radius:20px;padding:30px 34px">
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.28em;color:#6B6152">TYPE &amp; MEANING</div>
+      <div style="font-family:'Rajdhani',sans-serif;font-weight:700;font-size:30px;color:#F3ECDD;margin-top:14px;letter-spacing:.03em">RAJDHANI 700 <span style="color:#6B6152;font-weight:500;font-size:18px">wordmark</span></div>
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:13px;color:#A99C82;margin-top:6px;letter-spacing:.1em">IBM Plex Mono · systems / tagline</div>
+      <p style="font-family:'IBM Plex Mono',monospace;font-size:12px;line-height:1.8;color:#8A7E6C;margin:16px 0 0"><span style="color:#C9BCA4">tri</span> = three · <span style="color:#C9BCA4">netra</span> = eye. The third eye sits above the brow — so the mark sits above the I. Rays radiate like fire; the iris scans like a camera.</p>
+    </div>
+  </div>
+
+  <div style="max-width:1180px;margin:26px auto 0;padding:0 40px">
+    <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.16em;color:#6B6152;line-height:1.9">
+      ANIMATION — eye opens · rays rotate slowly · iris scans left-right · glow breathes · rule draws under the name. The name itself never blinks.<br>
+      TWEAKS (top-right) — animate the eye · toggle tagline &nbsp;·&nbsp; V1 (cyan aperture) preserved in “Trinetra Aperture Wordmark”.
+    </div>
+  </div>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1280,&quot;height&quot;:2450},&quot;animated&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Logo&quot;},&quot;showTagline&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Logo&quot;}}">
+class Component extends DCLogic {
+  componentDidMount() {
+    this._kickTimer = setInterval(() => {
+      try {
+        document.getAnimations().forEach(a => {
+          if (a.startTime === null && a.playState === 'running') {
+            a.startTime = document.timeline.currentTime;
+          }
+        });
+      } catch (e) {}
+    }, 500);
+  }
+  componentWillUnmount() {
+    clearInterval(this._kickTimer);
+  }
+
+  eyeMark(w, ec, anim, pre, o) {
+    o = o || {};
+    const h = React.createElement;
+    const sw = o.sw ?? 5.5;
+    const rayCount = o.rays ?? 24;
+    const irisR = o.irisR ?? 26;
+    const pupilR = o.pupilR ?? 9.5;
+    const glowOn = (o.glow ?? true) && !!ec.glow;
+    const id = pre();
+    const cx = 100, cy = 60;
+    const almond = 'M 12 60 Q 100 6 188 60 Q 100 114 12 60 Z';
+    const rays = [];
+    for (let i = 0; i < rayCount; i++) {
+      const a = (i * 360 / rayCount) * Math.PI / 180;
+      const long = i % 2 === 0;
+      const r1 = pupilR + 3.5;
+      const r2 = long ? irisR : irisR * 0.82;
+      rays.push(h('line', {
+        key: 'r' + i,
+        x1: cx + r1 * Math.cos(a), y1: cy + r1 * Math.sin(a),
+        x2: cx + r2 * Math.cos(a), y2: cy + r2 * Math.sin(a),
+        stroke: long ? ec.rayA : ec.rayB,
+        strokeWidth: o.rayW ?? (long ? 2.6 : 1.7),
+        strokeLinecap: 'round'
+      }));
+    }
+    const spinStyle = anim ? { transformBox: 'fill-box', transformOrigin: 'center', animation: 'raysSpin 26s linear infinite' } : {};
+    const panStyle = anim ? { transformBox: 'fill-box', transformOrigin: 'center', animation: 'irisPan 8s ease-in-out infinite' } : {};
+    const pupilStyle = anim ? { transformBox: 'fill-box', transformOrigin: 'center', animation: 'pupilPulse 3.6s ease-in-out infinite' } : {};
+    const glowStyle = anim ? { animation: 'glowPulse 4.5s ease-in-out infinite' } : { opacity: 0.5 };
+    const openStyle = anim ? { transformBox: 'fill-box', transformOrigin: 'center', animation: 'eyeOpen 1.15s cubic-bezier(.22,.9,.28,1) both' } : {};
+    const defs = [h('clipPath', { key: 'c', id: id + 'c' }, h('path', { d: almond }))];
+    if (glowOn) {
+      defs.push(h('radialGradient', { key: 'g', id: id + 'g' }, [
+        h('stop', { key: '0', offset: '0%', stopColor: ec.glow, stopOpacity: 0.55 }),
+        h('stop', { key: '1', offset: '100%', stopColor: ec.glow, stopOpacity: 0 })
+      ]));
+    }
+    const inner = [];
+    if (glowOn) inner.push(h('circle', { key: 'gl', cx, cy, r: 46, fill: `url(#${id}g)`, style: glowStyle }));
+    inner.push(h('g', { key: 'clip', clipPath: `url(#${id}c)` },
+      h('g', { key: 'pan', style: panStyle }, [
+        h('g', { key: 'spin', style: spinStyle }, rays),
+        h('circle', { key: 'ring', cx, cy, r: irisR + 2.5, stroke: ec.rayB, strokeWidth: 1.4, fill: 'none', opacity: 0.65 }),
+        h('g', { key: 'pu', style: pupilStyle }, [
+          h('circle', { key: 'p', cx, cy, r: pupilR, fill: ec.pupil }),
+          h('circle', { key: 'pr', cx, cy, r: pupilR + 1.6, stroke: ec.rayA, strokeWidth: 1.6, fill: 'none' }),
+          h('circle', { key: 'hl', cx: cx - pupilR * 0.45, cy: cy - pupilR * 0.5, r: 2.6, fill: ec.hl || '#FFF6E8', opacity: 0.9 })
+        ])
+      ])
+    ));
+    inner.push(h('path', { key: 'al', d: almond, stroke: ec.outline, strokeWidth: sw, fill: 'none', strokeLinejoin: 'round' }));
+    return h('svg', { viewBox: '0 0 200 120', width: w, height: w * 0.6, fill: 'none', style: { display: 'block', overflow: 'visible' } },
+      [h('defs', { key: 'd' }, defs), h('g', { key: 'open', style: openStyle }, inner)]);
+  }
+
+  wordmark2(FS, wc, pre, anim) {
+    const h = React.createElement;
+    const letters = 'TRINETRA'.split('');
+    const eyeW = FS * 1.15;
+    const kids = letters.map((L, i) => {
+      if (i === 2) {
+        return h('span', { key: i, style: { display: 'inline-block', position: 'relative' } }, [
+          L,
+          h('span', { key: 'eye', style: { position: 'absolute', left: '50%', bottom: '94%', transform: 'translateX(-50%)', display: 'flex' } }, this.eyeMark(eyeW, wc.eye, !!anim, pre, { sw: 6 }))
+        ]);
+      }
+      return h('span', { key: i, style: { display: 'inline-block' } }, L);
+    });
+    return h('span', { style: { display: 'inline-flex', alignItems: 'center', fontFamily: "'Rajdhani',sans-serif", fontWeight: 700, fontSize: FS + 'px', letterSpacing: '0.09em', color: wc.letter, lineHeight: 1, paddingTop: (eyeW * 0.5) + 'px' } }, kids);
+  }
+
+  renderVals() {
+    let uid = 0;
+    const pre = () => 'v2' + (uid++) + '_';
+    const anim = this.props.animated ?? true;
+    const emberDark = { outline: '#F3ECDD', rayA: '#FFB84D', rayB: '#E8720C', pupil: '#0B0908', glow: '#F59B2D', hl: '#FFF3DC' };
+    const emberLight = { outline: '#221A10', rayA: '#D96A08', rayB: '#A44E06', pupil: '#221A10', glow: null, hl: '#FFF3DC' };
+    const monoInkEye = { outline: '#221A10', rayA: '#221A10', rayB: '#221A10', pupil: '#FFFFFF', glow: null, hl: '#FFFFFF' };
+    const monoIvoryEye = { outline: '#F3ECDD', rayA: '#F3ECDD', rayB: '#F3ECDD', pupil: '#14100A', glow: null, hl: '#F3ECDD' };
+    const midnight = { outline: '#DCE6FF', rayA: '#37D2F0', rayB: '#1C46DA', pupil: '#0A1027', glow: '#2FD0EE', hl: '#EAF6FF' };
+    const violet = { outline: '#E9E2FF', rayA: '#B08CFF', rayB: '#7A4DEB', pupil: '#120C24', glow: '#9D6BFF', hl: '#F3EDFF' };
+    return {
+      animated: anim,
+      notAnimated: !anim,
+      showTagline: this.props.showTagline ?? true,
+      heroEye: this.eyeMark(150, emberDark, anim, pre),
+      appDark: this.eyeMark(96, emberDark, anim, pre),
+      appLight: this.eyeMark(96, emberLight, anim, pre, { glow: false }),
+      avatar: this.eyeMark(84, emberDark, anim, pre),
+      fav64: this.eyeMark(46, emberDark, false, pre, { sw: 9, rays: 12, rayW: 4, irisR: 28, pupilR: 11 }),
+      fav48: this.eyeMark(34, emberDark, false, pre, { sw: 9, rays: 12, rayW: 4, irisR: 28, pupilR: 11 }),
+      fav32: this.eyeMark(23, emberDark, false, pre, { sw: 10, rays: 8, rayW: 5, irisR: 28, pupilR: 12 }),
+      fav16: this.eyeMark(12, emberDark, false, pre, { sw: 12, rays: 6, rayW: 6, irisR: 28, pupilR: 13 }),
+      cwEmber: this.wordmark2(32, { letter: '#F3ECDD', eye: emberDark }, pre, false),
+      cwMidnight: this.wordmark2(32, { letter: '#F4F7FF', eye: midnight }, pre, false),
+      cwViolet: this.wordmark2(32, { letter: '#EFEAFE', eye: violet }, pre, false),
+      lockLight: this.wordmark2(52, { letter: '#221A10', eye: emberLight }, pre, false),
+      lockDark: this.wordmark2(52, { letter: '#F3ECDD', eye: emberDark }, pre, false),
+      stackEye: this.eyeMark(120, emberLight, false, pre),
+      monoInk: this.wordmark2(38, { letter: '#221A10', eye: monoInkEye }, pre, false),
+      monoWhite: this.wordmark2(38, { letter: '#F3ECDD', eye: monoIvoryEye }, pre, false),
+      palette: [
+        { c: '#0B0908', n: 'OBSIDIAN' },
+        { c: '#E8720C', n: 'EMBER' },
+        { c: '#FFB84D', n: 'AMBER' },
+        { c: '#F3ECDD', n: 'IVORY' },
+        { c: '#221A10', n: 'COAL' },
+      ],
+    };
+  }
+}
+</script>
+</body>
+</html>
