@@ -2566,13 +2566,6 @@ const Admin = () => {
                       </div>
                     ))}
                   </div>
-
-                  <p className="mt-5 text-xs text-muted-foreground">
-                    This same collection is also available as a public page at{" "}
-                    <a href="/brand.html" target="_blank" rel="noopener noreferrer" className="underline transition hover:text-foreground">
-                      /brand.html
-                    </a>.
-                  </p>
                 </section>
               )}
 
