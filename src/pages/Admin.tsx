@@ -26,7 +26,7 @@ import {
   where,
 } from "firebase/firestore";
 import { adminAuth, auth, db } from "@/lib/firebase";
-import { Shield, LogIn, LogOut, RefreshCw, ArrowLeft, CheckCircle, Trash2, Eye, EyeOff, Key, Copy, Users, Phone, Mail, Search, FileText, Download, XCircle, MessageSquare, Sun, Moon, Presentation, ExternalLink } from "lucide-react";
+import { Shield, LogIn, LogOut, RefreshCw, ArrowLeft, CheckCircle, Trash2, Eye, EyeOff, Key, Copy, Users, Phone, Mail, Search, FileText, Download, XCircle, MessageSquare, Sun, Moon, Presentation, ExternalLink, ImageIcon } from "lucide-react";
 import AppSidebar from "@/components/AppSidebar";
 // Auto-detected list of presentation decks in public/ppts (filenames only — the
 // binaries are served statically from that folder, never bundled). Drop any new
@@ -245,11 +245,24 @@ const AVAILABLE_TABS = [
   { id: "tickets", label: "Support Tickets" },
   { id: "docs", label: "Documentation" },
   { id: "ppts", label: "Presentations" },
-  { id: "invoice", label: "Invoice Generator" }
+  { id: "invoice", label: "Invoice Generator" },
+  { id: "logo", label: "Logo" }
 ];
 
 // Served from public/ at the site root.
 const INVOICE_GENERATOR_PATH = "/trinetra-invoice-generator.html";
+
+// Brand logo assets (generated in public/brand/) offered for download in the Logo section.
+const BRAND_ZIP_PATH = "/brand/trinetra-brand-assets.zip";
+const BRAND_ASSETS: {
+  name: string; file: string; meta: string; use: string; theme: "dark" | "light" | "tile"; mark?: boolean;
+}[] = [
+  { name: "Full Logo — Dark", file: "/brand/Trinetra-Logo-Full-Dark.png", meta: "PNG · 1116×385 · transparent", use: "For dark or coloured backgrounds & slides.", theme: "dark" },
+  { name: "Full Logo — Light", file: "/brand/Trinetra-Logo-Full-Light.png", meta: "PNG · 1195×422 · transparent", use: "For white or light backgrounds & documents.", theme: "light" },
+  { name: "Shield Mark — Dark", file: "/brand/Trinetra-Mark-Dark.png", meta: "PNG · 664×770 · transparent", use: "Icon-only mark for dark backgrounds.", theme: "dark", mark: true },
+  { name: "Shield Mark — Light", file: "/brand/Trinetra-Mark-Light.png", meta: "PNG · 728×844 · transparent", use: "Icon-only mark for light backgrounds.", theme: "light", mark: true },
+  { name: "App Icon", file: "/brand/Trinetra-App-Icon.png", meta: "PNG · 1024×1024 · rounded tile", use: "The mobile app launcher icon.", theme: "tile", mark: true },
+];
 const Admin = () => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
@@ -301,7 +314,7 @@ const Admin = () => {
   const [selectedUserMaintenanceLifetime, setSelectedUserMaintenanceLifetime] = useState(false);
   const [updatingUser, setUpdatingUser] = useState(false);
   const [deletingUser, setDeletingUser] = useState(false);
-  const [activeSection, setActiveSection] = useState<"create" | "edit" | "forms" | "tickets" | "contacts" | "docs" | "ppts" | "invoice" | "requests">("tickets");
+  const [activeSection, setActiveSection] = useState<"create" | "edit" | "forms" | "tickets" | "contacts" | "docs" | "ppts" | "invoice" | "logo" | "requests">("tickets");
   const [selectedDoc, setSelectedDoc] = useState<{ id: string; title: string; description: string; path: string } | null>(null);
   const [docTheme, setDocTheme] = useState<"light" | "dark">("light");
   const [invoiceFullscreen, setInvoiceFullscreen] = useState(false);
@@ -1505,6 +1518,17 @@ const Admin = () => {
                     <FileText className="h-3.5 w-3.5" />
                     Invoice Generator
                   </button>)}
+                  {hasPermission("logo") && (<button
+                    type="button"
+                    onClick={() => setActiveSection("logo")}
+                    className={`inline-flex items-center gap-1.5 rounded-lg px-4 py-2 text-sm font-medium transition ${activeSection === "logo"
+                      ? "bg-primary text-primary-foreground"
+                      : "border border-border bg-background hover:bg-secondary/40"
+                      }`}
+                  >
+                    <ImageIcon className="h-3.5 w-3.5" />
+                    Logo
+                  </button>)}
                 </div>
               </section>
 
@@ -2478,6 +2502,77 @@ const Admin = () => {
                       </div>
                     </div>
                   )}
+                </section>
+              )}
+
+              {activeSection === "logo" && hasPermission("logo") && (
+                <section className="rounded-2xl border border-border bg-card p-6 shadow-lg">
+                  <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                    <div>
+                      <h2 className="text-2xl font-bold">Logo &amp; Brand Assets</h2>
+                      <p className="mt-1 text-sm text-muted-foreground">
+                        Download official Trinetra Systems logos for presentations, documents and reports. All logos are transparent PNGs unless noted.
+                      </p>
+                    </div>
+                    <a
+                      href={BRAND_ZIP_PATH}
+                      download
+                      className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground transition hover:opacity-90"
+                    >
+                      <Download className="h-4 w-4" />
+                      Download all (ZIP)
+                    </a>
+                  </div>
+
+                  <div className="mt-6 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+                    {BRAND_ASSETS.map((asset) => (
+                      <div key={asset.file} className="flex flex-col overflow-hidden rounded-xl border border-border bg-background">
+                        <div
+                          className="relative flex h-44 items-center justify-center p-6"
+                          style={
+                            asset.theme === "dark"
+                              ? { background: "#0A0D18" }
+                              : asset.theme === "light"
+                                ? { background: "#F4F5F8" }
+                                : { backgroundImage: "repeating-conic-gradient(#dfe3ee 0% 25%, #f4f5f8 0% 50%)", backgroundSize: "22px 22px" }
+                          }
+                        >
+                          <span className="absolute right-2.5 top-2.5 rounded-full bg-primary/15 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide text-primary">
+                            {asset.theme === "dark" ? "Dark" : asset.theme === "light" ? "Light" : "App icon"}
+                          </span>
+                          <img
+                            src={asset.file}
+                            alt={asset.name}
+                            className="max-h-full max-w-full object-contain"
+                            style={{
+                              maxHeight: asset.mark ? "120px" : undefined,
+                              borderRadius: asset.theme === "tile" ? "18px" : undefined,
+                            }}
+                          />
+                        </div>
+                        <div className="flex flex-1 flex-col p-4">
+                          <div className="text-sm font-semibold">{asset.name}</div>
+                          <div className="mt-0.5 font-mono text-xs text-muted-foreground">{asset.meta}</div>
+                          <div className="mt-1 text-xs text-muted-foreground">{asset.use}</div>
+                          <a
+                            href={asset.file}
+                            download
+                            className="mt-4 inline-flex items-center justify-center gap-2 rounded-lg border border-border bg-card px-3 py-2.5 text-sm font-medium transition hover:bg-secondary/40"
+                          >
+                            <Download className="h-4 w-4" />
+                            Download PNG
+                          </a>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  <p className="mt-5 text-xs text-muted-foreground">
+                    This same collection is also available as a public page at{" "}
+                    <a href="/brand.html" target="_blank" rel="noopener noreferrer" className="underline transition hover:text-foreground">
+                      /brand.html
+                    </a>.
+                  </p>
                 </section>
               )}
 
