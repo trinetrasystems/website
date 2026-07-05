@@ -76,7 +76,7 @@ const AppSidebar = () => {
   return (
     <>
       <header className="fixed top-0 left-0 right-0 z-[60] bg-background/80 backdrop-blur-xl border-b border-border/40 shadow-sm">
-        <div className="flex h-20 md:h-24 w-full items-center justify-between gap-3 px-4 sm:px-6 md:px-10 xl:px-12 mx-auto">
+        <div className="flex h-20 md:h-24 w-full items-center justify-between gap-3 px-4 sm:px-6 md:px-10 min-[1360px]:px-12 mx-auto">
           {/* Logo Area — shrink-0 so the brand logo is never squeezed off-screen */}
           <a
             href="#home"
@@ -96,9 +96,11 @@ const AppSidebar = () => {
             />
           </a>
 
-          {/* Nav Items — full inline nav only at xl+ (>=1280px) where the 8 items fit;
-              tablets (incl. iPad landscape ~1080px) use the slide-out drawer below. */}
-          <nav className="hidden xl:flex items-center gap-1.5 min-w-0">
+          {/* Nav Items — full inline nav only at >=1360px, the width at which all 8
+              items clear the action buttons with comfortable spacing. Everything
+              below (incl. iPad landscape ~1080px and 1280px laptops) uses the
+              slide-out drawer, so the nav can never overlap the theme/login buttons. */}
+          <nav className="hidden min-[1360px]:flex items-center gap-1.5">
             {navItems.map((item) =>
               (item as any).isRoute ? (
                 <Link
@@ -157,7 +159,7 @@ const AppSidebar = () => {
 
             <button
               onClick={() => setMobileOpen(!mobileOpen)}
-              className="xl:hidden p-2 rounded-xl bg-secondary/30 hover:bg-secondary/50 transition-colors"
+              className="min-[1360px]:hidden p-2 rounded-xl bg-secondary/30 hover:bg-secondary/50 transition-colors"
             >
               {mobileOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
             </button>
@@ -172,7 +174,7 @@ const AppSidebar = () => {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-black/60 backdrop-blur-md z-50 xl:hidden"
+              className="fixed inset-0 bg-black/60 backdrop-blur-md z-50 min-[1360px]:hidden"
               onClick={() => setMobileOpen(false)}
             />
             <motion.nav
@@ -180,7 +182,7 @@ const AppSidebar = () => {
               animate={{ x: 0 }}
               exit={{ x: "100%" }}
               transition={{ type: "spring", damping: 25, stiffness: 200 }}
-              className="fixed top-0 right-0 bottom-0 w-[80%] max-w-xs z-[70] bg-background border-l border-border/40 p-8 flex flex-col gap-6 xl:hidden overflow-y-auto overscroll-contain"
+              className="fixed top-0 right-0 bottom-0 w-[80%] max-w-xs z-[70] bg-background border-l border-border/40 p-8 flex flex-col gap-6 min-[1360px]:hidden overflow-y-auto overscroll-contain"
             >
               <div className="flex items-center justify-between mb-4">
                 <span className="text-xl font-black">Menu</span>
