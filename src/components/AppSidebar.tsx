@@ -76,7 +76,7 @@ const AppSidebar = () => {
   return (
     <>
       <header className="fixed top-0 left-0 right-0 z-[60] bg-background/80 backdrop-blur-xl border-b border-border/40 shadow-sm">
-        <div className="flex h-20 xl:h-24 w-full items-center justify-between gap-3 px-4 sm:px-6 md:px-8 xl:px-12 mx-auto">
+        <div className="flex h-20 md:h-24 w-full items-center justify-between gap-3 px-4 sm:px-6 md:px-10 xl:px-12 mx-auto">
           {/* Logo Area — shrink-0 so the brand logo is never squeezed off-screen */}
           <a
             href="#home"
@@ -87,24 +87,24 @@ const AppSidebar = () => {
             <img
               src="/logo/logo-light.png"
               alt="Trinetra Systems"
-              className="h-11 sm:h-12 md:h-14 w-auto block dark:hidden transition-transform duration-300 group-hover:scale-[1.03]"
+              className="h-12 sm:h-14 md:h-16 w-auto block dark:hidden transition-transform duration-300 group-hover:scale-[1.03]"
             />
             <img
               src="/logo/logo-dark.png"
               alt="Trinetra Systems"
-              className="h-11 sm:h-12 md:h-14 w-auto hidden dark:block transition-transform duration-300 group-hover:scale-[1.03]"
+              className="h-12 sm:h-14 md:h-16 w-auto hidden dark:block transition-transform duration-300 group-hover:scale-[1.03]"
             />
           </a>
 
           {/* Nav Items — full inline nav only at xl+ (>=1280px) where the 8 items fit;
               tablets (incl. iPad landscape ~1080px) use the slide-out drawer below. */}
-          <nav className="hidden xl:flex items-center gap-1 min-w-0">
+          <nav className="hidden xl:flex items-center gap-1.5 min-w-0">
             {navItems.map((item) =>
               (item as any).isRoute ? (
                 <Link
                   key={item.title}
                   to={item.href}
-                  className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-bold text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-all duration-300 group"
+                  className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold whitespace-nowrap text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-all duration-300 group"
                 >
                   <item.icon className="w-4 h-4 group-hover:scale-110 transition-transform text-primary/70 group-hover:text-primary" />
                   <span>{item.title}</span>
@@ -114,7 +114,7 @@ const AppSidebar = () => {
                   key={item.title}
                   href={item.href}
                   onClick={handleHashNavigation(item.href)}
-                  className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-bold transition-all duration-300 group border border-amber-500/30 bg-amber-500/5 hover:bg-amber-500/15 text-amber-600 dark:text-amber-400 hover:border-amber-500/50 hover:shadow-[0_0_12px_rgba(245,158,11,0.15)]"
+                  className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold whitespace-nowrap transition-all duration-300 group border border-amber-500/30 bg-amber-500/5 hover:bg-amber-500/15 text-amber-600 dark:text-amber-400 hover:border-amber-500/50 hover:shadow-[0_0_12px_rgba(245,158,11,0.15)]"
                 >
                   <item.icon className="w-4 h-4 group-hover:scale-110 transition-transform text-amber-500 animate-pulse" style={{ animationDuration: '3s' }} />
                   <span>{item.title}</span>
@@ -124,7 +124,7 @@ const AppSidebar = () => {
                   key={item.title}
                   href={item.href}
                   onClick={handleHashNavigation(item.href)}
-                  className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-bold text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-all duration-300 group"
+                  className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold whitespace-nowrap text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-all duration-300 group"
                 >
                   <item.icon className="w-4 h-4 group-hover:scale-110 transition-transform text-primary/70 group-hover:text-primary" />
                   <span>{item.title}</span>
