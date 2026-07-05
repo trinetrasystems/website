@@ -16,6 +16,7 @@ import Pricing from "@/components/Pricing";
 import SeeItInAction from "@/components/SeeItInAction";
 import SEOHead from "@/components/SEOHead";
 import GlobalReach from "@/components/GlobalReach";
+import IndustriesWeServe from "@/components/IndustriesWeServe";
 
 const Index = () => {
   const navigate = useNavigate();
@@ -51,6 +52,7 @@ const Index = () => {
         <SeeItInAction />
         <Features />
         <UseCases />
+        <IndustriesWeServe />
         <ResponseTime />
         <SLA />
         <Pricing />

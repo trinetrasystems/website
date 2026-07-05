@@ -256,4 +256,16 @@
   .animate-pulse-subtle {
     animation: pulse-subtle 2.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
   }
+
+  /* Seamless infinite banner: the track holds two identical copies and shifts
+     by exactly one copy (-50%), so the loop restarts on the same frame. */
+  @keyframes marquee {
+    from { transform: translateX(0); }
+    to { transform: translateX(-50%); }
+  }
+
+  .animate-marquee {
+    animation: marquee 45s linear infinite;
+    will-change: transform;
+  }
 }
