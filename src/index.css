@@ -160,6 +160,11 @@
   body {
     @apply bg-background text-foreground;
     font-family: 'Inter', sans-serif;
+    /* Clip transient off-screen transforms (e.g. framer-motion `x: 30` entry
+       animations on below-the-fold sections) so they never create a page-wide
+       horizontal scrollbar on narrower screens like tablets/phones. No
+       `position: sticky` is used anywhere, so this has no adverse effect. */
+    overflow-x: hidden;
   }
 
   h1, h2, h3, h4, h5, h6 {
@@ -169,6 +174,7 @@
 
   html {
     scroll-behavior: smooth;
+    overflow-x: hidden;
   }
 }
 
