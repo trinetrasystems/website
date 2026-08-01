@@ -20,7 +20,7 @@ const faqs = [
   { q: "How does AI footfall and conversion counting work?", a: "A single entry camera counts every person crossing the IN and OUT line. Billing events are matched against entries in the same time window to compute a live conversion rate — the share of visitors who actually purchased. Everything is plotted through the day so you can see visitors, buyers and peak hours at a glance." },
   { q: "Does the billing-queue alert work in real time?", a: "Yes. The system continuously measures queue length at each counter and how long it has stayed over its threshold. When the queue exceeds capacity, an alert reaches the store manager's phone and the counter display at the same moment — so a second counter opens on evidence, not on a complaint." },
   { q: "What is a shelf dwell heatmap?", a: "It is a visual overlay of how long customers stand in front of each aisle, combined with footfall per aisle. Aisles are ranked from strongest to weakest engagement, so you can place high-margin and new products where attention already goes and move slow stock off prime shelf." },
-  { q: "Does this work with our existing CCTV cameras?", a: "Yes. Trinetra runs on your existing IP cameras — no replacement needed. The AI processes video locally on an NVIDIA Jetson edge device installed on-premise, so no footage is sent to the cloud." },
+  { q: "Does this work with our existing CCTV cameras?", a: "Yes. Trinetra runs on your existing IP cameras — no replacement needed. The AI processes video locally on AI hardware installed on-premise, so no footage is sent to the cloud." },
   { q: "Is customer privacy protected?", a: "Yes. The analytics are anonymous — the system produces counts, queue lengths and heatmaps, not personal identities. All processing happens on-premise, keeping footage inside your store network." },
   { q: "Can head office see all branches together?", a: "Yes. Store staff see their own live view, while head office sees every branch on the same footfall, queue and conversion metrics, side by side, with a searchable and exportable alert log." },
 ];
@@ -79,7 +79,7 @@ const RetailAnalytics = () => (
   <div className="min-h-screen">
     <SEOHead
       title="AI Retail Analytics | Footfall, Conversion & Shelf Heatmaps | Trinetra Systems"
-      description="Turn your existing store CCTV into a real-time retail intelligence system. Trinetra Systems measures footfall vs. billing conversion, raises live billing-queue alerts, and maps shelf dwell heatmaps — all processed on-premise via NVIDIA Jetson edge AI."
+      description="Turn your existing store CCTV into a real-time retail intelligence system. Trinetra Systems measures footfall vs. billing conversion, raises live billing-queue alerts, and maps shelf dwell heatmaps — all processed on-premise via dedicated AI hardware."
       keywords="AI retail analytics, retail footfall counting, conversion rate CCTV, people counting store, billing queue detection, checkout queue alerts, shelf dwell time heatmap, aisle heatmap analytics, retail store intelligence, edge AI retail, on-premise retail video analytics, Trinetra Systems retail analytics"
       canonicalPath="/retail-analytics"
       jsonLd={jsonLd}
@@ -106,7 +106,7 @@ const RetailAnalytics = () => (
               where attention actually goes on your floor.
             </p>
             <p className="text-base text-muted-foreground max-w-2xl mx-auto mb-10">
-              Same hardware. Same cameras. Answers that arrive while you can still act on them — all processed on-premise via NVIDIA Jetson.
+              Same hardware. Same cameras. Answers that arrive while you can still act on them — all processed on-premise via AI hardware.
             </p>
             <div className="flex flex-wrap justify-center gap-3 md:gap-4 mb-10">
               {["100% On-Premise", "Works With Existing CCTV", "Real-Time Alerts", "Privacy by Design"].map((f) => (
@@ -453,7 +453,7 @@ const RetailAnalytics = () => (
                 "Every branch compared on one head-office dashboard",
                 "Searchable, exportable alert log with trigger snapshots",
                 "Works with your existing CCTV — no camera replacement",
-                "On-premise NVIDIA Jetson processing — complete data privacy",
+                "On-premise AI hardware processing — complete data privacy",
                 "Anonymous analytics — counts and heatmaps, not identities",
               ].map((b, i) => (
                 <motion.div key={i} className="flex items-start gap-3" {...fadeUp(i * 0.05)}>

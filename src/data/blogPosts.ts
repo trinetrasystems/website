@@ -128,7 +128,7 @@ export const blogPosts: BlogPost[] = [
       </ul>
 
       <h2>Privacy-First and On-Premise</h2>
-      <p>Trinetra Systems runs retail analytics <strong>on-premise</strong> using anonymous detection — no facial recognition and no cloud upload. You get actionable insights while customer footage stays private within your store. It works with your existing cameras and deploys in days as part of a broader <a href="/ai-surveillance">AI surveillance</a> setup.</p>
+      <p>Trinetra Systems runs retail analytics <strong>on-premise</strong> using anonymous detection — no facial recognition and no cloud upload. You get actionable insights while customer footage stays private within your store. It works with your existing cameras and deploys in days as part of a broader AI surveillance setup.</p>
       <p>Want to see what your store data is hiding? <a href="/contact">Book a free retail analytics demo</a>.</p>
     `,
   },
@@ -225,7 +225,7 @@ export const blogPosts: BlogPost[] = [
     excerpt: "Should your AI surveillance run in the cloud or on the edge? We compare the two approaches on privacy, speed, cost, and reliability — and explain why on-premise processing wins for most organizations.",
     content: `
       <h2>The Big Decision: Where Does Your Video Get Processed?</h2>
-      <p>When you deploy <a href="/ai-surveillance">AI surveillance</a>, one architectural choice matters more than almost any other: <strong>does your video get analyzed in the cloud, or locally on the edge?</strong> The answer affects your privacy, response speed, monthly bills, and even whether the system keeps working when your internet goes down.</p>
+      <p>When you deploy AI surveillance, one architectural choice matters more than almost any other: <strong>does your video get analyzed in the cloud, or locally on the edge?</strong> The answer affects your privacy, response speed, monthly bills, and even whether the system keeps working when your internet goes down.</p>
 
       <h2>What Is Edge AI Surveillance?</h2>
       <p><strong>Edge AI</strong> means the AI processing happens on a device located at your premises — right next to your cameras — rather than on remote servers. The video is analyzed locally, and only alerts and metadata leave the device (if you choose). <strong>Cloud surveillance</strong>, by contrast, streams your raw video to external data centers for processing.</p>
