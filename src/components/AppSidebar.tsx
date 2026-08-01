@@ -10,8 +10,8 @@ import { doc, getDoc } from "firebase/firestore";
 const navItems = [
   { title: "Home", href: "#home", icon: Home },
   { title: "Features", href: "#features", icon: Sparkles },
-  { title: "Use Cases", href: "#usecases", icon: Grid3X3 },
   { title: "Solutions", href: "#solutions", icon: Shield },
+  { title: "Use Cases", href: "#usecases", icon: Grid3X3 },
   { title: "Blog", href: "/blog", icon: BookOpen, isRoute: true },
   { title: "Pricing", href: "#pricing", icon: CircleDollarSign },
   { title: "Global Reach", href: "#global-reach", icon: Globe2, isHighlight: true },

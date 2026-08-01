@@ -1,7 +1,7 @@
 import { motion, useInView } from "framer-motion";
 import { useRef } from "react";
 import { Link } from "react-router-dom";
-import { Shield, BarChart3, Megaphone, Building2, CheckCircle2, ArrowRight } from "lucide-react";
+import { Shield, BarChart3, Megaphone, Building2, Store, Factory, CheckCircle2, ArrowRight } from "lucide-react";
 
 const solutionPages = [
   {
@@ -27,6 +27,18 @@ const solutionPages = [
     description: "AI-powered protection for societies, gated communities & homes.",
     href: "/residential-cctv-ai-surveillance",
     icon: Building2,
+  },
+  {
+    title: "Retail Analytics",
+    description: "Footfall & conversion, billing-queue alerts and shelf dwell heatmaps.",
+    href: "/retail-analytics",
+    icon: Store,
+  },
+  {
+    title: "Manufacturing Analytics",
+    description: "Machine uptime, PPE compliance, fire & smoke and defect detection.",
+    href: "/manufacturing-analytics",
+    icon: Factory,
   },
 ];
 
@@ -58,7 +70,7 @@ const Solutions = () => {
           </p>
         </motion.div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-12 md:mb-16">
+        <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-12 md:mb-16">
           {solutionPages.map((s, i) => (
             <motion.div
               key={s.title}
