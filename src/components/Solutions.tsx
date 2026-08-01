@@ -1,15 +1,9 @@
 import { motion, useInView } from "framer-motion";
 import { useRef } from "react";
 import { Link } from "react-router-dom";
-import { Shield, BarChart3, Megaphone, Building2, Store, Factory, CheckCircle2, ArrowRight } from "lucide-react";
+import { BarChart3, Megaphone, Building2, Store, Factory, CheckCircle2, ArrowRight } from "lucide-react";
 
 const solutionPages = [
-  {
-    title: "AI Surveillance",
-    description: "Real-time AI monitoring across every camera with instant alerts.",
-    href: "/ai-surveillance",
-    icon: Shield,
-  },
   {
     title: "Workplace Analytics",
     description: "Desk, meeting room & cafeteria utilization from existing CCTV.",

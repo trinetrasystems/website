@@ -1,7 +1,7 @@
 import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import ScrollToTop from "./components/ScrollToTop.tsx";
 import { ThemeProvider } from "next-themes";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -11,7 +11,6 @@ import Index from "./pages/Index.tsx";
 import Admin from "./pages/Admin.tsx";
 import ContactPage from "./pages/ContactPage.tsx";
 import NotFound from "./pages/NotFound.tsx";
-import AiSurveillance from "./pages/AiSurveillance.tsx";
 import PersonDetection from "./pages/PersonDetection.tsx";
 import VehicleDetection from "./pages/VehicleDetection.tsx";
 import SocietySecurity from "./pages/SocietySecurity.tsx";
@@ -40,7 +39,8 @@ const App = () => (
             <Route path="/" element={<Index />} />
             <Route path="/admin" element={<Admin />} />
             <Route path="/contact" element={<ContactPage />} />
-            <Route path="/ai-surveillance" element={<AiSurveillance />} />
+            {/* AI Surveillance page removed — redirect the old URL to home to avoid a dead link. */}
+            <Route path="/ai-surveillance" element={<Navigate to="/" replace />} />
             <Route path="/person-detection" element={<PersonDetection />} />
             <Route path="/vehicle-detection" element={<VehicleDetection />} />
             <Route path="/society-security" element={<SocietySecurity />} />

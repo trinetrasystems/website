@@ -21,7 +21,7 @@ const faqs = [
   { q: "What does the PPE compliance module check?", a: "Every person on the floor is checked for helmet, vest and goggles, continuously and on every shift. Non-compliance is flagged with a timestamped snapshot, and rules can be set per zone — stricter in a cutting area than at dispatch — giving you audit evidence for buyers, insurers and inspections." },
   { q: "How fast is fire and smoke detection?", a: "Flame and smoke are recognised as visual signatures directly from the camera feed, with detection to phone alert in under 5 seconds. Because it does not wait for smoke to reach a ceiling sensor, it is well suited to large open bays. It complements your existing fire system and does not replace certified detection or suppression equipment." },
   { q: "Can it detect production or print defects in real time?", a: "Yes. A camera over the running material flags ink spots, streaks, hairs, scratches and smudges while the run can still be stopped, marks the defect position, and identifies repeat defects at the same position as a roller or blanket fault. Waste and rework are reported per job and per machine." },
-  { q: "Does this work with existing plant CCTV?", a: "Yes. Trinetra runs on your existing IP cameras — no replacement needed. All processing happens locally on an NVIDIA Jetson edge device installed on-premise, so footage never leaves the plant." },
+  { q: "Does this work with existing plant CCTV?", a: "Yes. Trinetra runs on your existing IP cameras — no replacement needed. All processing happens locally on AI hardware installed on-premise, so footage never leaves the plant." },
   { q: "Does the fire module replace our certified fire system?", a: "No. The visual fire and smoke module is an early-warning layer that complements your certified detection and suppression equipment — it adds seconds-fast visual alerts on the cameras you already have, but does not replace mandated fire safety systems." },
 ];
 
@@ -80,7 +80,7 @@ const ManufacturingAnalytics = () => (
   <div className="min-h-screen">
     <SEOHead
       title="AI Manufacturing Analytics & Safety | Machine Uptime, PPE & Fire Detection | Trinetra Systems"
-      description="Turn your existing plant CCTV into a real-time safety and productivity system. Trinetra Systems times idle machines to the second, checks PPE compliance continuously, detects fire and smoke visually in seconds, and flags production defects before a run is wasted — all on-premise via NVIDIA Jetson edge AI."
+      description="Turn your existing plant CCTV into a real-time safety and productivity system. Trinetra Systems times idle machines to the second, checks PPE compliance continuously, detects fire and smoke visually in seconds, and flags production defects before a run is wasted — all on-premise via dedicated AI hardware."
       keywords="AI manufacturing analytics, machine uptime monitoring CCTV, idle machine detection, PPE compliance detection, helmet vest detection AI, industrial fire and smoke detection, visual flame detection factory, production defect detection AI, print defect detection, factory safety analytics, edge AI manufacturing, on-premise plant video analytics, Trinetra Systems manufacturing"
       canonicalPath="/manufacturing-analytics"
       jsonLd={jsonLd}
@@ -107,7 +107,7 @@ const ManufacturingAnalytics = () => (
               seconds, and stops a defective run before thousands of parts are wasted.
             </p>
             <p className="text-base text-muted-foreground max-w-2xl mx-auto mb-10">
-              Same hardware. Same cameras. Answers that arrive while you can still act on them — all processed on-premise via NVIDIA Jetson.
+              Same hardware. Same cameras. Answers that arrive while you can still act on them — all processed on-premise via AI hardware.
             </p>
             <div className="flex flex-wrap justify-center gap-3 md:gap-4 mb-10">
               {["100% On-Premise", "Works With Existing CCTV", "24×7 Monitoring", "Real-Time Alerts"].map((f) => (
@@ -533,7 +533,7 @@ const ManufacturingAnalytics = () => (
                 "One dashboard for camera health, idle machines, PPE and alerts",
                 "Every event logged with time, camera, location and snapshot",
                 "Works with your existing CCTV — no camera replacement",
-                "On-premise NVIDIA Jetson processing — footage never leaves the plant",
+                "On-premise AI hardware processing — footage never leaves the plant",
               ].map((b, i) => (
                 <motion.div key={i} className="flex items-start gap-3" {...fadeUp(i * 0.05)}>
                   <CheckCircle2 className="w-5 h-5 text-primary shrink-0 mt-0.5" />
