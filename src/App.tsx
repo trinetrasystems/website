@@ -23,6 +23,8 @@ import BlogPost from "./pages/BlogPost.tsx";
 import ResidentialCCTV from "./pages/ResidentialCCTV.tsx";
 import WorkplaceAnalytics from "./pages/WorkplaceAnalytics.tsx";
 import BillboardAnalytics from "./pages/BillboardAnalytics.tsx";
+import RetailAnalytics from "./pages/RetailAnalytics.tsx";
+import ManufacturingAnalytics from "./pages/ManufacturingAnalytics.tsx";
 
 const queryClient = new QueryClient();
 
@@ -50,6 +52,8 @@ const App = () => (
             <Route path="/residential-cctv-ai-surveillance" element={<ResidentialCCTV />} />
             <Route path="/workplace-analytics" element={<WorkplaceAnalytics />} />
             <Route path="/billboard-analytics" element={<BillboardAnalytics />} />
+            <Route path="/retail-analytics" element={<RetailAnalytics />} />
+            <Route path="/manufacturing-analytics" element={<ManufacturingAnalytics />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
