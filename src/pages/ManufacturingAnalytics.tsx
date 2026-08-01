@@ -16,13 +16,74 @@ const fadeUp = (delay = 0) => ({
   transition: { duration: 0.6, delay },
 });
 
+const faqs = [
+  { q: "How does AI machine uptime monitoring work?", a: "A camera reads whether each machine in frame is actually producing or idle, and starts a clock the moment it stops. Continuous idle duration is tracked per machine, an alert fires once idle time crosses your threshold, and the data rolls up into a shift-wise utilisation report — separating changeover, breakdown and unexplained idling without any manual log." },
+  { q: "What does the PPE compliance module check?", a: "Every person on the floor is checked for helmet, vest and goggles, continuously and on every shift. Non-compliance is flagged with a timestamped snapshot, and rules can be set per zone — stricter in a cutting area than at dispatch — giving you audit evidence for buyers, insurers and inspections." },
+  { q: "How fast is fire and smoke detection?", a: "Flame and smoke are recognised as visual signatures directly from the camera feed, with detection to phone alert in under 5 seconds. Because it does not wait for smoke to reach a ceiling sensor, it is well suited to large open bays. It complements your existing fire system and does not replace certified detection or suppression equipment." },
+  { q: "Can it detect production or print defects in real time?", a: "Yes. A camera over the running material flags ink spots, streaks, hairs, scratches and smudges while the run can still be stopped, marks the defect position, and identifies repeat defects at the same position as a roller or blanket fault. Waste and rework are reported per job and per machine." },
+  { q: "Does this work with existing plant CCTV?", a: "Yes. Trinetra runs on your existing IP cameras — no replacement needed. All processing happens locally on an NVIDIA Jetson edge device installed on-premise, so footage never leaves the plant." },
+  { q: "Does the fire module replace our certified fire system?", a: "No. The visual fire and smoke module is an early-warning layer that complements your certified detection and suppression equipment — it adds seconds-fast visual alerts on the cameras you already have, but does not replace mandated fire safety systems." },
+];
+
+const pageUrl = "https://www.trinetrasystems.com/manufacturing-analytics";
+
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Service",
+      "@id": `${pageUrl}#service`,
+      name: "AI Manufacturing Analytics & Safety",
+      serviceType: "AI manufacturing video analytics and safety monitoring",
+      url: pageUrl,
+      description:
+        "On-premise AI manufacturing analytics that turns existing plant CCTV into real-time machine uptime monitoring, PPE compliance, visual fire & smoke detection and production defect detection.",
+      provider: { "@id": "https://www.trinetrasystems.com/#organization" },
+      areaServed: [
+        { "@type": "Country", name: "India" },
+        { "@type": "Country", name: "United Arab Emirates" },
+        { "@type": "Country", name: "Singapore" },
+      ],
+      hasOfferCatalog: {
+        "@type": "OfferCatalog",
+        name: "Manufacturing Analytics Modules",
+        itemListElement: [
+          { "@type": "Offer", itemOffered: { "@type": "Service", name: "Machine Uptime & Idle Monitoring" } },
+          { "@type": "Offer", itemOffered: { "@type": "Service", name: "PPE Compliance Detection" } },
+          { "@type": "Offer", itemOffered: { "@type": "Service", name: "Fire & Smoke Detection" } },
+          { "@type": "Offer", itemOffered: { "@type": "Service", name: "Production Defect Detection" } },
+        ],
+      },
+    },
+    {
+      "@type": "FAQPage",
+      "@id": `${pageUrl}#faq`,
+      mainEntity: faqs.map((f) => ({
+        "@type": "Question",
+        name: f.q,
+        acceptedAnswer: { "@type": "Answer", text: f.a },
+      })),
+    },
+    {
+      "@type": "BreadcrumbList",
+      "@id": `${pageUrl}#breadcrumb`,
+      itemListElement: [
+        { "@type": "ListItem", position: 1, name: "Home", item: "https://www.trinetrasystems.com/" },
+        { "@type": "ListItem", position: 2, name: "Solutions", item: "https://www.trinetrasystems.com/#solutions" },
+        { "@type": "ListItem", position: 3, name: "Manufacturing Analytics", item: pageUrl },
+      ],
+    },
+  ],
+};
+
 const ManufacturingAnalytics = () => (
   <div className="min-h-screen">
     <SEOHead
-      title="AI Manufacturing Analytics & Safety | Machine Uptime, PPE, Fire & Defect Detection | Trinetra Systems"
+      title="AI Manufacturing Analytics & Safety | Machine Uptime, PPE & Fire Detection | Trinetra Systems"
       description="Turn your existing plant CCTV into a real-time safety and productivity system. Trinetra Systems times idle machines to the second, checks PPE compliance continuously, detects fire and smoke visually in seconds, and flags production defects before a run is wasted — all on-premise via NVIDIA Jetson edge AI."
       keywords="AI manufacturing analytics, machine uptime monitoring CCTV, idle machine detection, PPE compliance detection, helmet vest detection AI, industrial fire and smoke detection, visual flame detection factory, production defect detection AI, print defect detection, factory safety analytics, edge AI manufacturing, on-premise plant video analytics, Trinetra Systems manufacturing"
       canonicalPath="/manufacturing-analytics"
+      jsonLd={jsonLd}
     />
     <AppSidebar />
     <main className="pt-16 lg:pt-20">
@@ -440,7 +501,7 @@ const ManufacturingAnalytics = () => (
             {[
               { title: "Existing Cameras", desc: "Your IP cameras stream over the local network", icon: Camera },
               { title: "AI Detection", desc: "Tuned models read machines, PPE, fire & defects", icon: Eye },
-              { title: "Jetson Edge", desc: "On-premise inference — footage stays on site", icon: Cpu },
+              { title: "AI Hardware", desc: "On-premise inference — footage stays on site", icon: Cpu },
               { title: "Analytics Engine", desc: "Computes uptime, compliance & defect logs", icon: BarChart3 },
               { title: "Live Dashboard", desc: "Floor-wide reporting with instant alerts", icon: LayoutDashboard },
             ].map((s, i) => (
@@ -491,14 +552,7 @@ const ManufacturingAnalytics = () => (
             <h2 className="text-3xl md:text-4xl font-bold mb-4">Frequently Asked <span className="text-gradient">Questions</span></h2>
           </motion.div>
           <div className="space-y-4">
-            {[
-              { q: "How does AI machine uptime monitoring work?", a: "A camera reads whether each machine in frame is actually producing or idle, and starts a clock the moment it stops. Continuous idle duration is tracked per machine, an alert fires once idle time crosses your threshold, and the data rolls up into a shift-wise utilisation report — separating changeover, breakdown and unexplained idling without any manual log." },
-              { q: "What does the PPE compliance module check?", a: "Every person on the floor is checked for helmet, vest and goggles, continuously and on every shift. Non-compliance is flagged with a timestamped snapshot, and rules can be set per zone — stricter in a cutting area than at dispatch — giving you audit evidence for buyers, insurers and inspections." },
-              { q: "How fast is fire and smoke detection?", a: "Flame and smoke are recognised as visual signatures directly from the camera feed, with detection to phone alert in under 5 seconds. Because it does not wait for smoke to reach a ceiling sensor, it is well suited to large open bays. It complements your existing fire system and does not replace certified detection or suppression equipment." },
-              { q: "Can it detect production or print defects in real time?", a: "Yes. A camera over the running material flags ink spots, streaks, hairs, scratches and smudges while the run can still be stopped, marks the defect position, and identifies repeat defects at the same position as a roller or blanket fault. Waste and rework are reported per job and per machine." },
-              { q: "Does this work with existing plant CCTV?", a: "Yes. Trinetra runs on your existing IP cameras — no replacement needed. All processing happens locally on an NVIDIA Jetson edge device installed on-premise, so footage never leaves the plant." },
-              { q: "Does the fire module replace our certified fire system?", a: "No. The visual fire and smoke module is an early-warning layer that complements your certified detection and suppression equipment — it adds seconds-fast visual alerts on the cameras you already have, but does not replace mandated fire safety systems." },
-            ].map((faq, i) => (
+            {faqs.map((faq, i) => (
               <motion.div key={i} className="glass rounded-2xl p-6" {...fadeUp(i * 0.08)}>
                 <h3 className="font-bold text-lg mb-3">{faq.q}</h3>
                 <p className="text-muted-foreground leading-relaxed">{faq.a}</p>

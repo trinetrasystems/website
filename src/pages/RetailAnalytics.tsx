@@ -16,6 +16,65 @@ const fadeUp = (delay = 0) => ({
   transition: { duration: 0.6, delay },
 });
 
+const faqs = [
+  { q: "How does AI footfall and conversion counting work?", a: "A single entry camera counts every person crossing the IN and OUT line. Billing events are matched against entries in the same time window to compute a live conversion rate — the share of visitors who actually purchased. Everything is plotted through the day so you can see visitors, buyers and peak hours at a glance." },
+  { q: "Does the billing-queue alert work in real time?", a: "Yes. The system continuously measures queue length at each counter and how long it has stayed over its threshold. When the queue exceeds capacity, an alert reaches the store manager's phone and the counter display at the same moment — so a second counter opens on evidence, not on a complaint." },
+  { q: "What is a shelf dwell heatmap?", a: "It is a visual overlay of how long customers stand in front of each aisle, combined with footfall per aisle. Aisles are ranked from strongest to weakest engagement, so you can place high-margin and new products where attention already goes and move slow stock off prime shelf." },
+  { q: "Does this work with our existing CCTV cameras?", a: "Yes. Trinetra runs on your existing IP cameras — no replacement needed. The AI processes video locally on an NVIDIA Jetson edge device installed on-premise, so no footage is sent to the cloud." },
+  { q: "Is customer privacy protected?", a: "Yes. The analytics are anonymous — the system produces counts, queue lengths and heatmaps, not personal identities. All processing happens on-premise, keeping footage inside your store network." },
+  { q: "Can head office see all branches together?", a: "Yes. Store staff see their own live view, while head office sees every branch on the same footfall, queue and conversion metrics, side by side, with a searchable and exportable alert log." },
+];
+
+const pageUrl = "https://www.trinetrasystems.com/retail-analytics";
+
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Service",
+      "@id": `${pageUrl}#service`,
+      name: "AI Retail Analytics",
+      serviceType: "AI retail video analytics",
+      url: pageUrl,
+      description:
+        "On-premise AI retail analytics that turns existing store CCTV into real-time footfall & conversion counting, live billing-queue alerts and shelf dwell heatmaps.",
+      provider: { "@id": "https://www.trinetrasystems.com/#organization" },
+      areaServed: [
+        { "@type": "Country", name: "India" },
+        { "@type": "Country", name: "United Arab Emirates" },
+        { "@type": "Country", name: "Singapore" },
+      ],
+      hasOfferCatalog: {
+        "@type": "OfferCatalog",
+        name: "Retail Analytics Modules",
+        itemListElement: [
+          { "@type": "Offer", itemOffered: { "@type": "Service", name: "Footfall & Conversion Counting" } },
+          { "@type": "Offer", itemOffered: { "@type": "Service", name: "Billing-Queue Alerts" } },
+          { "@type": "Offer", itemOffered: { "@type": "Service", name: "Shelf Dwell Heatmaps" } },
+        ],
+      },
+    },
+    {
+      "@type": "FAQPage",
+      "@id": `${pageUrl}#faq`,
+      mainEntity: faqs.map((f) => ({
+        "@type": "Question",
+        name: f.q,
+        acceptedAnswer: { "@type": "Answer", text: f.a },
+      })),
+    },
+    {
+      "@type": "BreadcrumbList",
+      "@id": `${pageUrl}#breadcrumb`,
+      itemListElement: [
+        { "@type": "ListItem", position: 1, name: "Home", item: "https://www.trinetrasystems.com/" },
+        { "@type": "ListItem", position: 2, name: "Solutions", item: "https://www.trinetrasystems.com/#solutions" },
+        { "@type": "ListItem", position: 3, name: "Retail Analytics", item: pageUrl },
+      ],
+    },
+  ],
+};
+
 const RetailAnalytics = () => (
   <div className="min-h-screen">
     <SEOHead
@@ -23,6 +82,7 @@ const RetailAnalytics = () => (
       description="Turn your existing store CCTV into a real-time retail intelligence system. Trinetra Systems measures footfall vs. billing conversion, raises live billing-queue alerts, and maps shelf dwell heatmaps — all processed on-premise via NVIDIA Jetson edge AI."
       keywords="AI retail analytics, retail footfall counting, conversion rate CCTV, people counting store, billing queue detection, checkout queue alerts, shelf dwell time heatmap, aisle heatmap analytics, retail store intelligence, edge AI retail, on-premise retail video analytics, Trinetra Systems retail analytics"
       canonicalPath="/retail-analytics"
+      jsonLd={jsonLd}
     />
     <AppSidebar />
     <main className="pt-16 lg:pt-20">
@@ -362,7 +422,7 @@ const RetailAnalytics = () => (
             {[
               { title: "Existing Cameras", desc: "Your IP cameras stream over the local network", icon: Camera },
               { title: "AI Detection", desc: "Tuned model counts people, queues & dwell", icon: Eye },
-              { title: "Jetson Edge", desc: "On-premise inference — no footage leaves site", icon: Cpu },
+              { title: "AI Hardware", desc: "On-premise inference — no footage leaves site", icon: Cpu },
               { title: "Analytics Engine", desc: "Computes footfall, conversion & heatmaps", icon: BarChart3 },
               { title: "Live Dashboard", desc: "Store & head-office reporting with alerts", icon: LayoutDashboard },
             ].map((s, i) => (
@@ -413,14 +473,7 @@ const RetailAnalytics = () => (
             <h2 className="text-3xl md:text-4xl font-bold mb-4">Frequently Asked <span className="text-gradient">Questions</span></h2>
           </motion.div>
           <div className="space-y-4">
-            {[
-              { q: "How does AI footfall and conversion counting work?", a: "A single entry camera counts every person crossing the IN and OUT line. Billing events are matched against entries in the same time window to compute a live conversion rate — the share of visitors who actually purchased. Everything is plotted through the day so you can see visitors, buyers and peak hours at a glance." },
-              { q: "Does the billing-queue alert work in real time?", a: "Yes. The system continuously measures queue length at each counter and how long it has stayed over its threshold. When the queue exceeds capacity, an alert reaches the store manager's phone and the counter display at the same moment — so a second counter opens on evidence, not on a complaint." },
-              { q: "What is a shelf dwell heatmap?", a: "It is a visual overlay of how long customers stand in front of each aisle, combined with footfall per aisle. Aisles are ranked from strongest to weakest engagement, so you can place high-margin and new products where attention already goes and move slow stock off prime shelf." },
-              { q: "Does this work with our existing CCTV cameras?", a: "Yes. Trinetra runs on your existing IP cameras — no replacement needed. The AI processes video locally on an NVIDIA Jetson edge device installed on-premise, so no footage is sent to the cloud." },
-              { q: "Is customer privacy protected?", a: "Yes. The analytics are anonymous — the system produces counts, queue lengths and heatmaps, not personal identities. All processing happens on-premise, keeping footage inside your store network." },
-              { q: "Can head office see all branches together?", a: "Yes. Store staff see their own live view, while head office sees every branch on the same footfall, queue and conversion metrics, side by side, with a searchable and exportable alert log." },
-            ].map((faq, i) => (
+            {faqs.map((faq, i) => (
               <motion.div key={i} className="glass rounded-2xl p-6" {...fadeUp(i * 0.08)}>
                 <h3 className="font-bold text-lg mb-3">{faq.q}</h3>
                 <p className="text-muted-foreground leading-relaxed">{faq.a}</p>
