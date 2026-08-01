@@ -77,7 +77,7 @@ const Contact = () => {
     const contactNumber = formData.contactNumber.trim();
     const message = formData.message.trim();
 
-    if (!name || !email || !message) {
+    if (!name || !email || !contactNumber || !message) {
       setStatus({ type: "error", message: "Please fill all form fields." });
       return;
     }
@@ -211,7 +211,7 @@ const Contact = () => {
               />
               <input
                 type="text"
-                placeholder="Company Name"
+                placeholder="Company Name (optional)"
                 value={formData.companyName}
                 onChange={(event) => handleInputChange("companyName", event.target.value)}
                 className="w-full px-4 py-3 rounded-lg bg-secondary/50 border border-border/50 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
