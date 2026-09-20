@@ -24,6 +24,7 @@ import WorkplaceAnalytics from "./pages/WorkplaceAnalytics.tsx";
 import BillboardAnalytics from "./pages/BillboardAnalytics.tsx";
 import RetailAnalytics from "./pages/RetailAnalytics.tsx";
 import ManufacturingAnalytics from "./pages/ManufacturingAnalytics.tsx";
+import WhatsAppButton from "./components/WhatsAppButton.tsx";
 
 const queryClient = new QueryClient();
 
@@ -59,6 +60,7 @@ const App = () => (
           </Routes>
         <Analytics />
         <SpeedInsights />
+        <WhatsAppButton />
         </BrowserRouter>
       </TooltipProvider>
     </ThemeProvider>
