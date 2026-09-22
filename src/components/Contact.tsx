@@ -1,5 +1,7 @@
 import emailjs from "@emailjs/browser";
 import { motion, useInView } from "framer-motion";
+import { fadeUp } from "@/lib/motion";
+import SectionHeader from "./SectionHeader";
 import { useRef, useState } from "react";
 import { Mail, Phone, MapPin, Send, Share2 } from "lucide-react";
 import { addDoc, collection, serverTimestamp } from "firebase/firestore";
@@ -130,25 +132,16 @@ const Contact = () => {
   return (
     <section id="contact" className="py-12 md:py-24 px-4 md:px-6 bg-gradient-dark" ref={ref}>
       <div className="max-w-6xl mx-auto">
-        <motion.div
-          initial={{ opacity: 0, y: 40 }}
-          animate={isInView ? { opacity: 1, y: 0 } : {}}
-          transition={{ duration: 0.6 }}
-          className="text-center mb-8 md:mb-16"
-        >
-          <h2 className="text-3xl md:text-5xl font-bold mb-6">
-            Get in <span className="text-gradient">Touch</span>
-          </h2>
-          <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-            Ready to transform your surveillance? Let's talk.
-          </p>
-        </motion.div>
+        <SectionHeader
+          eyebrow="Contact"
+          inView={isInView}
+          title={<>Get in <span className="text-gradient">Touch</span></>}
+          description={"Ready to transform your surveillance? Let's talk."}
+        />
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
           <motion.div
-            initial={{ opacity: 0, x: -30 }}
-            animate={isInView ? { opacity: 1, x: 0 } : {}}
-            transition={{ duration: 0.6, delay: 0.2 }}
+            {...fadeUp(isInView, 0.2)}
             className="space-y-8"
           >
             <div className="flex items-start gap-4">
@@ -211,9 +204,7 @@ const Contact = () => {
 
           <motion.form
             id="contact-form"
-            initial={{ opacity: 0, x: 30 }}
-            animate={isInView ? { opacity: 1, x: 0 } : {}}
-            transition={{ duration: 0.6, delay: 0.3 }}
+            {...fadeUp(isInView, 0.3)}
             className="glass rounded-2xl p-5 sm:p-8 space-y-6"
             onSubmit={handleSubmit}
           >
@@ -286,7 +277,7 @@ const Contact = () => {
             <button
               type="submit"
               disabled={isSubmitting}
-              className="inline-flex items-center gap-2 px-8 py-3 rounded-lg bg-primary text-primary-foreground font-semibold glow-primary hover:opacity-90 transition-all"
+              className="btn-shine inline-flex items-center gap-2 px-8 py-3 rounded-lg bg-primary text-primary-foreground font-semibold glow-primary hover:opacity-90 transition-all"
             >
               <Send className="w-4 h-4" />
               {isSubmitting ? "Sending..." : "Send Message"}

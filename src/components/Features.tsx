@@ -1,4 +1,6 @@
 import { motion, useInView } from "framer-motion";
+import { fadeUp, stagger } from "@/lib/motion";
+import SectionHeader from "./SectionHeader";
 import { useRef } from "react";
 import { Zap, Shield, Target, LayoutDashboard, MessageCircle, Plug } from "lucide-react";
 
@@ -18,24 +20,17 @@ const Features = () => {
   return (
     <section id="features" className="py-12 md:py-24 px-4 md:px-6" ref={ref}>
       <div className="max-w-6xl mx-auto">
-        <motion.div
-          initial={{ opacity: 0, y: 40 }}
-          animate={isInView ? { opacity: 1, y: 0 } : {}}
-          transition={{ duration: 0.6 }}
-          className="text-center mb-12"
-        >
-          <h2 className="text-3xl md:text-5xl font-bold mb-6">
-            Core Features of Our <span className="text-gradient">AI Camera Detection System</span>
-          </h2>
-        </motion.div>
+        <SectionHeader
+          eyebrow="Capabilities"
+          inView={isInView}
+          title={<>Core Features of Our <span className="text-gradient">AI Camera Detection System</span></>}
+        />
 
         <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-8">
           {features.map((f, i) => (
             <motion.div
               key={f.title}
-              initial={{ opacity: 0, y: 30 }}
-              animate={isInView ? { opacity: 1, y: 0 } : {}}
-              transition={{ duration: 0.5, delay: i * 0.1 }}
+              {...fadeUp(isInView, stagger(i))}
               className="glass rounded-xl p-4 md:p-8 glow-hover transition-all duration-300 group"
             >
               <div className={`w-10 h-10 md:w-14 md:h-14 rounded-2xl ${f.bg} flex items-center justify-center mb-4 md:mb-6 group-hover:scale-110 transition-transform`}>

@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import AppSidebar from "@/components/AppSidebar";
 import Hero from "@/components/Hero";
+import EngineStory from "@/components/EngineStory";
 import About from "@/components/About";
 import Solutions from "@/components/Solutions";
 import UseCases from "@/components/UseCases";
@@ -39,7 +40,8 @@ const Index = () => {
   return (
     <div className="min-h-screen">
       <AppSidebar />
-      <main className="pt-16 lg:pt-20">
+      {/* No top padding: the hero runs under the floating header. */}
+      <main>
         <SEOHead
           title="AI Surveillance & Camera Detection Solutions | Smart CCTV Analytics | Trinetra Systems"
           description="Trinetra Systems delivers AI-powered surveillance, smart camera detection, person tracking, and vehicle analytics for societies, industries, and enterprises across all of India — Bangalore, Mumbai, Delhi, Hyderabad, Chennai, Pune — and internationally, with support in Hindi, Tamil, Telugu, Kannada, Marathi, Bengali and all major Indian languages."
@@ -47,6 +49,7 @@ const Index = () => {
           canonicalPath="/"
         />
         <Hero />
+        <EngineStory />
         <About />
         <Solutions />
         <SeeItInAction />

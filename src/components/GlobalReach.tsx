@@ -1,4 +1,5 @@
 import { motion, useInView } from "framer-motion";
+import { fadeUp, stagger } from "@/lib/motion";
 import { useRef, useMemo } from "react";
 import { Shield, Zap, Globe, Radio } from "lucide-react";
 
@@ -232,9 +233,7 @@ const GlobalReach = () => {
       <div className="relative z-10 max-w-6xl mx-auto">
         {/* Header */}
         <motion.div
-          initial={{ opacity: 0, y: 40 }}
-          animate={isInView ? { opacity: 1, y: 0 } : {}}
-          transition={{ duration: 0.7 }}
+          {...fadeUp(isInView, 0.1)}
           className="text-center mb-12 md:mb-16"
         >
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass border-amber-500/20 mb-6 text-sm font-semibold">
@@ -257,9 +256,7 @@ const GlobalReach = () => {
 
         {/* World Map Container */}
         <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={isInView ? { opacity: 1, scale: 1 } : {}}
-          transition={{ duration: 0.8, delay: 0.2 }}
+          {...fadeUp(isInView, 0.2)}
           className="relative glass rounded-[2rem] md:rounded-[3rem] p-4 md:p-8 lg:p-10 mb-10 md:mb-14 border-white/[0.06] overflow-hidden"
         >
           {/* Ambient glow behind the map */}
@@ -335,8 +332,7 @@ const GlobalReach = () => {
                     cy={dot.y}
                     r={dot.isHQ ? 0.7 : 0.45}
                     fill="#f59e0b"
-                    initial={{ opacity: 0, scale: 0 }}
-                    animate={isInView ? { opacity: 1, scale: 1 } : {}}
+                    {...fadeUp(isInView, 0.1)}
                     transition={{
                       duration: 0.4,
                       delay: 0.6 + i * 0.08,
@@ -382,9 +378,7 @@ const GlobalReach = () => {
 
               {/* HQ Label */}
               <motion.g
-                initial={{ opacity: 0 }}
-                animate={isInView ? { opacity: 1 } : {}}
-                transition={{ delay: 1.5, duration: 0.5 }}
+                {...fadeUp(isInView, 1.5)}
               >
                 <rect
                   x="64.5"
@@ -442,9 +436,7 @@ const GlobalReach = () => {
           {valueProps.map((prop, i) => (
             <motion.div
               key={prop.title}
-              initial={{ opacity: 0, y: 30 }}
-              animate={isInView ? { opacity: 1, y: 0 } : {}}
-              transition={{ duration: 0.5, delay: 0.8 + i * 0.15 }}
+              {...fadeUp(isInView, stagger(i, 0.8))}
               className={`glass rounded-2xl p-5 md:p-8 text-center glow-hover transition-all duration-300 group border-white/5 ${prop.borderHover} ${i === 2 ? "col-span-2 md:col-span-1" : ""}`}
             >
               <div

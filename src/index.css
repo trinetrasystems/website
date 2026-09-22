@@ -51,6 +51,7 @@
     --gradient-start: 214 45% 95%;
     --gradient-mid: 203 56% 90%;
     --gradient-end: 220 43% 94%;
+    --glow-strength: 0.1;
 
     --trinetra-logo-color: #1A150E;
   }
@@ -98,6 +99,7 @@
     --gradient-start: 228 50% 5%;
     --gradient-mid: 250 40% 10%;
     --gradient-end: 228 50% 5%;
+    --glow-strength: 0.2;
 
     --trinetra-logo-color: #F3ECDD;
   }
@@ -146,6 +148,7 @@
       --gradient-start: 228 50% 5%;
       --gradient-mid: 250 40% 10%;
       --gradient-end: 228 50% 5%;
+      --glow-strength: 0.2;
 
       --trinetra-logo-color: #F3ECDD;
     }
@@ -162,9 +165,11 @@
     font-family: 'Inter', sans-serif;
     /* Clip transient off-screen transforms (e.g. framer-motion `x: 30` entry
        animations on below-the-fold sections) so they never create a page-wide
-       horizontal scrollbar on narrower screens like tablets/phones. No
-       `position: sticky` is used anywhere, so this has no adverse effect. */
+       horizontal scrollbar on narrower screens like tablets/phones. `clip`
+       (unlike `hidden`) keeps `position: sticky` working for the pinned story;
+       `hidden` stays as the fallback for older browsers. */
     overflow-x: hidden;
+    overflow-x: clip;
   }
 
   h1, h2, h3, h4, h5, h6 {
@@ -175,6 +180,13 @@
   html {
     scroll-behavior: smooth;
     overflow-x: hidden;
+    overflow-x: clip;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
   }
 }
 
@@ -232,13 +244,86 @@
     @apply bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent;
   }
 
+  /* Tinted section background with soft violet (top-left) and cyan (bottom-right) glows. */
   .bg-gradient-dark {
-    background: linear-gradient(
-      135deg,
-      hsl(var(--gradient-start)),
-      hsl(var(--gradient-mid)),
-      hsl(var(--gradient-end))
-    );
+    background:
+      radial-gradient(60% 45% at 12% 0%, hsl(var(--glow-primary) / var(--glow-strength)), transparent 70%),
+      radial-gradient(50% 40% at 88% 100%, hsl(var(--glow-accent) / var(--glow-strength)), transparent 70%),
+      linear-gradient(
+        135deg,
+        hsl(var(--gradient-start)),
+        hsl(var(--gradient-mid)),
+        hsl(var(--gradient-end))
+      );
+  }
+
+  /* Card with a violet-to-cyan gradient border that brightens and glows on hover. */
+  .glow-card {
+    position: relative;
+    isolation: isolate;
+    background-color: hsl(var(--card));
+    border: 1px solid hsl(var(--border));
+    box-shadow: 0 1px 2px rgb(0 0 0 / 0.04), 0 8px 24px -16px hsl(var(--glow-primary) / 0.3);
+    transition: box-shadow 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .glow-card::before {
+    content: "";
+    position: absolute;
+    inset: -1px;
+    padding: 1px;
+    border-radius: inherit;
+    background: linear-gradient(135deg, hsl(var(--glow-primary)), hsl(var(--glow-accent)));
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    opacity: 0.35;
+    transition: opacity 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+    pointer-events: none;
+  }
+
+  .glow-card:hover,
+  .glow-card:focus-visible {
+    box-shadow: 0 12px 40px -12px hsl(var(--glow-primary) / 0.45), 0 0 32px -8px hsl(var(--glow-accent) / 0.35);
+  }
+
+  .glow-card:hover::before,
+  .glow-card:focus-visible::before {
+    opacity: 1;
+  }
+
+  /* Periodic light sweep across primary buttons. */
+  .btn-shine {
+    position: relative;
+    overflow: hidden;
+    isolation: isolate;
+  }
+
+  .btn-shine::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(110deg, transparent 25%, rgb(255 255 255 / 0.35) 45%, rgb(255 255 255 / 0.08) 55%, transparent 75%);
+    transform: translateX(-120%);
+    /* First sweep waits until the hero has finished animating in. */
+    animation: shine-sweep 4.5s cubic-bezier(0.4, 0, 0.2, 1) 1.5s infinite;
+    pointer-events: none;
+  }
+
+  @keyframes shine-sweep {
+    0% { transform: translateX(-120%); }
+    30%, 100% { transform: translateX(120%); }
+  }
+
+  .btn-shine:disabled::after {
+    display: none;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .btn-shine::after {
+      animation: none;
+      opacity: 0;
+    }
   }
 
   .bg-grid {
@@ -267,5 +352,194 @@
   .animate-marquee {
     animation: marquee 45s linear infinite;
     will-change: transform;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   Signature motion (hero glow, scroll cue, pinned engine story).
+   Every loop here stops for people who prefer reduced motion.
+   --------------------------------------------------------------------------- */
+
+/* Large soft glow that slowly drifts; position it with utilities (left-1/2 etc.). */
+.ambient-glow {
+  background: radial-gradient(60% 70% at 50% 0%, hsl(var(--glow-accent) / 0.35), hsl(var(--glow-primary) / 0.25) 45%, transparent 80%);
+  transform: translateX(-50%);
+  animation: glow-drift 16s ease-in-out infinite alternate;
+}
+
+@keyframes glow-drift {
+  0% { transform: translateX(-53%) translateY(0) scale(1); }
+  50% { transform: translateX(-47%) translateY(-2%) scale(1.06); }
+  100% { transform: translateX(-52%) translateY(2%) scale(1); }
+}
+
+/* Expanding ring behind a live indicator dot. */
+.ping-ring {
+  animation: ping-ring 2s ease-out infinite;
+}
+
+@keyframes ping-ring {
+  0% { transform: scale(1); opacity: 0.9; }
+  100% { transform: scale(2.4); opacity: 0; }
+}
+
+/* "Scroll to explore" cue: mouse with a falling wheel dot, pulsing label, dotted line with a travelling light. */
+.scroll-cue__mouse {
+  position: relative;
+  width: 22px;
+  height: 34px;
+  border: 1.5px solid rgb(255 255 255 / 0.6);
+  border-radius: 999px;
+}
+
+.scroll-cue__wheel {
+  position: absolute;
+  left: 50%;
+  top: 7px;
+  width: 3px;
+  height: 7px;
+  border-radius: 2px;
+  background: #fff;
+  transform: translate(-50%, 0);
+  animation: cue-wheel 1.9s ease-in-out infinite;
+}
+
+@keyframes cue-wheel {
+  0% { opacity: 0; transform: translate(-50%, -2px); }
+  20% { opacity: 1; }
+  70%, 100% { opacity: 0; transform: translate(-50%, 13px); }
+}
+
+.scroll-cue__label {
+  animation: cue-pulse 2.6s ease-in-out infinite;
+}
+
+@keyframes cue-pulse {
+  0%, 100% { opacity: 0.55; }
+  50% { opacity: 1; }
+}
+
+.scroll-cue__line {
+  position: relative;
+  width: 2px;
+  height: 56px;
+  overflow: hidden;
+  background-image: linear-gradient(to bottom, rgb(255 255 255 / 0.45) 50%, transparent 50%);
+  background-size: 2px 6px;
+}
+
+.scroll-cue__line::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: -30%;
+  width: 100%;
+  height: 30%;
+  background: linear-gradient(to bottom, transparent, hsl(185 80% 60%), transparent);
+  animation: cue-travel 2.2s linear infinite;
+}
+
+@keyframes cue-travel {
+  0% { transform: translateY(0); }
+  100% { transform: translateY(450%); }
+}
+
+/* Pinned engine story. --cy is the shared anchor height; --piece is one puzzle piece's width. */
+.engine-stage {
+  --cy: 40%;
+  --piece: min(42vw, 300px);
+}
+
+@media (min-width: 768px) {
+  .engine-stage {
+    --cy: 44%;
+  }
+}
+
+.engine-anchor {
+  top: var(--cy);
+}
+
+/* Headline sits just below the pieces (a piece is 2/3 as tall as it is wide). */
+.engine-copy {
+  top: calc(var(--cy) + var(--piece) / 3 + 3rem);
+}
+
+.engine-glow {
+  background:
+    radial-gradient(45% 45% at 50% var(--cy), hsl(250 80% 60% / 0.32), transparent 70%),
+    radial-gradient(30% 30% at 40% var(--cy), hsl(185 80% 50% / 0.2), transparent 70%);
+}
+
+.engine-piece-glow {
+  position: absolute;
+  inset: -28px;
+  border-radius: 48px;
+  pointer-events: none;
+}
+
+.engine-piece-glow--cyan {
+  background: radial-gradient(closest-side, hsl(185 80% 50% / 0.45), transparent);
+}
+
+.engine-piece-glow--violet {
+  background: radial-gradient(closest-side, hsl(250 80% 60% / 0.5), transparent);
+}
+
+.engine-ring {
+  position: absolute;
+  left: 50%;
+  top: var(--cy);
+  width: 560px;
+  height: 560px;
+  margin: -280px 0 0 -280px;
+  border-radius: 999px;
+  border: 2px solid hsl(185 80% 60% / 0.8);
+  box-shadow: 0 0 40px hsl(185 80% 55% / 0.55), inset 0 0 40px hsl(250 80% 60% / 0.35);
+  pointer-events: none;
+}
+
+.engine-ring--violet {
+  border-color: hsl(250 85% 68% / 0.7);
+  box-shadow: 0 0 40px hsl(250 80% 60% / 0.5);
+}
+
+/* Light streaks: each ray is rotated around the stage centre and slides outward. */
+.engine-ray {
+  position: absolute;
+  left: 50%;
+  top: var(--cy);
+  width: var(--len);
+  height: var(--h);
+  margin-top: calc(var(--h) / -2);
+  transform-origin: 0 50%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, transparent, var(--ray-color) 70%, #fff);
+  opacity: 0;
+  animation: engine-ray var(--dur) linear var(--delay) infinite;
+  animation-play-state: paused;
+}
+
+.engine-rays[data-running="true"] .engine-ray {
+  animation-play-state: running;
+}
+
+@keyframes engine-ray {
+  0% { opacity: 0; transform: rotate(var(--a)) translateX(var(--x0)) scaleX(0.5); }
+  12%, 68% { opacity: var(--o); }
+  100% { opacity: 0; transform: rotate(var(--a)) translateX(var(--x1)) scaleX(1.25); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ambient-glow,
+  .ping-ring,
+  .scroll-cue__wheel,
+  .scroll-cue__label,
+  .scroll-cue__line::after {
+    animation: none;
+  }
+
+  .ping-ring {
+    opacity: 0;
   }
 }

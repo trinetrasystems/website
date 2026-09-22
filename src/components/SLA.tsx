@@ -1,4 +1,6 @@
 import { motion, useInView } from "framer-motion";
+import { fadeUp, stagger } from "@/lib/motion";
+import SectionHeader from "./SectionHeader";
 import { useRef } from "react";
 
 const slaData = [
@@ -15,24 +17,15 @@ const SLA = () => {
   return (
     <section id="sla" className="py-12 md:py-24 px-4 md:px-6 bg-gradient-dark" ref={ref}>
       <div className="max-w-5xl mx-auto">
-        <motion.div
-          initial={{ opacity: 0, y: 40 }}
-          animate={isInView ? { opacity: 1, y: 0 } : {}}
-          transition={{ duration: 0.6 }}
-          className="text-center mb-12 md:mb-16"
-        >
-          <h2 className="text-3xl md:text-5xl font-bold mb-6">
-            <span className="text-gradient">SLA</span> & Support
-          </h2>
-          <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-            Guaranteed response times for every severity level. Your security never waits.
-          </p>
-        </motion.div>
+        <SectionHeader
+          eyebrow="Support"
+          inView={isInView}
+          title={<><span className="text-gradient">SLA</span> & Support</>}
+          description="Guaranteed response times for every severity level. Your security never waits."
+        />
 
         <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={isInView ? { opacity: 1, y: 0 } : {}}
-          transition={{ duration: 0.6, delay: 0.2 }}
+          {...fadeUp(isInView, 0.2)}
           className="glass rounded-2xl overflow-hidden shadow-2xl border-white/5"
         >
           {/* Header */}
@@ -48,9 +41,7 @@ const SLA = () => {
             {slaData.map((row, i) => (
               <motion.div
                 key={row.severity}
-                initial={{ opacity: 0, x: -20 }}
-                animate={isInView ? { opacity: 1, x: 0 } : {}}
-                transition={{ duration: 0.4, delay: 0.3 + i * 0.1 }}
+                {...fadeUp(isInView, stagger(i, 0.3))}
                 className="grid grid-cols-4 gap-2 md:gap-4 px-4 md:px-8 py-4 md:py-6 hover:bg-secondary/30 transition-colors items-center"
               >
                 <div>
