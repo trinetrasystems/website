@@ -1,9 +1,10 @@
 import emailjs from "@emailjs/browser";
 import { motion, useInView } from "framer-motion";
 import { useRef, useState } from "react";
-import { Mail, Phone, MapPin, Send } from "lucide-react";
+import { Mail, Phone, MapPin, Send, Share2 } from "lucide-react";
 import { addDoc, collection, serverTimestamp } from "firebase/firestore";
 import { db } from "@/lib/firebase";
+import { socialLinks } from "@/data/socialLinks";
 
 emailjs.init(import.meta.env.VITE_EMAILJS_PUBLIC_KEY);
 import {
@@ -182,6 +183,28 @@ const Contact = () => {
                   Trinetra Systems<br />
                   Tech Park, Bengaluru, Karnataka 560001, India
                 </p>
+              </div>
+            </div>
+            <div className="flex items-start gap-4">
+              <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+                <Share2 className="w-6 h-6 text-primary" />
+              </div>
+              <div>
+                <h3 className="font-semibold mb-1">Follow Us</h3>
+                <div className="flex flex-wrap gap-x-6">
+                  {socialLinks.map(({ label, href, icon: Icon }) => (
+                    <a
+                      key={label}
+                      href={href}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-2 py-1 text-muted-foreground hover:text-primary transition-colors"
+                    >
+                      <Icon className="w-4 h-4" />
+                      {label}
+                    </a>
+                  ))}
+                </div>
               </div>
             </div>
           </motion.div>

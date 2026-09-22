@@ -1,0 +1,69 @@
+// Contact-form hardening for the `publicSubmissions` collection.
+//
+// WHY THIS FILE EXISTS
+// The website's Firebase config is public (it ships inside the JS bundle), so a
+// bot does not need to load the page or fill the form: it can POST straight to
+//   https://firestore.googleapis.com/v1/projects/<project>/databases/(default)/documents/publicSubmissions
+// Client-side checks in Contact.tsx cannot see those requests. Security rules
+// are the only place that can reject them, so the shape of a valid enquiry has
+// to be enforced here as well.
+//
+// HOW TO APPLY
+// Merge the `match /publicSubmissions/{id}` block below into the project's
+// existing ruleset (Firebase console -> Firestore -> Rules), keeping the
+// read/update/delete conditions the admin panel already relies on. Do NOT
+// deploy this file on its own - it does not contain the rules for `users`,
+// `tickets`, `userPasswords`, `loginIndex` or `deleteRequests`.
+
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    match /publicSubmissions/{submissionId} {
+
+      function payload() {
+        return request.resource.data;
+      }
+
+      // Exactly the fields Contact.tsx sends - nothing more.
+      function hasExpectedShape() {
+        return payload().keys().hasAll(['name', 'email', 'message', 'createdAt', 'source'])
+          && payload().keys().hasOnly(['name', 'companyName', 'email', 'contactNumber', 'message', 'createdAt', 'source']);
+      }
+
+      function isSizedString(value, minLength, maxLength) {
+        return value is string && value.size() >= minLength && value.size() <= maxLength;
+      }
+
+      // A name or company name containing a URL is always spam.
+      function hasNoLink(value) {
+        return !value.lower().matches('.*(https?://|www\\.|\\[url|\\[link).*');
+      }
+
+      function hasValidFields() {
+        return isSizedString(payload().name, 1, 100)
+          && hasNoLink(payload().name)
+          && isSizedString(payload().email, 5, 200)
+          && payload().email.matches('^[^@\\s]+@[^@\\s]+\\.[a-zA-Z]{2,}$')
+          && isSizedString(payload().message, 10, 2000)
+          && (!payload().keys().hasAny(['companyName'])
+              || payload().companyName == null
+              || (isSizedString(payload().companyName, 1, 150) && hasNoLink(payload().companyName)))
+          && (!payload().keys().hasAny(['contactNumber'])
+              || payload().contactNumber == null
+              || isSizedString(payload().contactNumber, 7, 25))
+          // serverTimestamp() only - a bot cannot backdate or omit it.
+          && payload().createdAt == request.time
+          && payload().source == 'website-contact';
+      }
+
+      allow create: if hasExpectedShape() && hasValidFields();
+
+      // KEEP THE PROJECT'S EXISTING ADMIN CONDITIONS HERE.
+      // Replace the line below with whatever the current ruleset already uses to
+      // identify an admin (verified above: anonymous reads are already denied).
+      allow read, update, delete: if isAdmin();
+    }
+  }
+}
