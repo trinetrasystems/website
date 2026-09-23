@@ -56,21 +56,25 @@ const EngineStory = () => {
   const progress = useMotionValue(0);
   const [collapsed, setCollapsed] = useState(false);
   const collapsedRef = useRef(false);
+  const upScrolled = useRef(0);
 
   useMotionValueEvent(scrollYProgress, "change", (value) => {
     if (collapsedRef.current) return;
-
-    if (value > progress.get()) {
-      progress.set(value);
-      return;
-    }
-
-    // Scrolled up (past a small threshold, so trackpad jitter doesn't trigger it):
-    // drop the remaining scroll distance and hold the scroll where it already is,
-    // which keeps the stage looking identical while the section shrinks.
     const previous = scrollYProgress.getPrevious() ?? value;
+
+    if (value > progress.get()) progress.set(value);
+
+    // Measure upward scrolling cumulatively: touch scrolling arrives in many tiny
+    // steps, so comparing single steps would never reach a sensible threshold.
+    if (value < previous) upScrolled.current += previous - value;
+    else if (value > previous) upScrolled.current = 0;
+    if (upScrolled.current < 0.02) return;
+
+    // Drop the story's remaining scroll distance and hold the scroll where it is.
+    // The pinned stage looks the same at any point inside the section, so this is
+    // invisible — but the reader is now free to carry straight on up the page.
     const section = sectionRef.current;
-    if (!section || value > previous - 0.01) return;
+    if (!section) return;
 
     collapsedRef.current = true;
     setCollapsed(true);
@@ -86,6 +90,7 @@ const EngineStory = () => {
     if (!section || section.getBoundingClientRect().top <= 0) return;
 
     collapsedRef.current = false;
+    upScrolled.current = 0;
     setCollapsed(false);
     progress.set(0);
   }, [inView, progress]);
