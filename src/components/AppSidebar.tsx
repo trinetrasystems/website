@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Home, Sparkles, Grid3X3, Star, CircleDollarSign, Mail, Lock, Menu, X, Eye, Shield, BookOpen, Globe2 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { ThemeToggle } from "./ThemeToggle";
+import { scrollToSection } from "@/lib/smoothScroll";
 import { auth, db } from "@/lib/firebase";
 import { onAuthStateChanged } from "firebase/auth";
 import { doc, getDoc } from "firebase/firestore";
@@ -54,18 +55,7 @@ const AppSidebar = () => {
     setMobileOpen(false);
 
     const targetId = href.slice(1);
-    const targetElement = document.getElementById(targetId);
-
-    if (targetElement) {
-      const headerElement = document.querySelector("header");
-      const headerHeight = headerElement instanceof HTMLElement ? headerElement.offsetHeight : 64;
-      const offset = headerHeight + 20;
-      const targetTop = targetElement.getBoundingClientRect().top + window.scrollY - offset;
-
-      window.scrollTo({
-        top: Math.max(targetTop, 0),
-        behavior: "smooth",
-      });
+    if (scrollToSection(targetId)) {
       window.history.replaceState(null, "", `#${targetId}`);
       return;
     }
@@ -75,8 +65,8 @@ const AppSidebar = () => {
 
   return (
     <>
-      <header className="fixed top-0 left-0 right-0 z-[60] bg-background/80 backdrop-blur-xl border-b border-border/40 shadow-sm">
-        <div className="flex h-20 md:h-24 w-full items-center justify-between gap-3 px-4 sm:px-6 md:px-10 min-[1360px]:px-12 mx-auto">
+      <header className="fixed top-3 inset-x-3 md:top-4 md:inset-x-6 z-[60] mx-auto max-w-[1440px] rounded-2xl border border-border/60 bg-background/70 dark:bg-card/70 backdrop-blur-xl shadow-[0_8px_32px_-12px_rgba(0,0,0,0.25)]">
+        <div className="flex h-16 md:h-[72px] w-full items-center justify-between gap-3 px-3 sm:px-4 md:px-5">
           {/* Logo Area — shrink-0 so the brand logo is never squeezed off-screen */}
           <a
             href="#home"
@@ -87,12 +77,12 @@ const AppSidebar = () => {
             <img
               src="/logo/logo-light.png"
               alt="Trinetra Systems"
-              className="h-12 sm:h-14 md:h-16 w-auto block dark:hidden transition-transform duration-300 group-hover:scale-[1.03]"
+              className="h-11 md:h-12 w-auto block dark:hidden transition-transform duration-300 group-hover:scale-[1.03]"
             />
             <img
               src="/logo/logo-dark.png"
               alt="Trinetra Systems"
-              className="h-12 sm:h-14 md:h-16 w-auto hidden dark:block transition-transform duration-300 group-hover:scale-[1.03]"
+              className="h-11 md:h-12 w-auto hidden dark:block transition-transform duration-300 group-hover:scale-[1.03]"
             />
           </a>
 
@@ -116,9 +106,9 @@ const AppSidebar = () => {
                   key={item.title}
                   href={item.href}
                   onClick={handleHashNavigation(item.href)}
-                  className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold whitespace-nowrap transition-all duration-300 group border border-amber-500/30 bg-amber-500/5 hover:bg-amber-500/15 text-amber-600 dark:text-amber-400 hover:border-amber-500/50 hover:shadow-[0_0_12px_rgba(245,158,11,0.15)]"
+                  className="btn-shine group flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold whitespace-nowrap backdrop-blur-md border border-white/50 bg-primary/[0.09] text-primary shadow-[inset_0_1px_0_rgba(255,255,255,0.75),0_2px_8px_-3px_hsl(250_80%_40%/0.35)] transition-all duration-200 hover:bg-primary/[0.14] hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.85),0_3px_12px_-3px_hsl(250_80%_40%/0.45)] dark:border-white/15 dark:bg-primary/[0.16] dark:text-[hsl(250_90%_78%)] dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.14),0_2px_10px_-4px_rgba(0,0,0,0.7)] dark:hover:bg-primary/[0.22]"
                 >
-                  <item.icon className="w-4 h-4 group-hover:scale-110 transition-transform text-amber-500 animate-pulse" style={{ animationDuration: '3s' }} />
+                  <item.icon className="w-4 h-4 group-hover:scale-110 transition-transform text-primary dark:text-[hsl(250_90%_78%)]" />
                   <span>{item.title}</span>
                 </a>
               ) : (
@@ -178,6 +168,7 @@ const AppSidebar = () => {
               onClick={() => setMobileOpen(false)}
             />
             <motion.nav
+              data-lenis-prevent
               initial={{ x: "100%" }}
               animate={{ x: 0 }}
               exit={{ x: "100%" }}
@@ -208,9 +199,9 @@ const AppSidebar = () => {
                       key={item.title}
                       href={item.href}
                       onClick={handleHashNavigation(item.href)}
-                      className="flex items-center gap-4 px-4 py-4 rounded-2xl text-lg font-bold text-amber-600 dark:text-amber-400 bg-amber-500/5 border border-amber-500/20 hover:bg-amber-500/10 transition-all"
+                      className="btn-shine flex items-center gap-4 px-4 py-4 rounded-2xl text-lg font-bold backdrop-blur-md text-primary dark:text-[hsl(250_90%_78%)] bg-primary/[0.09] dark:bg-primary/[0.16] border border-white/50 dark:border-white/15 shadow-[inset_0_1px_0_rgba(255,255,255,0.75),0_2px_10px_-4px_hsl(250_80%_40%/0.35)] dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.14),0_2px_10px_-4px_rgba(0,0,0,0.7)] hover:bg-primary/[0.14] transition-all"
                     >
-                      <item.icon className="w-6 h-6 text-amber-500" />
+                      <item.icon className="w-6 h-6 text-primary dark:text-[hsl(250_90%_78%)]" />
                       <span>{item.title}</span>
                     </a>
                   ) : (

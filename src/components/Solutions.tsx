@@ -1,4 +1,6 @@
 import { motion, useInView } from "framer-motion";
+import { fadeUp, stagger } from "@/lib/motion";
+import SectionHeader from "./SectionHeader";
 import { useRef } from "react";
 import { Link } from "react-router-dom";
 import { BarChart3, Megaphone, Building2, Store, Factory, CheckCircle2, ArrowRight } from "lucide-react";
@@ -50,31 +52,22 @@ const Solutions = () => {
   return (
     <section id="solutions" className="py-12 md:py-24 px-4 md:px-6 bg-gradient-dark" ref={ref}>
       <div className="max-w-6xl mx-auto">
-        <motion.div
-          initial={{ opacity: 0, y: 40 }}
-          animate={isInView ? { opacity: 1, y: 0 } : {}}
-          transition={{ duration: 0.6 }}
-          className="text-center mb-12 md:mb-16"
-        >
-          <h2 className="text-3xl md:text-5xl font-bold mb-6">
-            AI Surveillance Solutions That <span className="text-gradient">Work For You</span>
-          </h2>
-          <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-            Purpose-built, on-premise AI for every environment — explore the solution that fits your site.
-          </p>
-        </motion.div>
+        <SectionHeader
+          eyebrow="What we build"
+          inView={isInView}
+          title={<>AI Surveillance Solutions That <span className="text-gradient">Work For You</span></>}
+          description="Purpose-built, on-premise AI for every environment — explore the solution that fits your site."
+        />
 
         <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-12 md:mb-16">
           {solutionPages.map((s, i) => (
             <motion.div
               key={s.title}
-              initial={{ opacity: 0, y: 30 }}
-              animate={isInView ? { opacity: 1, y: 0 } : {}}
-              transition={{ duration: 0.5, delay: 0.1 + i * 0.1 }}
+              {...fadeUp(isInView, stagger(i))}
             >
               <Link
                 to={s.href}
-                className="group flex flex-col h-full glass rounded-2xl p-6 border-white/5 hover:border-primary/40 hover:shadow-glow-primary transition-all duration-300"
+                className="group flex flex-col h-full glow-card rounded-2xl p-6"
               >
                 <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mb-5 group-hover:bg-primary/20 group-hover:scale-110 transition-all duration-300">
                   <s.icon className="w-6 h-6 text-primary" />
@@ -95,9 +88,7 @@ const Solutions = () => {
         </div>
 
         <motion.div
-          initial={{ opacity: 0, scale: 0.97 }}
-          animate={isInView ? { opacity: 1, scale: 1 } : {}}
-          transition={{ duration: 0.6, delay: 0.3 }}
+          {...fadeUp(isInView, 0.3)}
           className="flex flex-wrap items-center justify-center gap-x-8 gap-y-4 max-w-4xl mx-auto"
         >
           {highlights.map((h) => (

@@ -1,4 +1,6 @@
 import { motion, useInView } from "framer-motion";
+import { fadeUp } from "@/lib/motion";
+import SectionHeader from "./SectionHeader";
 import { useRef } from "react";
 import { Eye, Brain, Zap, ShieldCheck, AlertTriangle } from "lucide-react";
 
@@ -17,23 +19,15 @@ const About = () => {
   return (
     <section id="about" className="py-12 md:py-24 px-4 md:px-6" ref={ref}>
       <div className="max-w-4xl mx-auto">
-        <motion.div
-           initial={{ opacity: 0, y: 40 }}
-           animate={isInView ? { opacity: 1, y: 0 } : {}}
-           className="text-center mb-12 md:mb-16"
-        >
-          <h2 className="text-3xl md:text-5xl font-bold mb-6">
-            Why <span className="text-red-500">Traditional CCTV</span> Fails at AI Detection
-          </h2>
-          <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-            Traditional CCTV relies on manual monitoring — our AI camera analytics and smart surveillance platform detects incidents automatically in real time.
-          </p>
-        </motion.div>
+        <SectionHeader
+          eyebrow="The problem"
+          inView={isInView}
+          title={<>Why <span className="text-red-500">Traditional CCTV</span> Fails at AI Detection</>}
+          description="Traditional CCTV relies on manual monitoring — our AI camera analytics and smart surveillance platform detects incidents automatically in real time."
+        />
 
         <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={isInView ? { opacity: 1, scale: 1 } : {}}
-          transition={{ duration: 0.5 }}
+          {...fadeUp(isInView, 0.1)}
           className="glass rounded-[2rem] p-8 md:p-12 border-red-500/20 bg-red-500/5 shadow-xl"
         >
           <div className="space-y-6">

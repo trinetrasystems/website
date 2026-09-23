@@ -1,4 +1,4 @@
-import { Github, Twitter, Linkedin, Instagram } from "lucide-react";
+import { socialLinks } from "@/data/socialLinks";
 
 const Footer = () => {
   return (
@@ -57,8 +57,15 @@ const Footer = () => {
               <li>Tech Park, Bengaluru, Karnataka<br />560001, India</li>
             </ul>
             <div className="flex gap-3 mt-4">
-              {[Twitter, Linkedin, Github, Instagram].map((Icon, i) => (
-                <a key={i} href="#" className="w-9 h-9 rounded-lg bg-secondary/50 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors">
+              {socialLinks.map(({ label, href, icon: Icon }) => (
+                <a
+                  key={label}
+                  href={href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label={`Trinetra Systems on ${label}`}
+                  className="w-11 h-11 rounded-lg bg-secondary/50 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
+                >
                   <Icon className="w-4 h-4" />
                 </a>
               ))}

@@ -1,4 +1,6 @@
 import { motion, useInView } from "framer-motion";
+import { fadeUp, stagger } from "@/lib/motion";
+import SectionHeader from "./SectionHeader";
 import { useRef, useState } from "react";
 import { X, ZoomIn } from "lucide-react";
 import dashboardImg from "../../videosandphotoes/dashboard_preview.PNG";
@@ -36,16 +38,11 @@ const SeeItInAction = () => {
   return (
     <section id="see-it-in-action" className="py-12 md:py-24 px-4 md:px-6 bg-gradient-dark" ref={ref}>
       <div className="max-w-7xl mx-auto">
-        <motion.div
-          initial={{ opacity: 0, y: 40 }}
-          animate={isInView ? { opacity: 1, y: 0 } : {}}
-          transition={{ duration: 0.6 }}
-          className="text-center mb-12"
-        >
-          <h2 className="text-3xl md:text-5xl font-extrabold mb-4">
-            See It In <span className="text-gradient">Action</span>
-          </h2>
-        </motion.div>
+        <SectionHeader
+          eyebrow="Product tour"
+          inView={isInView}
+          title={<>See It In <span className="text-gradient">Action</span></>}
+        />
 
         {/* Filter Bar */}
         <div className="flex flex-wrap justify-center gap-2 mb-12">
@@ -68,9 +65,7 @@ const SeeItInAction = () => {
           {filteredItems.map((item, i) => (
             <motion.div
               key={item.id}
-              initial={{ opacity: 0, y: 30 }}
-              animate={isInView ? { opacity: 1, y: 0 } : {}}
-              transition={{ duration: 0.5, delay: i * 0.1 }}
+              {...fadeUp(isInView, stagger(i))}
               className="glass rounded-2xl overflow-hidden group border-white/5 flex flex-col h-full cursor-pointer"
               onClick={() => setSelectedItem(item)}
             >

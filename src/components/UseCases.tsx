@@ -1,4 +1,6 @@
 import { motion, useInView } from "framer-motion";
+import { fadeUp, stagger } from "@/lib/motion";
+import SectionHeader from "./SectionHeader";
 import { useEffect, useRef, useState } from "react";
 import { useCaseCategories } from "@/data/useCases";
 import { Carousel, CarouselApi, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
@@ -93,24 +95,17 @@ const UseCases = () => {
   return (
     <section id="usecases" className="py-12 md:py-24 px-4 md:px-6" ref={ref}>
       <div className="max-w-7xl mx-auto">
-        <motion.div
-          initial={{ opacity: 0, y: 40 }}
-          animate={isInView ? { opacity: 1, y: 0 } : {}}
-          transition={{ duration: 0.6 }}
-          className="text-center mb-8 md:mb-16"
-        >
-          <h2 className="text-3xl md:text-5xl font-bold mb-4 md:mb-6">
-            AI Detection <span className="text-gradient">Use Cases</span>
-          </h2>
-        </motion.div>
+        <SectionHeader
+          eyebrow="In the field"
+          inView={isInView}
+          title={<>AI Detection <span className="text-gradient">Use Cases</span></>}
+        />
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
           {useCaseCategories.map((category, categoryIndex) => (
             <motion.div
               key={category.id}
-              initial={{ opacity: 0, y: 24 }}
-              animate={isInView ? { opacity: 1, y: 0 } : {}}
-              transition={{ duration: 0.45, delay: categoryIndex * 0.08 }}
+              {...fadeUp(isInView, stagger(categoryIndex))}
               className={`h-full ${categoryIndex >= 2 && !showAll ? "hidden md:block" : "block"}`}
             >
               <CategoryCarousel title={category.title} description={category.description} items={category.items} />

@@ -1,4 +1,6 @@
 import { motion, useInView } from "framer-motion";
+import { fadeUp } from "@/lib/motion";
+import SectionHeader from "./SectionHeader";
 import { useRef } from "react";
 
 const industryImages = [
@@ -21,27 +23,17 @@ const IndustriesWeServe = () => {
   return (
     <section id="industries" className="py-12 md:py-24 overflow-hidden" ref={ref}>
       <div className="max-w-7xl mx-auto px-4 md:px-6">
-        <motion.div
-          initial={{ opacity: 0, y: 40 }}
-          animate={isInView ? { opacity: 1, y: 0 } : {}}
-          transition={{ duration: 0.6 }}
-          className="text-center mb-8 md:mb-14"
-        >
-          <h2 className="text-3xl md:text-5xl font-bold mb-4 md:mb-6">
-            Industries We <span className="text-gradient">Serve</span>
-          </h2>
-          <p className="text-sm md:text-lg text-muted-foreground max-w-2xl mx-auto">
-            From residential societies and enterprises to retail and industrial
-            facilities, Trinetra's AI surveillance adapts to every environment.
-          </p>
-        </motion.div>
+        <SectionHeader
+          eyebrow="Who we serve"
+          inView={isInView}
+          title={<>Industries We <span className="text-gradient">Serve</span></>}
+          description={"From residential societies and enterprises to retail and industrial facilities, Trinetra's AI surveillance adapts to every environment."}
+        />
       </div>
 
       {/* Continuously moving black-and-white banner */}
       <motion.div
-        initial={{ opacity: 0 }}
-        animate={isInView ? { opacity: 1 } : {}}
-        transition={{ duration: 0.8, delay: 0.2 }}
+        {...fadeUp(isInView, 0.2)}
         className="relative"
         style={{
           maskImage:

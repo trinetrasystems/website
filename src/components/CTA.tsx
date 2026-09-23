@@ -1,4 +1,6 @@
 import { motion, useInView } from "framer-motion";
+import { fadeUp } from "@/lib/motion";
+import { scrollToSection } from "@/lib/smoothScroll";
 import { useRef } from "react";
 import { Phone, Calendar } from "lucide-react";
 
@@ -9,11 +11,11 @@ const CTA = () => {
   return (
     <section id="cta" className="py-12 md:py-24 px-4 md:px-6" ref={ref}>
       <motion.div
-        initial={{ opacity: 0, scale: 0.95 }}
-        animate={isInView ? { opacity: 1, scale: 1 } : {}}
+        {...fadeUp(isInView, 0.1)}
         className="max-w-6xl mx-auto glass rounded-[3rem] p-10 md:p-20 text-center relative overflow-hidden border-primary/20 bg-primary/5 shadow-2xl"
       >
         <div className="absolute inset-0 bg-grid opacity-10" />
+        <div aria-hidden className="ambient-glow pointer-events-none absolute left-1/2 top-0 h-full w-[120%]" />
         <div className="relative z-10">
           <h2 className="text-3xl md:text-5xl font-bold mb-6">
             We value your <span className="text-gradient">safety and time</span>.
@@ -29,7 +31,7 @@ const CTA = () => {
               href="tel:+919924315066"
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              className="inline-flex items-center gap-2 px-10 py-4 rounded-xl bg-primary text-primary-foreground font-bold text-lg glow-primary transition-all"
+              className="btn-shine inline-flex items-center gap-2 px-10 py-4 rounded-xl bg-primary text-primary-foreground font-bold text-lg glow-primary transition-all"
             >
               <Phone className="w-5 h-5" />
               Call Now
@@ -37,8 +39,7 @@ const CTA = () => {
             <motion.a
               href="#contact-form"
               onClick={(e) => {
-                e.preventDefault();
-                document.getElementById("contact")?.scrollIntoView({ behavior: "smooth" });
+                if (scrollToSection("contact")) e.preventDefault();
               }}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
