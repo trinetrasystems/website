@@ -1,0 +1,204 @@
+// Trinetra Systems — complete Firestore ruleset.
+//
+// This is the project's existing ruleset with the partner fund added. Paste the
+// whole file into Firebase console -> Firestore -> Rules -> Publish.
+//
+// WHAT CHANGED
+//   * new helper  financeEntryIsValid() — shape check for ledger writes
+//   * new block   match /fundEntries/{entryId}
+// Everything else is byte-for-byte what you already had.
+//
+// WHO CAN SEE THE PARTNER FUND
+// Every full admin — the three partners — sees exactly the same view.
+// Members do not: they are stored as role "admin" with isMember true, so
+// isFullAdmin() excludes them, and the per-tab permission list does not apply.
+//
+// WHY THE RULES MATTER MORE THAN THE UI
+// The Firebase config ships inside the public JS bundle, so anyone can call the
+// Firestore REST API directly without ever loading the site. Hiding the tab in
+// React protects nothing on its own — these rules are the actual lock.
+
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // --- Security Helper Functions ---
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function getProfile() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+    }
+
+    function isAnyAdmin() {
+      return isSignedIn() &&
+             exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+             getProfile().role == "admin";
+    }
+
+    function isFullAdmin() {
+      return isAnyAdmin() && getProfile().get('isMember', false) == false;
+    }
+
+    function canAccess(permission) {
+      let profile = getProfile();
+      return profile.role == "admin" && (
+        profile.get('isMember', false) == false ||
+        profile.get('permissions', []).hasAny([permission])
+      );
+    }
+
+    // --- Partner Fund Helpers ---
+
+    function financeEntryIsValid() {
+      let d = request.resource.data;
+      return d.keys().hasAll(['type', 'amount', 'date', 'voided'])
+        && d.keys().hasOnly([
+             'type', 'amount', 'date', 'partnerId', 'category', 'note', 'voided',
+             'createdAt', 'createdByUid', 'updatedAt', 'updatedByUid'
+           ])
+        && d.type in ['expense', 'payout', 'contribution', 'income']
+        // Whole paise, positive, capped at Rs 100 crore to blunt fat-finger entries.
+        && d.amount is int && d.amount > 0 && d.amount <= 10000000000
+        && d.date is timestamp
+        && d.voided is bool
+        // A payout always names the partner who received it; client income always
+        // lands in the company account, so it never carries a partner.
+        && (d.type != 'payout' || d.partnerId in ['yash', 'bhagya', 'pratik'])
+        && (d.type != 'income' || d.get('partnerId', null) == null)
+        && (d.get('partnerId', null) == null || d.partnerId in ['yash', 'bhagya', 'pratik'])
+        && (d.get('category', '') is string && d.get('category', '').size() <= 40)
+        && (d.get('note', '') is string && d.get('note', '').size() <= 500);
+    }
+
+    // --- Delete Approval System ---
+    match /deleteRequests/{requestId} {
+      allow read: if isFullAdmin() || (isAnyAdmin() && resource.data.requestedByUid == request.auth.uid);
+      allow create: if isAnyAdmin() && canAccess('edit') &&
+                    request.resource.data.status == 'pending' &&
+                    request.resource.data.requestedByUid == request.auth.uid;
+      allow update: if isFullAdmin();
+      allow delete: if isFullAdmin() || (isAnyAdmin() && resource.data.requestedByUid == request.auth.uid);
+    }
+
+    // --- Users Collection ---
+    // NOTE: The `validUntil` (software validity) field lives on each user doc.
+    // It is already protected: only admins/members can create/update user docs,
+    // so normal users cannot extend their own validity. Each user can still
+    // READ their own doc, which is what powers the countdown on their dashboard.
+    match /users/{uid} {
+      allow read: if isSignedIn() && (
+        request.auth.uid == uid ||
+        isFullAdmin() ||
+        (isAnyAdmin() &&
+         resource.data.get('role', 'user') == 'user' &&
+         resource.data.get('isMember', false) == false)
+      );
+      allow create: if isAnyAdmin() && canAccess('create') && (
+        isFullAdmin() || (
+          request.resource.data.get('role', 'user') == 'user' &&
+          request.resource.data.get('isMember', false) == false
+        )
+      );
+      allow update: if isAnyAdmin() && canAccess('edit') && (
+        isFullAdmin() || (
+          resource.data.get('role', 'user') == 'user' &&
+          resource.data.get('isMember', false) == false
+        )
+      );
+      allow delete: if isFullAdmin();
+    }
+
+    // --- User Passwords ---
+    match /userPasswords/{uid} {
+      allow read: if isAnyAdmin() && canAccess('contacts') && (
+        isFullAdmin() || (
+          get(/databases/$(database)/documents/users/$(uid)).data.get('role', 'user') == 'user' &&
+          get(/databases/$(database)/documents/users/$(uid)).data.get('isMember', false) == false
+        )
+      );
+      allow write: if isSignedIn() && (
+        request.auth.uid == uid ||
+        (isAnyAdmin() && canAccess('contacts') && (
+          isFullAdmin() || (
+            get(/databases/$(database)/documents/users/$(uid)).data.get('role', 'user') == 'user' &&
+            get(/databases/$(database)/documents/users/$(uid)).data.get('isMember', false) == false
+          )
+        ))
+      );
+      allow delete: if isFullAdmin();
+    }
+
+    // --- Login Index ---
+    match /loginIndex/{usernameKey} {
+      allow read: if true;
+      allow create, update: if isAnyAdmin() && (isFullAdmin() || canAccess('edit'));
+      allow delete: if isFullAdmin();
+    }
+
+    // --- Public Contact Forms ---
+    match /publicSubmissions/{id} {
+      allow create: if true;
+      allow read, update, delete: if isAnyAdmin() && canAccess('forms');
+    }
+
+    // --- Support Tickets (Mobile App — no Firebase Auth) ---
+    match /tickets/{ticketId} {
+      allow read, create: if true;
+      allow update, delete: if true;
+
+      // --- Ticket Messages Subcollection ---
+      match /messages/{messageId} {
+        allow read, write: if true;
+      }
+    }
+
+    // --- Ticket ID Counter ---
+    match /counters/{counterId} {
+      allow read, write: if true;
+    }
+
+    // --- System Metadata ---
+    match /admins/{uid} {
+      allow read: if isSignedIn() && request.auth.uid == uid;
+      allow write: if false;
+    }
+
+    // --- Shared Document Notes ---
+    match /docNotes/{docId} {
+      allow read: if true;
+      allow write: if true;
+    }
+
+    // --- Access Requests (Mobile App) ---
+    match /accessRequests/{requestId} {
+      allow read, write: if true;
+    }
+
+    // --- Partner Fund Ledger (partner money: full admins only) ---
+    // Partner names (yash / bhagya / pratik) live in src/lib/partnerFund.ts and
+    // are mirrored in financeEntryIsValid() above. If a partner is ever renamed,
+    // update both places.
+    match /fundEntries/{entryId} {
+      allow read: if isFullAdmin();
+
+      allow create: if isFullAdmin()
+        && financeEntryIsValid()
+        && request.resource.data.createdByUid == request.auth.uid;
+
+      // The author and the original creation stamp can never be rewritten.
+      allow update: if isFullAdmin()
+        && financeEntryIsValid()
+        && request.resource.data.get('createdAt', null) == resource.data.get('createdAt', null)
+        && request.resource.data.get('createdByUid', '') == resource.data.get('createdByUid', '')
+        && request.resource.data.updatedByUid == request.auth.uid;
+
+      // Entries are cancelled (voided) from the UI rather than deleted, so the
+      // history stays intact; delete remains available for genuine clean-up.
+      allow delete: if isFullAdmin();
+    }
+  }
+}

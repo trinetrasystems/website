@@ -26,8 +26,9 @@ import {
   where,
 } from "firebase/firestore";
 import { adminAuth, auth, db } from "@/lib/firebase";
-import { Shield, LogIn, LogOut, RefreshCw, ArrowLeft, CheckCircle, Trash2, Eye, EyeOff, Key, Copy, Users, Phone, Mail, Search, FileText, Download, XCircle, MessageSquare, Sun, Moon, Presentation, ExternalLink, ImageIcon } from "lucide-react";
+import { Shield, LogIn, LogOut, RefreshCw, ArrowLeft, CheckCircle, Trash2, Eye, EyeOff, Key, Copy, Users, Phone, Mail, Search, FileText, Download, XCircle, MessageSquare, Sun, Moon, Presentation, ExternalLink, ImageIcon, Wallet } from "lucide-react";
 import AppSidebar from "@/components/AppSidebar";
+import PartnerFundPanel from "@/components/partner-fund/PartnerFundPanel";
 // Auto-detected list of presentation decks in public/ppts (filenames only — the
 // binaries are served statically from that folder, never bundled). Drop any new
 // .ppt/.pptx into public/ppts and it shows up here on the next build.
@@ -314,7 +315,7 @@ const Admin = () => {
   const [selectedUserMaintenanceLifetime, setSelectedUserMaintenanceLifetime] = useState(false);
   const [updatingUser, setUpdatingUser] = useState(false);
   const [deletingUser, setDeletingUser] = useState(false);
-  const [activeSection, setActiveSection] = useState<"create" | "edit" | "forms" | "tickets" | "contacts" | "docs" | "ppts" | "invoice" | "logo" | "requests">("tickets");
+  const [activeSection, setActiveSection] = useState<"create" | "edit" | "forms" | "tickets" | "contacts" | "docs" | "ppts" | "invoice" | "logo" | "requests" | "fund">("tickets");
   const [selectedDoc, setSelectedDoc] = useState<{ id: string; title: string; description: string; path: string } | null>(null);
   const [docTheme, setDocTheme] = useState<"light" | "dark">("light");
   const [invoiceFullscreen, setInvoiceFullscreen] = useState(false);
@@ -1529,8 +1530,25 @@ const Admin = () => {
                     <ImageIcon className="h-3.5 w-3.5" />
                     Logo
                   </button>)}
+                  {isAdmin && (<button
+                    type="button"
+                    onClick={() => setActiveSection("fund")}
+                    className={`inline-flex items-center gap-1.5 rounded-lg px-4 py-2 text-sm font-medium transition ${activeSection === "fund"
+                      ? "bg-primary text-primary-foreground"
+                      : "border border-border bg-background hover:bg-secondary/40"
+                      }`}
+                  >
+                    <Wallet className="h-3.5 w-3.5" />
+                    Partner Fund
+                  </button>)}
                 </div>
               </section>
+
+              {activeSection === "fund" && isAdmin && (
+                <section className="rounded-2xl border border-border bg-card p-4 shadow-lg sm:p-6">
+                  <PartnerFundPanel />
+                </section>
+              )}
 
               {activeSection === "create" && hasPermission("create") && (
                 <section className="rounded-2xl border border-border bg-card p-6 shadow-lg">
