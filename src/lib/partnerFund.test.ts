@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import {
   computeFundState,
+  describeEntry,
+  formatDelta,
   computeFundTotals,
   computePartnerPositions,
   formatINR,
@@ -173,6 +175,72 @@ describe("the books always balance", () => {
       expect(Number.isInteger(position.net)).toBe(true);
       expect(Number.isInteger(position.shareOfCosts)).toBe(true);
     }
+  });
+});
+
+describe("entry descriptions", () => {
+  it("maps each entry type to its effect on the company account", () => {
+    expect(describeEntry(entry("expense", 500, "yash"))).toMatchObject({ paidBy: "Yash", companyDelta: 0, partnerDelta: rupees(500) });
+    expect(describeEntry(entry("expense", 500, null))).toMatchObject({ paidBy: "Company funds", companyDelta: rupees(-500) });
+    expect(describeEntry(entry("payout", 500, "bhagya"))).toMatchObject({ companyDelta: rupees(-500), partnerDelta: rupees(-500) });
+    expect(describeEntry(entry("contribution", 500, "pratik"))).toMatchObject({ paidBy: "Pratik", companyDelta: rupees(500) });
+    expect(describeEntry(entry("contribution", 500, null))).toMatchObject({ companyDelta: rupees(500), partnerDelta: 0 });
+    expect(describeEntry(entry("income", 500))).toMatchObject({ paidBy: "Client", companyDelta: rupees(500), partnerDelta: 0 });
+  });
+
+  it("formats movement with a sign, and an em dash for no movement", () => {
+    expect(formatDelta(rupees(500))).toContain("+");
+    expect(formatDelta(rupees(-500))).toContain("-");
+    expect(formatDelta(0)).toBe("—");
+  });
+});
+
+describe("awkward data", () => {
+  it("copes with a ledger of nothing but cancelled entries", () => {
+    const entries = [entry("expense", 5000, "yash", { voided: true }), entry("income", 9000, null, { voided: true })];
+    const state = computeFundState(entries);
+
+    expect(state.totals.companyBalance).toBe(0);
+    expect(state.totals.totalCosts).toBe(0);
+    expect(state.positions.every((p) => p.net === 0)).toBe(true);
+    expect(state.balances).toBe(true);
+  });
+
+  it("handles a partner who only ever took money out", () => {
+    const entries = [entry("contribution", 90000, null), entry("payout", 30000, "pratik")];
+    const positions = computePartnerPositions(entries);
+
+    expect(positionOf(entries, "pratik").net).toBe(rupees(-30000));
+    expect(positions.filter((p) => p.net === 0)).toHaveLength(2);
+    expect(computeFundTotals(entries).companyBalance).toBe(rupees(60000));
+  });
+
+  it("keeps the books balanced with large, uneven amounts", () => {
+    const entries = [
+      entry("expense", 1234567.89, "yash"),
+      entry("expense", 7654321.01, "bhagya"),
+      entry("income", 9999999.99),
+      entry("payout", 555555.55, "pratik"),
+      entry("contribution", 1000000.01, null),
+    ];
+    const state = computeFundState(entries);
+    const positionsTotal = state.positions.reduce((total, p) => total + p.net, 0);
+
+    expect(positionsTotal + state.totals.unallocatedFunds).toBe(state.totals.companyBalance);
+    expect(state.balances).toBe(true);
+  });
+
+  it("reports a negative company balance rather than hiding an overdraft", () => {
+    const entries = [entry("contribution", 10000, "yash"), entry("payout", 25000, "bhagya")];
+    expect(computeFundTotals(entries).companyBalance).toBe(rupees(-15000));
+  });
+
+  it("counts a cost paid from company funds against everyone, but credits nobody", () => {
+    const entries = [entry("contribution", 90000, null), entry("expense", 30000, null)];
+    const positions = computePartnerPositions(entries);
+
+    expect(positions.every((p) => p.net === rupees(-10000))).toBe(true);
+    expect(positions.every((p) => p.paidFromPocket === 0)).toBe(true);
   });
 });
 
