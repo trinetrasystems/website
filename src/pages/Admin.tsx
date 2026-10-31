@@ -1,4 +1,4 @@
-import { FormEvent, useEffect, useMemo, useState } from "react";
+import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import {
   createUserWithEmailAndPassword,
@@ -26,7 +26,7 @@ import {
   where,
 } from "firebase/firestore";
 import { adminAuth, auth, db } from "@/lib/firebase";
-import { Shield, LogIn, LogOut, RefreshCw, ArrowLeft, CheckCircle, Trash2, Eye, EyeOff, Key, Copy, Users, Phone, Mail, Search, FileText, Download, XCircle, MessageSquare, Sun, Moon, Presentation, ExternalLink, ImageIcon, Wallet } from "lucide-react";
+import { Shield, LogIn, LogOut, RefreshCw, ArrowLeft, CheckCircle, Trash2, Eye, EyeOff, Key, Copy, Users, Phone, Mail, Search, FileText, Download, XCircle, MessageSquare, Sun, Moon, Presentation, ExternalLink, ImageIcon, Wallet, Send } from "lucide-react";
 import AppSidebar from "@/components/AppSidebar";
 import PartnerFundPanel from "@/components/partner-fund/PartnerFundPanel";
 // Auto-detected list of presentation decks in public/ppts (filenames only — the
@@ -34,6 +34,19 @@ import PartnerFundPanel from "@/components/partner-fund/PartnerFundPanel";
 // .ppt/.pptx into public/ppts and it shows up here on the next build.
 import pptFilenames from "virtual:ppt-manifest";
 import UserDashboard from "@/components/UserDashboard";
+import UserPlanFields from "@/components/admin/UserPlanFields";
+import {
+  customerPlanFromUserDoc,
+  daysUntil,
+  emptyPlanForm,
+  planFormFromDocs,
+  planFormToBillingFields,
+  planFormToUserFields,
+  validatePlanForm,
+  type CustomerPlan,
+  type PlanFormValues,
+} from "@/lib/userPlan";
+import { sendWelcomeEmail } from "@/lib/notify";
 import AdminTickets from "@/components/AdminTickets";
 import { toast } from "sonner";
 import {
@@ -70,14 +83,11 @@ type UserProfile = {
   isMember?: boolean;
   permissions?: string[];
   ipLink: string;
-  softwareValidUntil?: Date | null;
-  softwareLifetime?: boolean;
-  softwareValidityValue?: number;
-  softwareValidityUnit?: string;
-  maintenanceValidUntil?: Date | null;
-  maintenanceLifetime?: boolean;
-  maintenanceValidityValue?: number;
-  maintenanceValidityUnit?: string;
+  companyName: string;
+  plan: CustomerPlan;
+  welcomeEmailSentAt: Date | null;
+  /** Raw Firestore data, used to prefill the plan form on Edit User. */
+  raw: Record<string, any>;
   createdAtLabel: string;
   updatedAtLabel: string;
 };
@@ -116,46 +126,8 @@ const formatTimestamp = (value: unknown) => {
 
 const normalizeUsername = (value: string) => value.trim().toLowerCase();
 
-type ValidityUnit = "months" | "years" | "lifetime";
-
-// Compute an absolute expiry date from a validity period entered by the admin.
-const computeValidUntil = (value: number, unit: "months" | "years") => {
-  const date = new Date();
-  if (unit === "years") {
-    date.setFullYear(date.getFullYear() + value);
-  } else {
-    date.setMonth(date.getMonth() + value);
-  }
-  return date;
-};
-
-// Translate an admin validity input into the Firestore fields to store.
-// Returns null when nothing was entered (so an edit can leave the field untouched).
-const buildValidityFields = (value: string, unit: ValidityUnit) => {
-  if (unit === "lifetime") {
-    return { validUntil: null as Timestamp | null, lifetime: true, value: 0, unit: "lifetime" as ValidityUnit };
-  }
-  if (Number(value) > 0) {
-    return {
-      validUntil: Timestamp.fromDate(computeValidUntil(Number(value), unit)),
-      lifetime: false,
-      value: Number(value),
-      unit,
-    };
-  }
-  return null;
-};
-
-// Turn stored validity fields back into the form inputs, so Edit User prefills them.
-const validityToInput = (
-  lifetime?: boolean,
-  value?: number,
-  unit?: string
-): { value: string; unit: ValidityUnit } => {
-  if (lifetime) return { value: "", unit: "lifetime" };
-  if (value && value > 0) return { value: String(value), unit: (unit as ValidityUnit) || "months" };
-  return { value: "", unit: "months" };
-};
+/** The date a customer's current plan period ends (subscription, or maintenance for lifetime). */
+const planEndDate = (plan: CustomerPlan) => (plan.softwareLifetime ? plan.maintenanceValidUntil : plan.softwareValidUntil);
 
 const createAuthEmail = (value: string) => {
   const normalizedUsername = normalizeUsername(value);
@@ -264,6 +236,29 @@ const BRAND_ASSETS: {
   { name: "Shield Mark — Light", file: "/brand/Trinetra-Mark-Light.png", meta: "PNG · 728×844 · transparent", use: "Icon-only mark for light backgrounds.", theme: "light", mark: true },
   { name: "App Icon", file: "/brand/Trinetra-App-Icon.png", meta: "PNG · 1024×1024 · rounded tile", use: "The mobile app launcher icon.", theme: "tile", mark: true },
 ];
+/** Small "expires in N days" chip for the Edit User list. */
+const ValidityBadge = ({ plan }: { plan: CustomerPlan }) => {
+  const end = planEndDate(plan);
+  if (!end) {
+    return plan.softwareLifetime ? (
+      <span className="rounded-full border border-primary/30 bg-primary/10 px-2 py-0.5 text-[10px] font-semibold text-primary">Lifetime</span>
+    ) : null;
+  }
+  const days = daysUntil(end) ?? 0;
+  const label = plan.softwareLifetime ? "Maint." : "Plan";
+  const tone =
+    days <= 0
+      ? "border-red-500/30 bg-red-500/10 text-red-600"
+      : days <= 7
+      ? "border-amber-500/40 bg-amber-500/10 text-amber-700 dark:text-amber-400"
+      : "border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400";
+  const text =
+    days <= 0
+      ? `${label} expired ${end.toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}`
+      : `${label} till ${end.toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })} · ${days}d`;
+  return <span className={`rounded-full border px-2 py-0.5 text-[10px] font-semibold ${tone}`}>{text}</span>;
+};
+
 const Admin = () => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
@@ -283,10 +278,7 @@ const Admin = () => {
   const [newUserRole, setNewUserRole] = useState<"admin" | "member" | "user">("user");
   const [newUserPermissions, setNewUserPermissions] = useState<string[]>([]);
   const [newUserIpLink, setNewUserIpLink] = useState("");
-  const [newUserSoftwareValidityValue, setNewUserSoftwareValidityValue] = useState("");
-  const [newUserSoftwareValidityUnit, setNewUserSoftwareValidityUnit] = useState<ValidityUnit>("months");
-  const [newUserMaintenanceValidityValue, setNewUserMaintenanceValidityValue] = useState("");
-  const [newUserMaintenanceValidityUnit, setNewUserMaintenanceValidityUnit] = useState<ValidityUnit>("months");
+  const [newUserPlan, setNewUserPlan] = useState<PlanFormValues>(() => emptyPlanForm());
   const [creatingUser, setCreatingUser] = useState(false);
 
   const [deleteRequests, setDeleteRequests] = useState<DeleteRequest[]>([]);
@@ -305,14 +297,11 @@ const Admin = () => {
   const [selectedUserRole, setSelectedUserRole] = useState<"admin" | "member" | "user">("user");
   const [selectedUserPermissions, setSelectedUserPermissions] = useState<string[]>([]);
   const [selectedUserIpLink, setSelectedUserIpLink] = useState("");
-  const [selectedUserSoftwareValidityValue, setSelectedUserSoftwareValidityValue] = useState("");
-  const [selectedUserSoftwareValidityUnit, setSelectedUserSoftwareValidityUnit] = useState<ValidityUnit>("months");
-  const [selectedUserSoftwareValidUntil, setSelectedUserSoftwareValidUntil] = useState<Date | null>(null);
-  const [selectedUserSoftwareLifetime, setSelectedUserSoftwareLifetime] = useState(false);
-  const [selectedUserMaintenanceValidityValue, setSelectedUserMaintenanceValidityValue] = useState("");
-  const [selectedUserMaintenanceValidityUnit, setSelectedUserMaintenanceValidityUnit] = useState<ValidityUnit>("months");
-  const [selectedUserMaintenanceValidUntil, setSelectedUserMaintenanceValidUntil] = useState<Date | null>(null);
-  const [selectedUserMaintenanceLifetime, setSelectedUserMaintenanceLifetime] = useState(false);
+  const [selectedUserPlan, setSelectedUserPlan] = useState<PlanFormValues>(() => emptyPlanForm());
+  const [selectedUserBillingState, setSelectedUserBillingState] = useState<"idle" | "loading" | "loaded" | "error">("idle");
+  const [sendingWelcome, setSendingWelcome] = useState(false);
+  const selectedUserIdRef = useRef("");
+  selectedUserIdRef.current = selectedUserId;
   const [updatingUser, setUpdatingUser] = useState(false);
   const [deletingUser, setDeletingUser] = useState(false);
   const [activeSection, setActiveSection] = useState<"create" | "edit" | "forms" | "tickets" | "contacts" | "docs" | "ppts" | "invoice" | "logo" | "requests" | "fund">("tickets");
@@ -328,10 +317,7 @@ const Admin = () => {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [updatingPassword, setUpdatingPassword] = useState(false);
   const [loggedInUsername, setLoggedInUsername] = useState("");
-  const [userSoftwareValidUntil, setUserSoftwareValidUntil] = useState<Date | null>(null);
-  const [userSoftwareLifetime, setUserSoftwareLifetime] = useState(false);
-  const [userMaintenanceValidUntil, setUserMaintenanceValidUntil] = useState<Date | null>(null);
-  const [userMaintenanceLifetime, setUserMaintenanceLifetime] = useState(false);
+  const [loggedInUserPlan, setLoggedInUserPlan] = useState<CustomerPlan | null>(null);
   const [showPasswordFields, setShowPasswordFields] = useState(false);
 
   const [passwordRecords, setPasswordRecords] = useState<PasswordRecord[]>([]);
@@ -437,6 +423,7 @@ const Admin = () => {
     return visibleUsers.filter((profile) => {
       return (
         profile.username.toLowerCase().includes(searchValue) ||
+        profile.companyName.toLowerCase().includes(searchValue) ||
         profile.authEmail.toLowerCase().includes(searchValue) ||
         profile.role.toLowerCase().includes(searchValue) ||
         profile.id.toLowerCase().includes(searchValue) ||
@@ -462,6 +449,7 @@ const Admin = () => {
     return baseUsers.filter(user =>
       user.id.toLowerCase().includes(q) ||
       user.username.toLowerCase().includes(q) ||
+      user.companyName.toLowerCase().includes(q) ||
       (user.contactEmail && user.contactEmail.toLowerCase().includes(q)) ||
       (user.contactMobile && user.contactMobile.toLowerCase().includes(q))
     );
@@ -484,6 +472,9 @@ const Admin = () => {
       setUserRole(null);
       setIpLink("");
       setLoggedInUsername("");
+      setLoggedInUserPlan(null);
+      setSelectedUserPlan(emptyPlanForm());
+      setSelectedUserBillingState("idle");
       setShowPasswordFields(false);
       setStatus("");
       setSubmissions([]);
@@ -522,10 +513,8 @@ const Admin = () => {
             setStatus(`${role === "admin" ? "Admin" : "Member"} access confirmed.`);
           } else {
             setIpLink(data.ip_link || "");
-            setUserSoftwareValidUntil((data.softwareValidUntil ?? data.validUntil)?.toDate?.() ?? null);
-            setUserSoftwareLifetime(data.softwareLifetime === true);
-            setUserMaintenanceValidUntil(data.maintenanceValidUntil?.toDate?.() ?? null);
-            setUserMaintenanceLifetime(data.maintenanceLifetime === true);
+            // Only non-financial plan data lives on the user doc; pricing is in userBilling (admin-only).
+            setLoggedInUserPlan(customerPlanFromUserDoc(data));
             setStatus("User logged in successfully.");
           }
         } else {
@@ -563,17 +552,13 @@ const Admin = () => {
             isMember: data.isMember || data.role === "member",
             permissions: data.permissions || [],
             ipLink: data.ip_link || "",
-            softwareValidUntil: (data.softwareValidUntil ?? data.validUntil)?.toDate?.() ?? null,
-            softwareLifetime: data.softwareLifetime === true,
-            softwareValidityValue: data.softwareValidityValue ?? 0,
-            softwareValidityUnit: data.softwareValidityUnit ?? "",
-            maintenanceValidUntil: data.maintenanceValidUntil?.toDate?.() ?? null,
-            maintenanceLifetime: data.maintenanceLifetime === true,
-            maintenanceValidityValue: data.maintenanceValidityValue ?? 0,
-            maintenanceValidityUnit: data.maintenanceValidityUnit ?? "",
+            companyName: data.companyName || "",
+            plan: customerPlanFromUserDoc(data),
+            welcomeEmailSentAt: data.welcomeEmailSentAt?.toDate?.() ?? null,
+            raw: data,
             createdAtLabel: formatTimestamp(data.createdAt),
             updatedAtLabel: formatTimestamp(data.updatedAt),
-          };
+          } as UserProfile;
         });
 
         setUsers(nextUsers);
@@ -587,16 +572,8 @@ const Admin = () => {
             setSelectedUserRole(selected.role);
             setSelectedUserPermissions(selected.permissions || []);
             setSelectedUserIpLink(selected.ipLink);
-            setSelectedUserSoftwareValidUntil(selected.softwareValidUntil ?? null);
-            setSelectedUserSoftwareLifetime(selected.softwareLifetime === true);
-            setSelectedUserMaintenanceValidUntil(selected.maintenanceValidUntil ?? null);
-            setSelectedUserMaintenanceLifetime(selected.maintenanceLifetime === true);
-            const swInput = validityToInput(selected.softwareLifetime, selected.softwareValidityValue, selected.softwareValidityUnit);
-            const mtInput = validityToInput(selected.maintenanceLifetime, selected.maintenanceValidityValue, selected.maintenanceValidityUnit);
-            setSelectedUserSoftwareValidityValue(swInput.value);
-            setSelectedUserSoftwareValidityUnit(swInput.unit);
-            setSelectedUserMaintenanceValidityValue(mtInput.value);
-            setSelectedUserMaintenanceValidityUnit(mtInput.unit);
+            // The plan form is only (re)filled on select, so a background update
+            // never wipes what the admin is typing.
           }
         }
       },
@@ -789,6 +766,15 @@ const Admin = () => {
       return;
     }
 
+    if (newUserRole === "user") {
+      const planError = validatePlanForm(newUserPlan);
+      if (planError) {
+        setStatus(planError);
+        toast.error(planError);
+        return;
+      }
+    }
+
     setCreatingUser(true);
     setStatus("");
 
@@ -804,10 +790,9 @@ const Admin = () => {
       const authEmail = createAuthEmail(normalizedUsername);
       const credential = await createUserWithEmailAndPassword(adminAuth, authEmail, newUserPassword);
 
-      const swValidity =
-        newUserRole === "user" ? buildValidityFields(newUserSoftwareValidityValue, newUserSoftwareValidityUnit) : null;
-      const mtValidity =
-        newUserRole === "user" ? buildValidityFields(newUserMaintenanceValidityValue, newUserMaintenanceValidityUnit) : null;
+      const isCustomer = newUserRole === "user";
+      const newUid = credential.user.uid;
+      const contactEmail = newUserContactEmail.trim();
 
       try {
         await setDoc(doc(db, "users", credential.user.uid), {
@@ -820,15 +805,8 @@ const Admin = () => {
           role: newUserRole === "member" ? "admin" : newUserRole,
           isMember: newUserRole === "member",
           permissions: newUserRole === "member" ? newUserPermissions : [],
-          ip_link: newUserRole === "user" ? newUserIpLink : "",
-          softwareValidUntil: swValidity?.validUntil ?? null,
-          softwareLifetime: swValidity?.lifetime ?? false,
-          softwareValidityValue: swValidity?.value ?? 0,
-          softwareValidityUnit: swValidity?.unit ?? "",
-          maintenanceValidUntil: mtValidity?.validUntil ?? null,
-          maintenanceLifetime: mtValidity?.lifetime ?? false,
-          maintenanceValidityValue: mtValidity?.value ?? 0,
-          maintenanceValidityUnit: mtValidity?.unit ?? "",
+          ip_link: isCustomer ? newUserIpLink : "",
+          ...(isCustomer ? planFormToUserFields(newUserPlan) : {}),
           createdAt: serverTimestamp(),
           updatedAt: serverTimestamp(),
         });
@@ -846,6 +824,15 @@ const Admin = () => {
           password: newUserPassword,
           updatedAt: serverTimestamp(),
         });
+        // Pricing, Jetsons and notes: admin-only collection, never readable by the customer.
+        if (isCustomer) {
+          await setDoc(doc(db, "userBilling", newUid), {
+            ...planFormToBillingFields(newUserPlan),
+            createdAt: serverTimestamp(),
+            updatedAt: serverTimestamp(),
+            updatedByUid: user?.uid || "",
+          });
+        }
       } catch (profileError) {
         await deleteUser(credential.user);
         throw profileError;
@@ -859,12 +846,19 @@ const Admin = () => {
       setNewUserContactMobile("");
       setNewUserRole("user");
       setNewUserIpLink("");
-      setNewUserSoftwareValidityValue("");
-      setNewUserSoftwareValidityUnit("months");
-      setNewUserMaintenanceValidityValue("");
-      setNewUserMaintenanceValidityUnit("months");
+      setNewUserPlan(emptyPlanForm());
       setStatus("User created successfully.");
       toast.success("User created successfully");
+
+      // Welcome mail with the portal link + credentials (sent from support@ by /api).
+      if (isCustomer) {
+        const mail = await sendWelcomeEmail(newUid);
+        if (mail.ok) {
+          toast.success(`Welcome email sent to ${contactEmail}`);
+        } else {
+          toast.warning(`User created, but the welcome email could not be sent: ${mail.error} You can resend it from Edit User.`);
+        }
+      }
     } catch (error) {
       const message = error instanceof Error ? error.message : "Could not create user.";
       setStatus(message);
@@ -875,23 +869,46 @@ const Admin = () => {
   };
 
   const handleSelectUser = (profile: UserProfile) => {
+    selectedUserIdRef.current = profile.id;
     setSelectedUserId(profile.id);
     setSelectedUserUsername(profile.username);
     setSelectedUserContactEmail(profile.contactEmail || "");
     setSelectedUserContactMobile(profile.contactMobile || "");
     setSelectedUserRole(profile.role);
     setSelectedUserIpLink(profile.ipLink);
-    setSelectedUserSoftwareValidUntil(profile.softwareValidUntil ?? null);
-    setSelectedUserSoftwareLifetime(profile.softwareLifetime === true);
-    setSelectedUserMaintenanceValidUntil(profile.maintenanceValidUntil ?? null);
-    setSelectedUserMaintenanceLifetime(profile.maintenanceLifetime === true);
-    const swInput = validityToInput(profile.softwareLifetime, profile.softwareValidityValue, profile.softwareValidityUnit);
-    const mtInput = validityToInput(profile.maintenanceLifetime, profile.maintenanceValidityValue, profile.maintenanceValidityUnit);
-    setSelectedUserSoftwareValidityValue(swInput.value);
-    setSelectedUserSoftwareValidityUnit(swInput.unit);
-    setSelectedUserMaintenanceValidityValue(mtInput.value);
-    setSelectedUserMaintenanceValidityUnit(mtInput.unit);
+    setSelectedUserPermissions(profile.permissions || []);
+    setSelectedUserPlan(planFormFromDocs(profile.raw, null));
     setStatus(`Selected ${profile.username}.`);
+
+    // Pricing / Jetsons / notes come from the admin-only billing doc.
+    if (profile.role !== "user") {
+      setSelectedUserBillingState("idle");
+      return;
+    }
+    setSelectedUserBillingState("loading");
+    getDoc(doc(db, "userBilling", profile.id))
+      .then((billingDoc) => {
+        if (selectedUserIdRef.current !== profile.id) return; // admin already picked someone else
+        setSelectedUserPlan(planFormFromDocs(profile.raw, billingDoc.exists() ? billingDoc.data() : null));
+        setSelectedUserBillingState("loaded");
+      })
+      .catch((error) => {
+        if (selectedUserIdRef.current !== profile.id) return;
+        console.error("Could not load billing", error);
+        setSelectedUserBillingState("error");
+      });
+  };
+
+  const handleResendWelcome = async () => {
+    if (!selectedUserId) return;
+    setSendingWelcome(true);
+    const mail = await sendWelcomeEmail(selectedUserId, true);
+    setSendingWelcome(false);
+    if (mail.ok) {
+      toast.success(`Welcome email sent to ${selectedUserContactEmail}`);
+    } else {
+      toast.error(`Could not send welcome email: ${mail.error}`);
+    }
   };
 
   const handleCancelSelectedUser = () => {
@@ -902,6 +919,8 @@ const Admin = () => {
     setSelectedUserRole("user");
     setSelectedUserPermissions([]);
     setSelectedUserIpLink("");
+    setSelectedUserPlan(emptyPlanForm());
+    setSelectedUserBillingState("idle");
     setStatus("Edit cancelled.");
   };
 
@@ -929,6 +948,25 @@ const Admin = () => {
         return;
       }
 
+      const isCustomer = selectedUserRole === "user";
+      if (isCustomer) {
+        if (selectedUserBillingState === "loading") {
+          toast.error("Still loading this user's billing details — try again in a moment.");
+          return;
+        }
+        if (selectedUserBillingState === "error") {
+          // Saving now would overwrite the stored pricing/notes with blanks.
+          toast.error("Billing details could not be loaded, so saving is blocked. Reselect the user and try again.");
+          return;
+        }
+        const planError = validatePlanForm(selectedUserPlan);
+        if (planError) {
+          setStatus(planError);
+          toast.error(planError);
+          return;
+        }
+      }
+
       const existingLoginIndex = await getDoc(doc(db, "loginIndex", normalizedUsername));
       if (existingLoginIndex.exists() && existingLoginIndex.data()?.userId !== selectedUserId) {
         setStatus("Username already exists.");
@@ -937,34 +975,6 @@ const Admin = () => {
       }
 
       const selectedUserAuthEmail = selectedUser?.authEmail || createAuthEmail(normalizedUsername);
-
-      // The validity fields are prefilled from the stored values. Only rewrite a validity
-      // when the admin actually changes it, so editing (e.g.) the IP link never resets an
-      // existing expiry from today.
-      const swStored = validityToInput(
-        selectedUser?.softwareLifetime,
-        selectedUser?.softwareValidityValue,
-        selectedUser?.softwareValidityUnit
-      );
-      const mtStored = validityToInput(
-        selectedUser?.maintenanceLifetime,
-        selectedUser?.maintenanceValidityValue,
-        selectedUser?.maintenanceValidityUnit
-      );
-      const swChanged =
-        selectedUserSoftwareValidityValue !== swStored.value ||
-        selectedUserSoftwareValidityUnit !== swStored.unit;
-      const mtChanged =
-        selectedUserMaintenanceValidityValue !== mtStored.value ||
-        selectedUserMaintenanceValidityUnit !== mtStored.unit;
-      const swValidity =
-        selectedUserRole === "user" && swChanged
-          ? buildValidityFields(selectedUserSoftwareValidityValue, selectedUserSoftwareValidityUnit)
-          : null;
-      const mtValidity =
-        selectedUserRole === "user" && mtChanged
-          ? buildValidityFields(selectedUserMaintenanceValidityValue, selectedUserMaintenanceValidityUnit)
-          : null;
 
       await setDoc(
         doc(db, "users", selectedUserId),
@@ -978,27 +988,23 @@ const Admin = () => {
           role: selectedUserRole === "member" ? "admin" : selectedUserRole,
           isMember: selectedUserRole === "member",
           permissions: selectedUserRole === "member" ? selectedUserPermissions : [],
-          ip_link: selectedUserRole === "user" ? selectedUserIpLink : "",
-          ...(swValidity
-            ? {
-                softwareValidUntil: swValidity.validUntil,
-                softwareLifetime: swValidity.lifetime,
-                softwareValidityValue: swValidity.value,
-                softwareValidityUnit: swValidity.unit,
-              }
-            : {}),
-          ...(mtValidity
-            ? {
-                maintenanceValidUntil: mtValidity.validUntil,
-                maintenanceLifetime: mtValidity.lifetime,
-                maintenanceValidityValue: mtValidity.value,
-                maintenanceValidityUnit: mtValidity.unit,
-              }
-            : {}),
+          ip_link: isCustomer ? selectedUserIpLink : "",
+          ...(isCustomer ? planFormToUserFields(selectedUserPlan) : {}),
           updatedAt: serverTimestamp(),
         },
         { merge: true }
       );
+      if (isCustomer) {
+        await setDoc(
+          doc(db, "userBilling", selectedUserId),
+          {
+            ...planFormToBillingFields(selectedUserPlan),
+            updatedAt: serverTimestamp(),
+            updatedByUid: user?.uid || "",
+          },
+          { merge: true }
+        );
+      }
       await setDoc(doc(db, "loginIndex", normalizedUsername), {
         authEmail: selectedUserAuthEmail,
         userId: selectedUserId,
@@ -1188,10 +1194,7 @@ const Admin = () => {
           user={user}
           username={loggedInUsername}
           ipLink={ipLink}
-          softwareValidUntil={userSoftwareValidUntil}
-          softwareLifetime={userSoftwareLifetime}
-          maintenanceValidUntil={userMaintenanceValidUntil}
-          maintenanceLifetime={userMaintenanceLifetime}
+          plan={loggedInUserPlan}
           onSignOut={handleSignOut}
         />
       </>
@@ -1633,56 +1636,7 @@ const Admin = () => {
                     </div>
 
                     {newUserRole === "user" && (
-                      <div className="grid gap-4 md:grid-cols-2">
-                        <div className="space-y-2">
-                          <label className="text-sm font-medium">Software Validity</label>
-                          <div className="flex gap-3">
-                            <input
-                              type="number"
-                              min={0}
-                              value={newUserSoftwareValidityValue}
-                              onChange={(event) => setNewUserSoftwareValidityValue(event.target.value)}
-                              disabled={newUserSoftwareValidityUnit === "lifetime"}
-                              className="w-full rounded-lg border border-border bg-background px-4 py-3 outline-none transition-all focus:ring-2 focus:ring-primary/40 disabled:cursor-not-allowed disabled:opacity-50"
-                              placeholder="e.g. 6"
-                            />
-                            <select
-                              value={newUserSoftwareValidityUnit}
-                              onChange={(event) => setNewUserSoftwareValidityUnit(event.target.value as ValidityUnit)}
-                              className="w-36 rounded-lg border border-border bg-background px-4 py-3 outline-none transition-all focus:ring-2 focus:ring-primary/40"
-                            >
-                              <option value="months">Months</option>
-                              <option value="years">Years</option>
-                              <option value="lifetime">Lifetime</option>
-                            </select>
-                          </div>
-                          <p className="text-xs text-muted-foreground">Leave empty for no expiry.</p>
-                        </div>
-                        <div className="space-y-2">
-                          <label className="text-sm font-medium">Maintenance Validity</label>
-                          <div className="flex gap-3">
-                            <input
-                              type="number"
-                              min={0}
-                              value={newUserMaintenanceValidityValue}
-                              onChange={(event) => setNewUserMaintenanceValidityValue(event.target.value)}
-                              disabled={newUserMaintenanceValidityUnit === "lifetime"}
-                              className="w-full rounded-lg border border-border bg-background px-4 py-3 outline-none transition-all focus:ring-2 focus:ring-primary/40 disabled:cursor-not-allowed disabled:opacity-50"
-                              placeholder="e.g. 12"
-                            />
-                            <select
-                              value={newUserMaintenanceValidityUnit}
-                              onChange={(event) => setNewUserMaintenanceValidityUnit(event.target.value as ValidityUnit)}
-                              className="w-36 rounded-lg border border-border bg-background px-4 py-3 outline-none transition-all focus:ring-2 focus:ring-primary/40"
-                            >
-                              <option value="months">Months</option>
-                              <option value="years">Years</option>
-                              <option value="lifetime">Lifetime</option>
-                            </select>
-                          </div>
-                          <p className="text-xs text-muted-foreground">Leave empty for no expiry.</p>
-                        </div>
-                      </div>
+                      <UserPlanFields idPrefix="create" value={newUserPlan} onChange={setNewUserPlan} />
                     )}
 
                     {newUserRole === "member" && (
@@ -1737,7 +1691,7 @@ const Admin = () => {
                         value={userSearch}
                         onChange={(event) => setUserSearch(event.target.value)}
                         className="w-full rounded-lg border border-border bg-background px-4 py-3 outline-none transition-all focus:ring-2 focus:ring-primary/40"
-                        placeholder="Search by username, auth email, role, UID, or IP link"
+                        placeholder="Search by username, company, auth email, role, UID, or IP link"
                       />
                     </div>
                     <div className="max-h-60 space-y-2 overflow-y-auto rounded-xl border border-border bg-secondary/10 p-3 pr-1">
@@ -1760,6 +1714,12 @@ const Admin = () => {
                                 {profile.role}
                               </span>
                             </div>
+                            {profile.role === "user" && (profile.companyName || planEndDate(profile.plan) || profile.plan.softwareLifetime) && (
+                              <div className="mt-1 flex flex-wrap items-center gap-2 text-xs">
+                                {profile.companyName && <span className="font-medium text-foreground/80">{profile.companyName}</span>}
+                                <ValidityBadge plan={profile.plan} />
+                              </div>
+                            )}
                             <div className="mt-1 flex items-center justify-between">
                               <p className="truncate text-xs text-muted-foreground">{profile.id}</p>
                               {profile.contactEmail && (
@@ -1840,70 +1800,33 @@ const Admin = () => {
                         </div>
 
                         {selectedUserRole === "user" && (
-                          <div className="grid gap-4 md:grid-cols-2">
-                            <div className="space-y-2">
-                              <label className="text-sm font-medium">Software Validity</label>
-                              <div className="flex gap-3">
-                                <input
-                                  type="number"
-                                  min={0}
-                                  value={selectedUserSoftwareValidityValue}
-                                  onChange={(event) => setSelectedUserSoftwareValidityValue(event.target.value)}
-                                  disabled={selectedUserSoftwareValidityUnit === "lifetime"}
-                                  className="w-full rounded-lg border border-border bg-background px-4 py-3 outline-none transition-all focus:ring-2 focus:ring-primary/40 disabled:cursor-not-allowed disabled:opacity-50"
-                                  placeholder="Set new period"
-                                />
-                                <select
-                                  value={selectedUserSoftwareValidityUnit}
-                                  onChange={(event) => setSelectedUserSoftwareValidityUnit(event.target.value as ValidityUnit)}
-                                  className="w-36 rounded-lg border border-border bg-background px-4 py-3 outline-none transition-all focus:ring-2 focus:ring-primary/40"
-                                >
-                                  <option value="months">Months</option>
-                                  <option value="years">Years</option>
-                                  <option value="lifetime">Lifetime</option>
-                                </select>
-                              </div>
-                              <p className="text-xs text-muted-foreground">
-                                {selectedUserSoftwareLifetime
-                                  ? "Currently: Lifetime."
-                                  : selectedUserSoftwareValidUntil
-                                  ? `Current expiry: ${selectedUserSoftwareValidUntil.toLocaleDateString("en-IN", { year: "numeric", month: "long", day: "numeric" })}.`
-                                  : "No expiry set."}{" "}
-                                Prefilled with the current setting — change it to update; leave it as-is to keep the current expiry.
+                          <>
+                            {selectedUserBillingState === "loading" && (
+                              <p className="text-xs text-muted-foreground animate-pulse">Loading billing details…</p>
+                            )}
+                            {selectedUserBillingState === "error" && (
+                              <p className="rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2 text-xs text-red-600">
+                                Could not load billing details (pricing, Jetsons, notes). Saving is blocked so nothing is overwritten.
                               </p>
-                            </div>
-                            <div className="space-y-2">
-                              <label className="text-sm font-medium">Maintenance Validity</label>
-                              <div className="flex gap-3">
-                                <input
-                                  type="number"
-                                  min={0}
-                                  value={selectedUserMaintenanceValidityValue}
-                                  onChange={(event) => setSelectedUserMaintenanceValidityValue(event.target.value)}
-                                  disabled={selectedUserMaintenanceValidityUnit === "lifetime"}
-                                  className="w-full rounded-lg border border-border bg-background px-4 py-3 outline-none transition-all focus:ring-2 focus:ring-primary/40 disabled:cursor-not-allowed disabled:opacity-50"
-                                  placeholder="Set new period"
-                                />
-                                <select
-                                  value={selectedUserMaintenanceValidityUnit}
-                                  onChange={(event) => setSelectedUserMaintenanceValidityUnit(event.target.value as ValidityUnit)}
-                                  className="w-36 rounded-lg border border-border bg-background px-4 py-3 outline-none transition-all focus:ring-2 focus:ring-primary/40"
-                                >
-                                  <option value="months">Months</option>
-                                  <option value="years">Years</option>
-                                  <option value="lifetime">Lifetime</option>
-                                </select>
-                              </div>
+                            )}
+                            <UserPlanFields idPrefix="edit" value={selectedUserPlan} onChange={setSelectedUserPlan} />
+                            <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border bg-background/60 px-4 py-3">
                               <p className="text-xs text-muted-foreground">
-                                {selectedUserMaintenanceLifetime
-                                  ? "Currently: Lifetime."
-                                  : selectedUserMaintenanceValidUntil
-                                  ? `Current expiry: ${selectedUserMaintenanceValidUntil.toLocaleDateString("en-IN", { year: "numeric", month: "long", day: "numeric" })}.`
-                                  : "No expiry set."}{" "}
-                                Prefilled with the current setting — change it to update; leave it as-is to keep the current expiry.
+                                {selectedUser?.welcomeEmailSentAt
+                                  ? `Welcome email sent ${selectedUser.welcomeEmailSentAt.toLocaleString()}${selectedUser.raw?.welcomeEmailTo ? ` to ${selectedUser.raw.welcomeEmailTo}` : ""}.`
+                                  : "Welcome email not sent yet."}
                               </p>
+                              <button
+                                type="button"
+                                onClick={handleResendWelcome}
+                                disabled={sendingWelcome || !selectedUserContactEmail}
+                                className="inline-flex items-center gap-2 rounded-lg border border-border px-3 py-2 text-sm font-medium transition hover:bg-secondary/40 disabled:cursor-not-allowed disabled:opacity-60"
+                              >
+                                <Send className="h-4 w-4" />
+                                {sendingWelcome ? "Sending…" : selectedUser?.welcomeEmailSentAt ? "Resend Welcome Email" : "Send Welcome Email"}
+                              </button>
                             </div>
-                          </div>
+                          </>
                         )}
 
                         {selectedUserRole === "member" && (
@@ -2612,6 +2535,7 @@ const Admin = () => {
                       <thead className="bg-secondary/40 text-muted-foreground border-b border-border">
                         <tr>
                           <th className="px-4 py-3 font-medium uppercase tracking-wider text-[11px]">Username</th>
+                          <th className="px-4 py-3 font-medium uppercase tracking-wider text-[11px]">Company</th>
                           <th className="px-4 py-3 font-medium uppercase tracking-wider text-[11px]">Email Address</th>
                           <th className="px-4 py-3 font-medium uppercase tracking-wider text-[11px]">Mobile Number</th>
                           <th className="px-4 py-3 font-medium uppercase tracking-wider text-[11px]">Password</th>
@@ -2621,7 +2545,7 @@ const Admin = () => {
                       <tbody className="divide-y divide-border">
                         {filteredContacts.length === 0 ? (
                           <tr>
-                            <td colSpan={5} className="px-4 py-8 text-center text-muted-foreground border-dashed">No matching users found.</td>
+                            <td colSpan={6} className="px-4 py-8 text-center text-muted-foreground border-dashed">No matching users found.</td>
                           </tr>
                         ) : (
                           filteredContacts.map((profile) => {
@@ -2631,6 +2555,7 @@ const Admin = () => {
                             return (
                               <tr key={profile.id} className="hover:bg-secondary/20 transition-colors">
                                 <td className="px-4 py-3 font-medium">{profile.username}</td>
+                                <td className="px-4 py-3">{profile.companyName || <span className="italic text-muted-foreground">—</span>}</td>
                                 <td className="px-4 py-3 select-all">{profile.contactEmail || <span className="italic text-muted-foreground">None</span>}</td>
                                 <td className="px-4 py-3 select-all">{profile.contactMobile || <span className="italic text-muted-foreground">None</span>}</td>
                                 <td className="px-4 py-3">
