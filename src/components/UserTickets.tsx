@@ -1,6 +1,7 @@
 import { useState, useEffect, FormEvent } from "react";
 import { collection, addDoc, query, where, onSnapshot, serverTimestamp, getDoc, doc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
+import { notifyNewTicket } from "@/lib/notify";
 import { type User } from "firebase/auth";
 import { motion } from "framer-motion";
 import { Plus, Tag, Clock, Activity, MessageSquare, Paperclip, ChevronRight, X, AlertCircle } from "lucide-react";
@@ -123,7 +124,12 @@ export default function UserTickets({ user, username }: UserTicketsProps) {
         updatedAt: serverTimestamp(),
       });
 
-      toast.success("Your support ticket has been created with Ticket ID: ${generatedTicketNumber}. We'll reach out to you as soon as possible.");
+      toast.success(`Your support ticket has been created with Ticket ID: ${generatedTicketNumber}. We'll reach out to you as soon as possible.`);
+
+      // Alert support@ right away. Best-effort: the ticket is already saved.
+      notifyNewTicket(docRef.id).then((mail) => {
+        if (!mail.ok) console.warn("Ticket saved, but the support email failed:", mail.error);
+      });
       
       setTitle("");
       setDescription("");

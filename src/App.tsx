@@ -8,24 +8,34 @@ import { ThemeProvider } from "next-themes";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { lazy, Suspense } from "react";
 import Index from "./pages/Index.tsx";
-import Admin from "./pages/Admin.tsx";
-import ContactPage from "./pages/ContactPage.tsx";
-import NotFound from "./pages/NotFound.tsx";
-import PersonDetection from "./pages/PersonDetection.tsx";
-import VehicleDetection from "./pages/VehicleDetection.tsx";
-import SocietySecurity from "./pages/SocietySecurity.tsx";
-import CrossCameraTracking from "./pages/CrossCameraTracking.tsx";
-import LoiteringDetection from "./pages/LoiteringDetection.tsx";
-import AnprSystem from "./pages/AnprSystem.tsx";
-import Blog from "./pages/Blog.tsx";
-import BlogPost from "./pages/BlogPost.tsx";
-import ResidentialCCTV from "./pages/ResidentialCCTV.tsx";
-import WorkplaceAnalytics from "./pages/WorkplaceAnalytics.tsx";
-import BillboardAnalytics from "./pages/BillboardAnalytics.tsx";
-import RetailAnalytics from "./pages/RetailAnalytics.tsx";
-import ManufacturingAnalytics from "./pages/ManufacturingAnalytics.tsx";
 import WhatsAppButton from "./components/WhatsAppButton.tsx";
+
+// Every page except the home page is loaded on demand, so visitors (and the
+// customer portal at /admin) only download the code for the page they open.
+const Admin = lazy(() => import("./pages/Admin.tsx"));
+const ContactPage = lazy(() => import("./pages/ContactPage.tsx"));
+const NotFound = lazy(() => import("./pages/NotFound.tsx"));
+const PersonDetection = lazy(() => import("./pages/PersonDetection.tsx"));
+const VehicleDetection = lazy(() => import("./pages/VehicleDetection.tsx"));
+const SocietySecurity = lazy(() => import("./pages/SocietySecurity.tsx"));
+const CrossCameraTracking = lazy(() => import("./pages/CrossCameraTracking.tsx"));
+const LoiteringDetection = lazy(() => import("./pages/LoiteringDetection.tsx"));
+const AnprSystem = lazy(() => import("./pages/AnprSystem.tsx"));
+const Blog = lazy(() => import("./pages/Blog.tsx"));
+const BlogPost = lazy(() => import("./pages/BlogPost.tsx"));
+const ResidentialCCTV = lazy(() => import("./pages/ResidentialCCTV.tsx"));
+const WorkplaceAnalytics = lazy(() => import("./pages/WorkplaceAnalytics.tsx"));
+const BillboardAnalytics = lazy(() => import("./pages/BillboardAnalytics.tsx"));
+const RetailAnalytics = lazy(() => import("./pages/RetailAnalytics.tsx"));
+const ManufacturingAnalytics = lazy(() => import("./pages/ManufacturingAnalytics.tsx"));
+
+const PageFallback = () => (
+  <div className="flex min-h-screen items-center justify-center bg-background" role="status" aria-label="Loading">
+    <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary/20 border-t-primary" />
+  </div>
+);
 
 const queryClient = new QueryClient();
 
@@ -38,6 +48,7 @@ const App = () => (
         <BrowserRouter>
           <ScrollToTop />
           <SmoothScroll />
+          <Suspense fallback={<PageFallback />}>
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/admin" element={<Admin />} />
@@ -60,6 +71,7 @@ const App = () => (
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
+          </Suspense>
         <Analytics />
         <SpeedInsights />
         <WhatsAppButton />

@@ -6,6 +6,11 @@
 // WHAT CHANGED
 //   * new helper  financeEntryIsValid() — shape check for ledger writes
 //   * new block   match /fundEntries/{entryId}
+//   * new helpers isCustomerAccount(), billingIsValid(), feedbackIsValid()
+//   * new block   match /userBilling/{uid}  — plan cost, amount received,
+//                 maintenance charge, security deposit, Jetson count,
+//                 private notes (staff only)
+//   * new block   match /feedback/{uid}     — one-time customer feedback
 // Everything else is byte-for-byte what you already had.
 //
 // WHO CAN SEE THE PARTNER FUND
@@ -74,6 +79,45 @@ service cloud.firestore {
         && (d.get('note', '') is string && d.get('note', '').size() <= 500);
     }
 
+    // --- Customer Plan / Billing Helpers ---
+
+    // True when users/{uid} is a normal customer (not an admin or member).
+    function isCustomerAccount(uid) {
+      let target = get(/databases/$(database)/documents/users/$(uid)).data;
+      return target.get('role', 'user') == 'user' && target.get('isMember', false) == false;
+    }
+
+    function isOptionalNumber(d, key, maxValue) {
+      return d.get(key, null) == null
+        || ((d[key] is int || d[key] is float) && d[key] >= 0 && d[key] <= maxValue);
+    }
+
+    function billingIsValid() {
+      let d = request.resource.data;
+      return d.keys().hasOnly([
+               'planCost', 'amountPaid', 'maintenanceCost', 'depositAmount', 'depositRefunded',
+               'jetsonCount', 'notes', 'createdAt', 'updatedAt', 'updatedByUid'
+             ])
+        && isOptionalNumber(d, 'planCost', 1000000000)
+        && isOptionalNumber(d, 'amountPaid', 1000000000)
+        && isOptionalNumber(d, 'maintenanceCost', 1000000000)
+        && isOptionalNumber(d, 'depositAmount', 1000000000)
+        && (d.get('depositRefunded', false) is bool)
+        && (d.get('jetsonCount', null) == null || (d.jetsonCount is int && d.jetsonCount >= 0 && d.jetsonCount <= 100000))
+        && (d.get('notes', '') is string && d.get('notes', '').size() <= 5000);
+    }
+
+    function feedbackIsValid() {
+      let d = request.resource.data;
+      return d.keys().hasAll(['rating', 'message', 'createdAt'])
+        && d.keys().hasOnly(['rating', 'message', 'username', 'companyName', 'createdAt'])
+        && d.rating is int && d.rating >= 1 && d.rating <= 5
+        && d.message is string && d.message.size() >= 1 && d.message.size() <= 2000
+        && (d.get('username', '') is string && d.get('username', '').size() <= 200)
+        && (d.get('companyName', '') is string && d.get('companyName', '').size() <= 200)
+        && d.createdAt == request.time;
+    }
+
     // --- Delete Approval System ---
     match /deleteRequests/{requestId} {
       allow read: if isFullAdmin() || (isAnyAdmin() && resource.data.requestedByUid == request.auth.uid);
@@ -109,6 +153,37 @@ service cloud.firestore {
           resource.data.get('isMember', false) == false
         )
       );
+      allow delete: if isFullAdmin();
+    }
+
+    // --- Customer Billing (pricing, Jetsons, private notes) ---
+    // Deliberately NOT on users/{uid}: customers can read their own user doc,
+    // and the Firebase config is public, so anything stored there is visible to
+    // them. Customers have no access here at all. Members need the 'create' or
+    // 'edit' permission and can only touch normal customer accounts.
+    match /userBilling/{uid} {
+      allow read: if isAnyAdmin() && (
+        isFullAdmin() ||
+        ((canAccess('create') || canAccess('edit')) && isCustomerAccount(uid))
+      );
+      allow create, update: if isAnyAdmin() && billingIsValid() && (
+        isFullAdmin() ||
+        ((canAccess('create') || canAccess('edit')) && isCustomerAccount(uid))
+      );
+      allow delete: if isFullAdmin();
+    }
+
+    // --- Customer Feedback (one per account) ---
+    // Doc id is the customer's uid. Create-only: once it exists, the customer
+    // cannot edit or resubmit. The email to support@ is sent by /api with the
+    // Admin SDK, which bypasses these rules to stamp notifiedAt.
+    match /feedback/{uid} {
+      allow read: if isSignedIn() && (
+        request.auth.uid == uid ||
+        (isAnyAdmin() && (isFullAdmin() || canAccess('tickets')))
+      );
+      allow create: if isSignedIn() && request.auth.uid == uid && feedbackIsValid();
+      allow update: if false;
       allow delete: if isFullAdmin();
     }
 
