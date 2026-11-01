@@ -2,9 +2,11 @@ import { useState, useEffect, FormEvent } from "react";
 import { collection, addDoc, query, where, onSnapshot, serverTimestamp, getDoc, doc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { notifyNewTicket } from "@/lib/notify";
+import { hasUnread, normalizeTicketStatus, ticketNumberOf, useMarkOpenTicketRead, type LegacyReply } from "@/lib/tickets";
+import TicketChat from "@/components/TicketChat";
 import { type User } from "firebase/auth";
 import { motion } from "framer-motion";
-import { Plus, Tag, Clock, Activity, MessageSquare, Paperclip, ChevronRight, X, AlertCircle } from "lucide-react";
+import { Plus, Tag, Clock, Activity, MessageSquare, ChevronDown, X, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
 
@@ -23,7 +25,10 @@ type Ticket = {
   createdAt: any;
   updatedAt: any;
   description: string;
-  replies: Array<{ message: string; role: string; timestamp: any }>;
+  replies?: LegacyReply[];
+  lastMessageFrom?: string;
+  lastMessageAt?: any;
+  userReadAt?: any;
 };
 
 const CATEGORIES = [
@@ -49,6 +54,7 @@ export default function UserTickets({ user, username }: UserTicketsProps) {
   const [description, setDescription] = useState("");
   const [userProfile, setUserProfile] = useState<{ contactEmail?: string, contactMobile?: string } | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [openTicketId, setOpenTicketId] = useState<string | null>(null);
 
   useEffect(() => {
     if (!user) return;
@@ -77,7 +83,11 @@ export default function UserTickets({ user, username }: UserTicketsProps) {
     
     const unsubscribe = onSnapshot(q, (snapshot) => {
       // Set `id` from the doc id last so a persisted `id` field can't shadow it.
-      let docs = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id } as Ticket));
+      let docs = snapshot.docs.map(doc => {
+        // "estimate": just-written server timestamps show as now instead of null.
+        const data = doc.data({ serverTimestamps: "estimate" });
+        return { ...data, id: doc.id, ticketNumber: ticketNumberOf(data, doc.id) } as Ticket;
+      });
       // Client-side sort to avoid Firebase Composite Index requirement
       docs.sort((a, b) => {
         const timeA = a.createdAt?.toMillis?.() || 0;
@@ -94,6 +104,9 @@ export default function UserTickets({ user, username }: UserTicketsProps) {
 
     return () => unsubscribe();
   }, [user]);
+
+  // Opening a ticket — or a new message arriving while it is open — marks it read.
+  useMarkOpenTicketRead(tickets, openTicketId, "user");
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -144,7 +157,7 @@ export default function UserTickets({ user, username }: UserTicketsProps) {
   };
 
   const getStatusColor = (status: string) => {
-    switch (status) {
+    switch (normalizeTicketStatus(status)) {
       case "Active": return "bg-blue-500/10 text-blue-500 border-blue-500/20";
       case "In Progress": return "bg-amber-500/10 text-amber-500 border-amber-500/20";
       case "Solved": return "bg-emerald-500/10 text-emerald-500 border-emerald-500/20";
@@ -283,72 +296,92 @@ export default function UserTickets({ user, username }: UserTicketsProps) {
             </div>
           ) : (
             <div className="grid gap-4">
-              {tickets.map((ticket, index) => (
-                <motion.div
-                  key={ticket.id}
-                  variants={fadeUp}
-                  initial="hidden"
-                  animate="visible"
-                  custom={index}
-                  className="rounded-xl border border-border bg-card p-5 hover:border-primary/30 transition-all group"
-                >
-                  <div className="flex flex-col sm:flex-row justify-between gap-4">
-                    <div className="space-y-2 flex-1">
-                      <div className="flex items-center gap-3 flex-wrap">
-                        <span className={`px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wide border ${getStatusColor(ticket.status)}`}>
-                          {ticket.status}
-                        </span>
-                        <span className="text-xs font-bold text-foreground bg-secondary/50 px-2 py-0.5 rounded border border-border/60">
-                          {ticket.ticketNumber || ticket.id.slice(0,8)}
-                        </span>
-                        <span className="flex items-center gap-1.5 text-xs text-muted-foreground bg-secondary/30 px-2 py-0.5 rounded-md border border-border/50">
-                          <Tag className="h-3 w-3" />
-                          {ticket.category}
-                        </span>
-                      </div>
-                      <h4 className="text-[15px] font-bold text-foreground">
-                        {ticket.title}
-                      </h4>
-                      <p className="text-[13px] text-muted-foreground line-clamp-2 mt-1 w-full sm:w-[90%]">
-                        {ticket.description}
-                      </p>
-                    </div>
-                    
-                    <div className="flex flex-row sm:flex-col items-center sm:items-end justify-between sm:justify-center gap-2 shrink-0 border-t sm:border-t-0 border-border/50 pt-3 sm:pt-0 mt-3 sm:mt-0">
-                      <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
-                        <Clock className="h-3 w-3" />
-                        Created: {formatDate(ticket.createdAt)}
-                      </div>
-                      <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
-                        <Activity className="h-3 w-3" />
-                        Updated: {formatDate(ticket.updatedAt)}
-                      </div>
-                    </div>
-                  </div>
-
-                  {ticket.replies && ticket.replies.length > 0 && (
-                    <div className="mt-4 pt-4 border-t border-border/60">
-                      <h5 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3 flex items-center gap-2">
-                        <MessageSquare className="h-3.5 w-3.5" />
-                        Replies ({ticket.replies.length})
-                      </h5>
-                      <div className="space-y-3 pl-2 border-l-2 border-border">
-                        {ticket.replies.map((reply, i) => (
-                          <div key={i} className={`text-sm p-3 rounded-lg ${reply.role === 'admin' ? 'bg-primary/[0.05] border border-primary/10' : 'bg-secondary/40'}`}>
-                            <div className="flex items-center justify-between mb-1">
-                              <span className={`text-xs font-bold ${reply.role === 'admin' ? 'text-primary' : 'text-foreground'}`}>
-                                {reply.role === 'admin' ? 'Support Team' : 'You'}
+              {tickets.map((ticket) => {
+                const isOpen = openTicketId === ticket.id;
+                const unread = hasUnread(ticket, "user");
+                const status = normalizeTicketStatus(ticket.status);
+                const toggle = () => setOpenTicketId(isOpen ? null : ticket.id);
+                return (
+                  <motion.div
+                    key={ticket.id}
+                    variants={fadeUp}
+                    initial="hidden"
+                    animate="visible"
+                    data-testid="user-ticket"
+                    className={`rounded-xl border bg-card transition-all ${isOpen ? "border-primary/30 shadow-md" : "border-border hover:border-primary/30"}`}
+                  >
+                    <button
+                      type="button"
+                      onClick={toggle}
+                      aria-expanded={isOpen}
+                      className="w-full p-4 text-left sm:p-5"
+                    >
+                      <div className="flex flex-col justify-between gap-3 sm:flex-row sm:gap-4">
+                        <div className="min-w-0 flex-1 space-y-2">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <span className={`rounded-md border px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide ${getStatusColor(ticket.status)}`}>
+                              {status}
+                            </span>
+                            <span className="rounded border border-border/60 bg-secondary/50 px-2 py-0.5 text-xs font-bold text-foreground">
+                              {ticket.ticketNumber || ticket.id.slice(0, 8)}
+                            </span>
+                            <span className="flex items-center gap-1.5 rounded-md border border-border/50 bg-secondary/30 px-2 py-0.5 text-xs text-muted-foreground">
+                              <Tag className="h-3 w-3" />
+                              {ticket.category}
+                            </span>
+                            {unread && (
+                              <span className="rounded-full bg-primary px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-primary-foreground" data-testid="ticket-unread">
+                                New reply
                               </span>
-                              <span className="text-[10px] text-muted-foreground">{formatDate(reply.timestamp)}</span>
-                            </div>
-                            <p className="text-[13px] text-foreground/90">{reply.message}</p>
+                            )}
                           </div>
-                        ))}
+                          <h4 className="break-words text-[15px] font-bold text-foreground">{ticket.title}</h4>
+                          {!isOpen && <p className="mt-1 line-clamp-2 break-words text-[13px] text-muted-foreground">{ticket.description}</p>}
+                        </div>
+
+                        <div className="flex shrink-0 flex-row items-center justify-between gap-3 border-t border-border/50 pt-3 sm:flex-col sm:items-end sm:justify-center sm:border-t-0 sm:pt-0">
+                          <div className="space-y-1 text-[11px] text-muted-foreground">
+                            <div className="flex items-center gap-1.5 sm:justify-end">
+                              <Clock className="h-3 w-3" />
+                              Created: {formatDate(ticket.createdAt)}
+                            </div>
+                            <div className="flex items-center gap-1.5 sm:justify-end">
+                              <Activity className="h-3 w-3" />
+                              Updated: {formatDate(ticket.updatedAt)}
+                            </div>
+                          </div>
+                          <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-primary">
+                            <MessageSquare className="h-3.5 w-3.5" />
+                            {isOpen ? "Hide conversation" : "Open conversation"}
+                            <ChevronDown className={`h-3.5 w-3.5 transition-transform ${isOpen ? "rotate-180" : ""}`} />
+                          </span>
+                        </div>
                       </div>
-                    </div>
-                  )}
-                </motion.div>
-              ))}
+                    </button>
+
+                    {isOpen && (
+                      <div className="space-y-4 border-t border-border/60 p-4 sm:p-5">
+                        <div>
+                          <h5 className="mb-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Description</h5>
+                          <p className="whitespace-pre-wrap break-words text-sm text-foreground/90">{ticket.description}</p>
+                        </div>
+                        <div>
+                          <h5 className="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                            <MessageSquare className="h-3.5 w-3.5" />
+                            Conversation with Trinetra Support
+                          </h5>
+                          <TicketChat
+                            ticketId={ticket.id}
+                            replies={ticket.replies}
+                            viewer="user"
+                            author={{ uid: user.uid, name: username || "Customer" }}
+                          />
+                        </div>
+                      </div>
+                    )}
+                  </motion.div>
+                );
+              })}
             </div>
           )}
         </div>
@@ -364,7 +397,7 @@ function TicketIcon(props: any) {
       xmlns="http://www.w3.org/2000/svg"
       width="24"
       height="24"
-      viewBox="0 24"
+      viewBox="0 0 24 24"
       fill="none"
       stroke="currentColor"
       strokeWidth="2"

@@ -48,6 +48,7 @@ import {
 } from "@/lib/userPlan";
 import { sendWelcomeEmail } from "@/lib/notify";
 import AdminTickets from "@/components/AdminTickets";
+import { normalizeTicketStatus } from "@/lib/tickets";
 import { toast } from "sonner";
 import {
   AlertDialog,
@@ -589,7 +590,7 @@ const Admin = () => {
     const unsubscribeTickets = onSnapshot(
       collection(db, "tickets"),
       (snapshot) => {
-        const activeCount = snapshot.docs.filter(d => d.data().status === "Active").length;
+        const activeCount = snapshot.docs.filter(d => normalizeTicketStatus(d.data().status) === "Active").length;
         setActiveTicketCount(activeCount);
       },
       (error) => console.error("Could not load tickets count", error)

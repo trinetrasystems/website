@@ -22,27 +22,32 @@ const deepMerge = (a: DocData, b: DocData): DocData => {
   for (const [k, v] of Object.entries(b)) out[k] = isPlainObject(v) && isPlainObject(a[k]) ? deepMerge(a[k], v) : v;
   return out;
 };
-const docRef = (col: string, id: string) => ({
-  id,
+// Paths like "tickets/t1" or "tickets/t1/messages/m1", as in Firestore.
+const docRef = (path: string): any => ({
+  id: path.split("/").pop()!,
   get: async () => {
-    const data = store.get(key(col, id));
-    return { id, exists: !!data, data: () => (data ? { ...data } : undefined) };
+    const data = store.get(path);
+    return { id: path.split("/").pop()!, exists: !!data, data: () => (data ? { ...data } : undefined) };
   },
   set: async (data: DocData, opts?: { merge?: boolean }) => {
-    const prev = store.get(key(col, id));
-    store.set(key(col, id), opts?.merge && prev ? deepMerge(prev, data) : { ...data });
+    const prev = store.get(path);
+    store.set(path, opts?.merge && prev ? deepMerge(prev, data) : { ...data });
+  },
+  collection: (sub: string) => collectionRef(`${path}/${sub}`),
+});
+const collectionRef = (path: string) => ({
+  doc: (id: string) => docRef(`${path}/${id}`),
+  get: async () => {
+    const docs = [...store.entries()]
+      .filter(([k]) => k.startsWith(`${path}/`) && !k.slice(path.length + 1).includes("/"))
+      .map(([k, data]) => ({ id: k.slice(path.length + 1), data: () => ({ ...data }) }));
+    return { size: docs.length, docs };
   },
 });
 const fakeDb = {
-  collection: (col: string) => ({
-    doc: (id: string) => docRef(col, id),
-    get: async () => {
-      const docs = [...store.entries()]
-        .filter(([k]) => k.startsWith(`${col}/`))
-        .map(([k, data]) => ({ id: k.slice(col.length + 1), data: () => ({ ...data }) }));
-      return { size: docs.length, docs };
-    },
-  }),
+  collection: (col: string) => collectionRef(col),
+  runTransaction: async <T,>(fn: (tx: any) => Promise<T>) =>
+    fn({ get: (ref: any) => ref.get(), set: (ref: any, data: DocData, opts?: { merge?: boolean }) => void ref.set(data, opts) }),
 };
 // "token-<uid>" is a valid ID token for <uid>.
 vi.mock("./_lib/firebaseAdmin.js", () => ({
@@ -57,6 +62,8 @@ vi.mock("./_lib/firebaseAdmin.js", () => ({
 import welcome from "./notify/welcome";
 import ticket from "./notify/ticket";
 import feedback from "./notify/feedback";
+import ticketStatus from "./notify/ticket-status";
+import ticketMessage from "./notify/ticket-message";
 import cron from "./cron/expiry-reminders";
 
 // ---------------- real SMTP server ----------------
@@ -105,6 +112,8 @@ beforeAll(async () => {
     "/api/notify/welcome": welcome,
     "/api/notify/ticket": ticket,
     "/api/notify/feedback": feedback,
+    "/api/notify/ticket-status": ticketStatus,
+    "/api/notify/ticket-message": ticketMessage,
     "/api/cron/expiry-reminders": cron,
   };
   api = createServer((req, res) => {
@@ -272,6 +281,185 @@ describe("POST /api/notify/ticket", () => {
     expect((await post("/api/notify/ticket", { ticketId: "missing" })).status).toBe(404);
     expect((await post("/api/notify/ticket", {})).status).toBe(400);
     expect(inbox).toHaveLength(1);
+  });
+});
+
+const webTicket = () => ({
+  ticketNumber: "TKT-123456",
+  userId: "cust1",
+  userEmail: "acme@trinetra.local", // login address — not deliverable, profile email wins
+  userName: "acme",
+  phone: "+91 98765 43210",
+  category: "Detection Not Working",
+  title: "Camera 4 <offline>",
+  description: "Since morning",
+  severity: "Medium",
+  status: "In Progress",
+  createdAt: ts(new Date()),
+});
+
+describe("POST /api/notify/ticket-status", () => {
+  beforeEach(() => {
+    store.set("users/memberTickets", { username: "desk", role: "admin", isMember: true, permissions: ["tickets"] });
+    store.set("tickets/t1", webTicket());
+  });
+
+  it("emails the customer's registered email from support@, with a hidden copy to support@", async () => {
+    const res = await post("/api/notify/ticket-status", { ticketId: "t1" }, "token-admin1");
+    expect(res.status).toBe(200);
+    expect(await res.json()).toEqual({ ok: true, to: "owner@acme.example" });
+    expect(inbox).toHaveLength(1);
+    const { mail, envelopeTo, envelopeFrom } = inbox[0];
+    expect(envelopeFrom).toBe("support@trinetrasystems.com");
+    expect(envelopeTo.sort()).toEqual(["owner@acme.example", "support@trinetrasystems.com"]);
+    expect(mail.to && "text" in mail.to ? mail.to.text : "").toBe("owner@acme.example"); // support@ is a hidden copy
+    expect(mail.from?.text).toContain("support@trinetrasystems.com");
+    expect(mail.subject).toBe("[Ticket TKT-123456] Status updated: In Progress");
+    expect(mail.text).toContain("Our team is now working on your ticket.");
+    expect(mail.text).toContain("https://www.trinetrasystems.com/admin");
+    expect(mail.html).toContain("Camera 4 &lt;offline&gt;");
+    expect(store.get("tickets/t1")!.statusEmailed).toBe("In Progress");
+  });
+
+  it("emails each status change once; a later change emails again", async () => {
+    await post("/api/notify/ticket-status", { ticketId: "t1" }, "token-admin1");
+    expect(await (await post("/api/notify/ticket-status", { ticketId: "t1" }, "token-admin1")).json()).toEqual({
+      ok: true,
+      skipped: true,
+      reason: "already-notified",
+    });
+    store.set("tickets/t1", { ...store.get("tickets/t1")!, status: "Solved" });
+    expect((await post("/api/notify/ticket-status", { ticketId: "t1" }, "token-admin1")).status).toBe(200);
+    expect(inbox.map((m) => m.mail.subject)).toEqual([
+      "[Ticket TKT-123456] Status updated: In Progress",
+      "[Ticket TKT-123456] Status updated: Solved",
+    ]);
+    expect(inbox[1].mail.text).toContain("marked as solved");
+  });
+
+  it("only staff with the tickets permission can trigger it", async () => {
+    expect((await post("/api/notify/ticket-status", { ticketId: "t1" })).status).toBe(401);
+    expect((await post("/api/notify/ticket-status", { ticketId: "t1" }, "token-cust1")).status).toBe(403);
+    expect((await post("/api/notify/ticket-status", { ticketId: "t1" }, "token-memberNone")).status).toBe(403);
+    expect((await post("/api/notify/ticket-status", { ticketId: "nope" }, "token-admin1")).status).toBe(404);
+    expect((await post("/api/notify/ticket-status", {}, "token-admin1")).status).toBe(400);
+    expect(inbox).toHaveLength(0);
+    expect((await post("/api/notify/ticket-status", { ticketId: "t1" }, "token-memberTickets")).status).toBe(200);
+    expect(inbox).toHaveLength(1);
+  });
+
+  it("works for existing mobile-app tickets (open/done, username only) and skips customers without an email", async () => {
+    store.set("loginIndex/acme", { userId: "cust1", username: "acme" });
+    store.set("tickets/app1", { id: "TKT-1007", title: "Gate cam", status: "open", createdBy: "Acme", createdAt: ts(new Date()) });
+    const res = await post("/api/notify/ticket-status", { ticketId: "app1" }, "token-admin1");
+    expect(await res.json()).toEqual({ ok: true, to: "owner@acme.example" });
+    expect(inbox[0].mail.subject).toBe("[Ticket TKT-1007] Status updated: Active");
+
+    store.set("tickets/orphan", { title: "x", status: "done", userEmail: "ghost@trinetra.local", createdAt: ts(new Date()) });
+    expect(await (await post("/api/notify/ticket-status", { ticketId: "orphan" }, "token-admin1")).json()).toEqual({
+      ok: true,
+      skipped: true,
+      reason: "no-email",
+    });
+    expect(inbox).toHaveLength(1);
+  });
+
+  it("releases the claim when SMTP fails so the admin can retry", async () => {
+    const saved = process.env.SMTP_PASS;
+    process.env.SMTP_PASS = "wrong-password";
+    try {
+      expect((await post("/api/notify/ticket-status", { ticketId: "t1" }, "token-admin1")).status).toBe(500);
+      expect(store.get("tickets/t1")!.statusEmailed).toBeNull();
+    } finally {
+      process.env.SMTP_PASS = saved;
+    }
+    expect((await post("/api/notify/ticket-status", { ticketId: "t1" }, "token-admin1")).status).toBe(200);
+    expect(inbox).toHaveLength(1);
+  });
+});
+
+describe("POST /api/notify/ticket-message", () => {
+  beforeEach(() => {
+    store.set("users/cust2", { username: "other", role: "user", isMember: false, contactEmail: "other@example.com" });
+    store.set("tickets/t1", webTicket());
+    store.set("tickets/t1/messages/s1", {
+      from: "support",
+      text: "We restarted the <NVR>.\nPlease check camera 4.",
+      type: "text",
+      createdAt: ts(new Date()),
+      authorUid: "admin1",
+      authorName: "yash-admin",
+    });
+    store.set("tickets/t1/messages/u1", { from: "user", text: "Still offline on cam 4", type: "text", createdAt: ts(new Date()), authorUid: "cust1" });
+  });
+
+  it("support reply → customer's registered email, hidden copy to support@, once", async () => {
+    const res = await post("/api/notify/ticket-message", { ticketId: "t1", messageId: "s1" }, "token-admin1");
+    expect(res.status).toBe(200);
+    expect(await res.json()).toEqual({ ok: true, to: "owner@acme.example" });
+    const { mail, envelopeTo } = inbox[0];
+    expect(envelopeTo.sort()).toEqual(["owner@acme.example", "support@trinetrasystems.com"]);
+    expect(mail.subject).toBe("[Ticket TKT-123456] New reply from Trinetra Support");
+    expect(mail.text).toContain("We restarted the <NVR>.\nPlease check camera 4.");
+    expect(mail.html).toContain("We restarted the &lt;NVR&gt;.");
+    expect(mail.replyTo?.text).toContain("support@trinetrasystems.com");
+    expect(store.get("tickets/t1/messages/s1")!.notifiedAt).toBeInstanceOf(Date);
+
+    expect(await (await post("/api/notify/ticket-message", { ticketId: "t1", messageId: "s1" }, "token-admin1")).json()).toEqual({
+      ok: true,
+      skipped: true,
+      reason: "already-notified",
+    });
+    expect(inbox).toHaveLength(1);
+  });
+
+  it("customer message → support@ only, Reply-To the customer", async () => {
+    const res = await post("/api/notify/ticket-message", { ticketId: "t1", messageId: "u1" }, "token-cust1");
+    expect(res.status).toBe(200);
+    const { mail, envelopeTo } = inbox[0];
+    expect(envelopeTo).toEqual(["support@trinetrasystems.com"]);
+    expect(mail.subject).toBe("[Ticket TKT-123456] New message from Acme Foods <Pvt> Ltd: Camera 4 <offline>");
+    expect(mail.replyTo?.text).toContain("owner@acme.example");
+    expect(mail.text).toContain("Still offline on cam 4");
+    expect(mail.text).toContain("Status: In Progress");
+  });
+
+  it("only the right side can trigger each email", async () => {
+    const call = (messageId: string, token?: string) => post("/api/notify/ticket-message", { ticketId: "t1", messageId }, token);
+    expect((await call("s1")).status).toBe(401);
+    expect((await call("s1", "token-cust1")).status).toBe(403); // customers can't send "support" emails
+    expect((await call("s1", "token-memberNone")).status).toBe(403);
+    expect((await call("u1", "token-cust2")).status).toBe(403); // not their ticket
+    expect((await call("u1", "token-admin1")).status).toBe(403); // staff can't send as the customer
+    expect((await call("missing", "token-admin1")).status).toBe(404);
+    expect((await post("/api/notify/ticket-message", { ticketId: "t1" }, "token-admin1")).status).toBe(400);
+    expect(inbox).toHaveLength(0);
+  });
+
+  it("skips messages older than 24h and rejects empty ones", async () => {
+    store.set("tickets/t1/messages/old", { from: "support", text: "old", createdAt: ts(new Date(Date.now() - 2 * DAY)) });
+    expect(await (await post("/api/notify/ticket-message", { ticketId: "t1", messageId: "old" }, "token-admin1")).json()).toEqual({
+      ok: true,
+      skipped: true,
+      reason: "stale",
+    });
+    store.set("tickets/t1/messages/empty", { from: "user", text: "  ", createdAt: ts(new Date()) });
+    expect((await post("/api/notify/ticket-message", { ticketId: "t1", messageId: "empty" }, "token-cust1")).status).toBe(400);
+    expect(inbox).toHaveLength(0);
+  });
+
+  it("works on mobile-app tickets that only carry the username", async () => {
+    store.set("loginIndex/acme", { userId: "cust1", username: "acme" });
+    store.set("tickets/app1", { id: "TKT-1007", title: "Gate cam", status: "done", createdBy: "acme", createdAt: ts(new Date()) });
+    store.set("tickets/app1/messages/u9", { from: "user", text: "Works now?", type: "text", createdAt: ts(new Date()) });
+    store.set("tickets/app1/messages/s9", { from: "support", text: "Yes, fixed.", type: "text", createdAt: ts(new Date()) });
+    expect((await post("/api/notify/ticket-message", { ticketId: "app1", messageId: "u9" }, "token-cust1")).status).toBe(200);
+    expect((await post("/api/notify/ticket-message", { ticketId: "app1", messageId: "s9" }, "token-admin1")).status).toBe(200);
+    expect(inbox.map((m) => m.mail.subject)).toEqual([
+      "[Ticket TKT-1007] New message from Acme Foods <Pvt> Ltd: Gate cam",
+      "[Ticket TKT-1007] New reply from Trinetra Support",
+    ]);
+    expect(inbox[1].envelopeTo).toContain("owner@acme.example");
   });
 });
 

@@ -1,6 +1,11 @@
 import React from 'react';
+import { useLocation } from 'react-router-dom';
 
 const WhatsAppButton = () => {
+  // Sales chat button: not shown inside the customer / admin portal, where it
+  // would cover the ticket chat's Send button on phones.
+  const { pathname } = useLocation();
+  if (pathname.startsWith('/admin')) return null;
   return (
     <a
       href="https://wa.me/919265296453?text=Hi%20Trinetra%20team,%20I'm%20interested%20in%20your%20AI%20surveillance%20solutions.%20Could%20you%20provide%20more%20details?"
