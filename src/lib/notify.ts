@@ -5,7 +5,15 @@
 
 import { auth } from "@/lib/firebase";
 
-export type NotifyResult = { ok: boolean; skipped?: boolean; error?: string };
+export type NotifyResult = {
+  ok: boolean;
+  skipped?: boolean;
+  /** Why nothing was sent, e.g. "no-email" (customer has no registered email) or "already-notified". */
+  reason?: string;
+  /** Who was emailed (customer-facing notifications). */
+  to?: string;
+  error?: string;
+};
 
 const post = async (path: string, body: unknown, withAuth: boolean): Promise<NotifyResult> => {
   try {
@@ -18,7 +26,12 @@ const post = async (path: string, body: unknown, withAuth: boolean): Promise<Not
     const response = await fetch(path, { method: "POST", headers, body: JSON.stringify(body) });
     const data = await response.json().catch(() => ({}));
     if (!response.ok) return { ok: false, error: data?.error || `Email service returned ${response.status}.` };
-    return { ok: true, skipped: data?.skipped === true };
+    return {
+      ok: true,
+      skipped: data?.skipped === true,
+      ...(typeof data?.reason === "string" ? { reason: data.reason } : {}),
+      ...(typeof data?.to === "string" ? { to: data.to } : {}),
+    };
   } catch (error) {
     return { ok: false, error: error instanceof Error ? error.message : "Email service unreachable." };
   }
@@ -32,3 +45,13 @@ export const notifyNewTicket = (ticketId: string) => post("/api/notify/ticket", 
 
 /** Forward the signed-in user's one-time feedback to support@. */
 export const notifyFeedback = () => post("/api/notify/feedback", {}, true);
+
+/** Email the customer the ticket's new status (from support@, copy to support@). Staff only. */
+export const notifyTicketStatus = (ticketId: string) => post("/api/notify/ticket-status", { ticketId }, true);
+
+/**
+ * Email one chat message: a support reply goes to the customer (copy to support@),
+ * a customer message goes to support@.
+ */
+export const notifyTicketMessage = (ticketId: string, messageId: string) =>
+  post("/api/notify/ticket-message", { ticketId, messageId }, true);

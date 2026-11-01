@@ -215,3 +215,118 @@ ${rows(details.map(([k, v]) => [k, escapeHtml(v)]))}`
     : `Renewal due: ${who} — ${what.split(" (")[0]} expires ${formatDate(expiresAt)}`;
   return { subject, html, text };
 };
+
+// --------------------------------------------------------------------------
+// Ticket conversation emails
+
+const STATUS_COPY: Record<string, { color: string; line: string }> = {
+  Active: { color: "#1f5eff", line: "Your ticket is open and in our support queue." },
+  "In Progress": { color: "#b7791f", line: "Our team is now working on your ticket." },
+  Solved: {
+    color: "#2f855a",
+    line: "Your ticket has been marked as solved. If the issue is still there, just send us a message on the ticket and we will pick it up again.",
+  },
+};
+
+const quote = (text: string) =>
+  `<div style="white-space:pre-wrap;font-size:14px;line-height:1.6;border:1px solid #e3e7f0;border-left:4px solid #1f5eff;border-radius:8px;padding:12px 14px;background:#f8f9fc;margin:0 0 20px">${escapeHtml(
+    text
+  )}</div>`;
+
+const button = (href: string, label: string) =>
+  `<p style="margin:0 0 20px"><a href="${escapeHtml(href)}" style="display:inline-block;background:#1f5eff;color:#ffffff;text-decoration:none;padding:12px 22px;border-radius:8px;font-weight:600">${escapeHtml(
+    label
+  )}</a></p>`;
+
+const customerName = (user: any | null, ticket: any) =>
+  user?.companyName || ticket.userName || user?.username || ticket.createdBy || "Customer";
+
+/** To the customer: the admin changed the ticket status. */
+export const ticketStatusEmail = (args: { label: string; ticket: any; user: any | null; status: string; portalUrl: string; supportEmail: string }) => {
+  const { label, ticket, user, status, portalUrl, supportEmail } = args;
+  const copy = STATUS_COPY[status] || { color: "#4a5265", line: `The status of your ticket is now ${status}.` };
+  const name = customerName(user, ticket);
+  const details: [string, string][] = [
+    ["Ticket", label],
+    ["Title", ticket.title || "—"],
+    ["Status", status],
+    ["Raised on", formatDateTime(ticket.createdAt)],
+  ];
+  const html = layout(
+    `Ticket ${label}: ${status}`,
+    `<p style="font-size:15px;line-height:1.6;margin:0 0 12px">Hello ${escapeHtml(name)},</p>
+<p style="font-size:15px;line-height:1.6;margin:0 0 4px">${escapeHtml(copy.line)}</p>
+${rows(details.map(([k, v]) => [k, k === "Status" ? `<strong style="color:${copy.color}">${escapeHtml(v)}</strong>` : escapeHtml(v)]))}
+${button(portalUrl, "View ticket in the portal")}
+<p style="font-size:13px;line-height:1.6;color:#4a5265;margin:0">Sign in → Support Tickets to see the full conversation. Questions? Write to <a href="mailto:${escapeHtml(supportEmail)}">${escapeHtml(supportEmail)}</a>.</p>`
+  );
+  const text = `Hello ${name},
+
+${copy.line}
+
+${textRows(details)}
+
+View the ticket: ${portalUrl} (Sign in → Support Tickets)
+
+— Trinetra Systems Support`;
+  return { subject: `[Ticket ${label}] Status updated: ${status}`, html, text };
+};
+
+/** To the customer: support replied on the ticket. */
+export const ticketReplyEmail = (args: { label: string; ticket: any; user: any | null; message: any; status: string; portalUrl: string }) => {
+  const { label, ticket, user, message, status, portalUrl } = args;
+  const name = customerName(user, ticket);
+  const html = layout(
+    `New reply on ticket ${label}`,
+    `<p style="font-size:15px;line-height:1.6;margin:0 0 12px">Hello ${escapeHtml(name)},</p>
+<p style="font-size:15px;line-height:1.6;margin:0 0 12px">Trinetra Support replied to your ticket <strong>${escapeHtml(ticket.title || label)}</strong>:</p>
+${quote(String(message.text || ""))}
+${rows([
+  ["Ticket", escapeHtml(label)],
+  ["Status", escapeHtml(status)],
+])}
+${button(portalUrl, "Reply in the portal")}
+<p style="font-size:13px;line-height:1.6;color:#4a5265;margin:0">Sign in → Support Tickets → open the ticket to continue the conversation.</p>`
+  );
+  const text = `Hello ${name},
+
+Trinetra Support replied to your ticket "${ticket.title || label}":
+
+${message.text || ""}
+
+Ticket: ${label}
+Status: ${status}
+
+Reply in the portal: ${portalUrl} (Sign in → Support Tickets)
+
+— Trinetra Systems Support`;
+  return { subject: `[Ticket ${label}] New reply from Trinetra Support`, html, text };
+};
+
+/** To support@: the customer sent a message on the ticket. */
+export const ticketCustomerMessageEmail = (args: { label: string; ticket: any; user: any | null; message: any; status: string; email: string | null }) => {
+  const { label, ticket, user, message, status, email } = args;
+  const who = customerName(user, ticket);
+  const details: [string, string][] = [
+    ["Ticket", label],
+    ["Title", ticket.title || ""],
+    ["Status", status],
+    ["Customer", ticket.userName || user?.username || ticket.createdBy || ""],
+    ["Company", user?.companyName || ""],
+    ["Email", email || ""],
+    ["Phone", ticket.phone || user?.contactMobile || ""],
+    ["Sent at", formatDateTime(message.createdAt)],
+  ];
+  const html = layout(
+    `${who} sent a message on ${label}`,
+    `${quote(String(message.text || ""))}
+${rows(details.map(([k, v]) => [k, escapeHtml(v || "—")]))}
+<p style="font-size:13px;color:#4a5265;margin:0">Reply from the admin console → Support Tickets so the customer sees it in the portal and gets an email.</p>`
+  );
+  const text = `${who} sent a message on ticket ${label}:
+
+${message.text || ""}
+
+${textRows(details.map(([k, v]) => [k, v || "—"]))}`;
+  return { subject: `[Ticket ${label}] New message from ${who}: ${String(ticket.title || "").slice(0, 100)}`, html, text };
+};

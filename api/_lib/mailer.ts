@@ -43,6 +43,8 @@ const getTransporter = (): Transporter => {
 
 export type OutgoingMail = {
   to: string | string[];
+  /** Hidden copy — used to keep support@ in the loop on customer emails. */
+  bcc?: string | string[];
   subject: string;
   html: string;
   text: string;
